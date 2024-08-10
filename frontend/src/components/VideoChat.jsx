@@ -42,7 +42,7 @@ const VideoChat = () => {
         try {
             const id = Math.random().toString(36).substring(2, 15);
             setRoomId(id);
-            await setupPeerConnection();
+            await setupPeerConnection(id); // Pass the ID directly
             alert(`Call started. Share this ID with the person you want to join: ${id}`);
         } catch (error) {
             console.error('Error starting call.', error);
@@ -54,16 +54,18 @@ const VideoChat = () => {
         try {
             const id = prompt('Enter the ID of the call you want to join:');
             if (!id) return;
+            console.log('Joining call with ID:', id);
             setRoomId(id);
-            await setupPeerConnection(true);
+            await setupPeerConnection(id, true); // Pass the ID directly and set isJoining = true
         } catch (error) {
             console.error('Error joining call.', error);
             alert('Error joining call: ' + error.message);
         }
     }
     
-    async function setupPeerConnection(isJoining = false) {
-        const callDoc = doc(collection(firestore, 'calls'), roomId);
+    
+    async function setupPeerConnection(id, isJoining = false) {
+        const callDoc = doc(collection(firestore, 'calls'), id); // Use the passed ID
         const offerCandidates = collection(callDoc, 'offerCandidates');
         const answerCandidates = collection(callDoc, 'answerCandidates');
     
@@ -91,6 +93,11 @@ const VideoChat = () => {
     
         if (isJoining) {
             const callData = (await getDoc(callDoc)).data();
+            if (!callData || !callData.offer) {
+                alert("Call ID not found or offer not available.");
+                return;
+            }
+            
             const offerDescription = callData.offer;
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
     
