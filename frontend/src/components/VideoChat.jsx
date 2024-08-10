@@ -130,7 +130,7 @@ const VideoChat = () => {
     
             onSnapshot(callDoc, snapshot => {
                 const data = snapshot.data();
-                if (data && data.answer) {
+                if (data && data.answer && peerConnection.signalingState === 'have-local-offer') {
                     const answerDescription = new RTCSessionDescription(data.answer);
                     peerConnection.setRemoteDescription(answerDescription);
                 }
