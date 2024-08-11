@@ -1,5 +1,5 @@
 import React from 'react';
-import VideoChat from './components/VideoChat';
+import Counseling from './pages/Counseling';
 
 const App = () => {
   return (
@@ -8,7 +8,7 @@ const App = () => {
         <h1>iPeer App</h1>
       </header>
       <main>
-        <VideoChat />
+        <Counseling />
       </main>
     </div>
   );
