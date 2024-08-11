@@ -1,25 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../styles.css';
 import { firestore } from '../firebase';
 import { collection, doc, setDoc, getDoc, onSnapshot, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
-// WebRTC configuration
 const servers = {
     iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' } // Public STUN server
+        { urls: 'stun:stun.l.google.com:19302' }
     ]
 };
 
-const VideoChat = () => {
+const VideoCall = ({ roomId, setRoomId }) => {
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
-    const chatBoxRef = useRef(null);
-    const messageInputRef = useRef(null);
-    
-    const [roomId, setRoomId] = useState('');
     const [localStream, setLocalStream] = useState(null);
     const [peerConnection, setPeerConnection] = useState(null);
-    const [messages, setMessages] = useState([]);
 
     useEffect(() => {
         const init = async () => {
@@ -42,28 +35,27 @@ const VideoChat = () => {
         try {
             const id = Math.random().toString(36).substring(2, 15);
             setRoomId(id);
-            await setupPeerConnection(id); // Pass the ID directly
+            await setupPeerConnection(id);
             alert(`Call started. Share this ID with the person you want to join: ${id}`);
         } catch (error) {
             console.error('Error starting call.', error);
             alert('Error starting call: ' + error.message);
         }
     }
-    
+
     async function joinCall() {
         try {
             const id = prompt('Enter the ID of the call you want to join:');
             if (!id) return;
             console.log('Joining call with ID:', id);
             setRoomId(id);
-            await setupPeerConnection(id, true); // Pass the ID directly and set isJoining = true
+            await setupPeerConnection(id, true);
         } catch (error) {
             console.error('Error joining call.', error);
             alert('Error joining call: ' + error.message);
         }
     }
-    
-    
+
     async function setupPeerConnection(id, isJoining = false) {
         const callDoc = doc(collection(firestore, 'calls'), id); // Use the passed ID
         const offerCandidates = collection(callDoc, 'offerCandidates');
@@ -130,7 +122,7 @@ const VideoChat = () => {
     
             onSnapshot(callDoc, snapshot => {
                 const data = snapshot.data();
-                if (data && data.answer) {
+                if (data && data.answer && peerConnection.signalingState === 'have-local-offer') {
                     const answerDescription = new RTCSessionDescription(data.answer);
                     peerConnection.setRemoteDescription(answerDescription);
                 }
@@ -145,16 +137,8 @@ const VideoChat = () => {
                 });
             });
         }
-    
-        // Listen for new messages
-        onSnapshot(callDoc, (snapshot) => {
-            const data = snapshot.data();
-            if (data && data.messages) {
-                updateChatBox(data.messages);
-            }
-        });
     }
-    
+
     function toggleAudio() {
         if (localStream) {
             const audioTrack = localStream.getAudioTracks()[0];
@@ -169,7 +153,7 @@ const VideoChat = () => {
             }
         }
     }
-    
+
     function toggleVideo() {
         if (localStream) {
             const videoTrack = localStream.getVideoTracks()[0];
@@ -200,48 +184,19 @@ const VideoChat = () => {
         }
         if (roomId) {
             try {
-                await deleteDoc(doc(firestore, 'calls', roomId));
+                const callDoc = doc(firestore, 'calls', roomId);
+                await updateDoc(callDoc, { messages: [] }); // Clear messages
+                await deleteDoc(callDoc);
             } catch (error) {
                 console.error('Error deleting room document:', error);
             }
         }
-        if (chatBoxRef.current) {
-            chatBoxRef.current.innerHTML = '';
-        }
+        setRoomId('');
         alert('Call ended');
-    }
-    
-    async function sendMessage() {
-        if (!roomId) {
-            alert('You must be in a call to send messages.');
-            return;
-        }
-        const messageText = messageInputRef.current.value.trim();
-        if (messageText) {
-            const callDoc = doc(firestore, 'calls', roomId);
-            const callData = (await getDoc(callDoc)).data();
-            const messages = callData.messages || [];
-            messages.push({ text: messageText, sender: 'Me', timestamp: new Date().toISOString() });
-            await updateDoc(callDoc, { messages: messages });
-            messageInputRef.current.value = '';
-        }
-    }
-    
-    function updateChatBox(messages) {
-        if (chatBoxRef.current) {
-            chatBoxRef.current.innerHTML = '';
-            messages.forEach(msg => {
-                const msgElement = document.createElement('div');
-                msgElement.textContent = `${msg.sender}: ${msg.text}`;
-                chatBoxRef.current.appendChild(msgElement);
-            });
-            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-        }
     }
 
     return (
         <div>
-            <h1>iPeer</h1>
             <div className="call-controls">
                 <button onClick={startCall}>Start Call</button>
                 <button onClick={joinCall}>Join Call</button>
@@ -255,23 +210,8 @@ const VideoChat = () => {
                 <button id="muteVideoButton" onClick={toggleVideo}>Mute Video</button>
                 <button onClick={endCall}>End Call</button>
             </div>
-            <div className="chat-container">
-                <div ref={chatBoxRef} id="chatBox">
-                    {messages.map((msg, index) => (
-                        <div key={index}>{msg.sender}: {msg.text}</div>
-                    ))}
-                </div>
-                <div className="chat-input">
-                    <input
-                        type="text"
-                        ref={messageInputRef}
-                        placeholder="Type a message..."
-                    />
-                    <button onClick={sendMessage}>Send</button>
-                </div>
-            </div>
         </div>
     );
 };
 
-export default VideoChat;
+export default VideoCall;
