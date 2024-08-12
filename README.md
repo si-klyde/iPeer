@@ -1,2 +1,0 @@
-# iPeer
-Capstone project repository
