@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { firestore } from '../firebase';
 import { collection, doc, setDoc, getDoc, onSnapshot, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
@@ -14,50 +14,8 @@ const VideoCall = ({ roomId, setRoomId }) => {
     const [localStream, setLocalStream] = useState(null);
     const [peerConnection, setPeerConnection] = useState(null);
 
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                setLocalStream(stream);
-                if (localVideoRef.current) {
-                    localVideoRef.current.srcObject = stream;
-                }
-            } catch (error) {
-                console.error('Error accessing media devices.', error);
-                alert('Error accessing media devices: ' + error.message);
-            }
-        };
-
-        init();
-    }, []);
-
-    async function startCall() {
-        try {
-            const id = Math.random().toString(36).substring(2, 15);
-            setRoomId(id);
-            await setupPeerConnection(id);
-            alert(`Call started. Share this ID with the person you want to join: ${id}`);
-        } catch (error) {
-            console.error('Error starting call.', error);
-            alert('Error starting call: ' + error.message);
-        }
-    }
-
-    async function joinCall() {
-        try {
-            const id = prompt('Enter the ID of the call you want to join:');
-            if (!id) return;
-            console.log('Joining call with ID:', id);
-            setRoomId(id);
-            await setupPeerConnection(id, true);
-        } catch (error) {
-            console.error('Error joining call.', error);
-            alert('Error joining call: ' + error.message);
-        }
-    }
-
-    async function setupPeerConnection(id, isJoining = false) {
-        const callDoc = doc(collection(firestore, 'calls'), id); // Use the passed ID
+    const setupPeerConnection = useCallback(async (id) => {
+        const callDoc = doc(collection(firestore, 'calls'), id);
         const offerCandidates = collection(callDoc, 'offerCandidates');
         const answerCandidates = collection(callDoc, 'answerCandidates');
     
@@ -75,24 +33,14 @@ const VideoCall = ({ roomId, setRoomId }) => {
     
         peerConnection.onicecandidate = event => {
             if (event.candidate) {
-                if (isJoining) {
-                    addDoc(answerCandidates, event.candidate.toJSON());
-                } else {
-                    addDoc(offerCandidates, event.candidate.toJSON());
-                }
+                addDoc(offerCandidates, event.candidate.toJSON());
             }
         };
     
-        if (isJoining) {
-            const callData = (await getDoc(callDoc)).data();
-            if (!callData || !callData.offer) {
-                alert("Call ID not found or offer not available.");
-                return;
-            }
-            
-            const offerDescription = callData.offer;
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
-    
+        const callData = (await getDoc(callDoc)).data();
+        
+        if (callData?.offer) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
             const answerDescription = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answerDescription);
     
@@ -122,7 +70,7 @@ const VideoCall = ({ roomId, setRoomId }) => {
     
             onSnapshot(callDoc, snapshot => {
                 const data = snapshot.data();
-                if (data && data.answer && peerConnection.signalingState === 'have-local-offer') {
+                if (data?.answer && peerConnection.signalingState === 'have-local-offer') {
                     const answerDescription = new RTCSessionDescription(data.answer);
                     peerConnection.setRemoteDescription(answerDescription);
                 }
@@ -137,7 +85,30 @@ const VideoCall = ({ roomId, setRoomId }) => {
                 });
             });
         }
-    }
+    }, [localStream]);
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                setLocalStream(stream);
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = stream;
+                }
+            } catch (error) {
+                console.error('Error accessing media devices.', error);
+                alert('Error accessing media devices: ' + error.message);
+            }
+        };
+
+        init();
+    }, []);
+
+    useEffect(() => {
+        if (roomId && localStream) {
+            setupPeerConnection(roomId);
+        }
+    }, [roomId, localStream, setupPeerConnection]);
 
     function toggleAudio() {
         if (localStream) {
@@ -197,10 +168,6 @@ const VideoCall = ({ roomId, setRoomId }) => {
 
     return (
         <div>
-            <div className="call-controls">
-                <button onClick={startCall}>Start Call</button>
-                <button onClick={joinCall}>Join Call</button>
-            </div>
             <div className="video-container">
                 <video className="video-player" ref={localVideoRef} autoPlay playsInline muted></video>
                 <video className="video-player" ref={remoteVideoRef} autoPlay playsInline></video>
