@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate,useLocation } from 'react-router-dom';
 import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import '../styles.css';
@@ -10,10 +10,12 @@ const Counseling = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
     const [isValidRoom, setIsValidRoom] = useState(false);
+    const location = useLocation();
+    const isCreating = location.state?.isCreating;
 
     useEffect(() => {
         const checkRoom = async () => {
-            if (roomId) {
+            if (roomId && !isCreating) {
                 try {
                     const roomRef = doc(firestore, 'calls', roomId);
                     const roomSnapshot = await getDoc(roomRef);
@@ -29,11 +31,13 @@ const Counseling = () => {
                     alert("An error occurred while checking the room. Redirecting to waiting room.");
                     navigate('/');
                 }
+            } else{
+                setIsValidRoom(true);
             }
         };
 
         checkRoom();
-    }, [roomId, navigate]);
+    }, [roomId, navigate, isCreating]);
 
     if (!isValidRoom) {
         return <div>Checking room validity...</div>;

@@ -9,7 +9,7 @@ const WaitingRoom = () => {
 
     const createRoom = async () => {
         const newRoomCode = Math.random().toString(36).substring(7);
-        navigate(`/counseling/${newRoomCode}`);
+        navigate(`/counseling/${newRoomCode}`, { state: { isCreating:true}});
     };
 
     const joinRoom = async () => {
