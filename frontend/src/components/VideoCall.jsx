@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { firestore } from '../firebase';
 import { collection, doc, setDoc, getDoc, onSnapshot, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 const servers = {
     iceServers: [
@@ -13,6 +14,7 @@ const VideoCall = ({ roomId, setRoomId }) => {
     const remoteVideoRef = useRef(null);
     const [localStream, setLocalStream] = useState(null);
     const [peerConnection, setPeerConnection] = useState(null);
+    const navigate = useNavigate();
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -162,8 +164,11 @@ const VideoCall = ({ roomId, setRoomId }) => {
                 console.error('Error deleting room document:', error);
             }
         }
-        setRoomId('');
+        if (setRoomId) {
+            setRoomId('');
+        }
         alert('Call ended');
+        navigate('/');
     }
 
     return (
