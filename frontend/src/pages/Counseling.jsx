@@ -9,9 +9,11 @@ import Chat from '../components/Chat';
 const Counseling = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
-    const [isValidRoom, setIsValidRoom] = useState(false);
     const location = useLocation();
     const isCreating = location.state?.isCreating;
+
+    const [isValidRoom, setIsValidRoom] = useState(false);
+    const [currentRoomId, setCurrentRoomId] = useState(roomId);
 
     useEffect(() => {
         const checkRoom = async () => {
@@ -46,7 +48,7 @@ const Counseling = () => {
     return (
         <div>
             <h1>iPeer Counseling</h1>
-            <VideoCall roomId={roomId} />
+            <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
             <Chat roomId={roomId} />
         </div>
     );
