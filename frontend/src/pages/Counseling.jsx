@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate,useLocation } from 'react-router-dom';
 import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import '../styles.css';
+import '../index'
 import VideoCall from '../components/VideoCall';
 import Chat from '../components/Chat';
 
