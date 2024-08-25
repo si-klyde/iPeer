@@ -12,6 +12,7 @@ const App = () => {
             <Header />
             <div className="pt-[4.75rem] lg:pt-[5.25rem] overflow-hidden">
                 <Routes>
+                    <Route path="/" element={<Hero />} />
                     <Route path="/home" element={<Hero />} />
                     <Route path="/waitingroom" element={<WaitingRoom />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
