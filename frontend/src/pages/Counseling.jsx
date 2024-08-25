@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate,useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import '../index'
 import VideoCall from '../components/VideoCall';
 import Chat from '../components/Chat';
 
@@ -33,7 +32,7 @@ const Counseling = () => {
                     alert("An error occurred while checking the room. Redirecting to waiting room.");
                     navigate('/');
                 }
-            } else{
+            } else {
                 setIsValidRoom(true);
             }
         };
@@ -42,14 +41,21 @@ const Counseling = () => {
     }, [roomId, navigate, isCreating]);
 
     if (!isValidRoom) {
-        return <div>Checking room validity...</div>;
+        return <div className="min-h-screen flex items-center justify-center text-white">Checking room validity...</div>;
     }
 
     return (
-        <div>
-            <h1>iPeer Counseling</h1>
-            <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
-            <Chat roomId={roomId} />
+        <div className="m-3 text-color-7 min-h-screen flex flex-col items-center bg-color-5 tracking-wide">
+            <h1 className="text-3xl font-bold text-white mb-8">iPeer Counseling Room</h1>
+            
+            <div className="mt-5 w-full max-w-6xl flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+                <div className="w-full lg:w-8/12 bg-white p-6 rounded-lg shadow-lg">
+                    <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
+                </div>
+                <div className="w-full lg:w-4/12 bg-white p-6 rounded-lg shadow-lg">
+                    <Chat roomId={roomId} />
+                </div>
+            </div>
         </div>
     );
 };

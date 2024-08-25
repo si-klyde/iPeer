@@ -9,7 +9,9 @@
     "firebase": "^10.12.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.0",
+    "react-just-parallax": "^3.1.16",
+    "react-router-dom": "^6.26.1",
+    "scroll-lock": "^2.1.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

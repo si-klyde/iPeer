@@ -134,9 +134,9 @@ const VideoCall = ({ roomId, setRoomId }) => {
                 videoTrack.enabled = !videoTrack.enabled;
                 // Update button text
                 if (videoTrack.enabled) {
-                    document.querySelector('#muteVideoButton').textContent = 'Mute Video';
+                    document.querySelector('#muteVideoButton').textContent = 'Off Camera';
                 } else {
-                    document.querySelector('#muteVideoButton').textContent = 'Unmute Video';
+                    document.querySelector('#muteVideoButton').textContent = 'Open Camera';
                 }
             }
         }
@@ -172,15 +172,43 @@ const VideoCall = ({ roomId, setRoomId }) => {
     }
 
     return (
-        <div>
-            <div className="video-container">
-                <video className="video-player" ref={localVideoRef} autoPlay playsInline muted></video>
-                <video className="video-player" ref={remoteVideoRef} autoPlay playsInline></video>
+        <div className="bg-gray-100 p-4 rounded-lg shadow-lg flex flex-col max-w-5xl">
+            <div className="flex justify-center items-center h-full w-full space-x-4">
+                <video 
+                    className="w-1/2 h-1/2 object-cover rounded-lg border" 
+                    ref={localVideoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted
+                ></video>
+                <video 
+                    className="w-1/2 h-1/2 object-cover rounded-lg border" 
+                    ref={remoteVideoRef} 
+                    autoPlay 
+                    playsInline
+                ></video>
             </div>
-            <div className="call-actions">
-                <button id="muteAudioButton" onClick={toggleAudio}>Mute Audio</button>
-                <button id="muteVideoButton" onClick={toggleVideo}>Mute Video</button>
-                <button onClick={endCall}>End Call</button>
+            <div className="flex justify-center space-x-4 mt-4">
+                <button 
+                    id="muteAudioButton" 
+                    className="bg-color-5 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600" 
+                    onClick={toggleAudio}
+                >
+                    Mute Audio
+                </button>
+                <button 
+                    id="muteVideoButton" 
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600" 
+                    onClick={toggleVideo}
+                >
+                    Off Camera
+                </button>
+                <button 
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600" 
+                    onClick={endCall}
+                >
+                    End Call
+                </button>
             </div>
         </div>
     );
