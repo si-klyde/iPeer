@@ -21,19 +21,19 @@ const VideoCall = ({ roomId, setRoomId }) => {
         const offerCandidates = collection(callDoc, 'offerCandidates');
         const answerCandidates = collection(callDoc, 'answerCandidates');
     
-        const peerConnection = new RTCPeerConnection(servers);
-        setPeerConnection(peerConnection);
+        const pc = new RTCPeerConnection(servers);
+        setPeerConnection(pc);
     
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     
-        peerConnection.ontrack = event => {
+        pc.ontrack = event => {
             const [remoteStream] = event.streams;
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = remoteStream;
             }
         };
     
-        peerConnection.onicecandidate = event => {
+        pc.onicecandidate = event => {
             if (event.candidate) {
                 addDoc(offerCandidates, event.candidate.toJSON());
             }
@@ -42,9 +42,9 @@ const VideoCall = ({ roomId, setRoomId }) => {
         const callData = (await getDoc(callDoc)).data();
         
         if (callData?.offer) {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
-            const answerDescription = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answerDescription);
+            await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+            const answerDescription = await pc.createAnswer();
+            await pc.setLocalDescription(answerDescription);
     
             const answer = {
                 sdp: answerDescription.sdp,
@@ -56,13 +56,13 @@ const VideoCall = ({ roomId, setRoomId }) => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const candidate = new RTCIceCandidate(change.doc.data());
-                        peerConnection.addIceCandidate(candidate);
+                        pc.addIceCandidate(candidate);
                     }
                 });
             });
         } else {
-            const offerDescription = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offerDescription);
+            const offerDescription = await pc.createOffer();
+            await pc.setLocalDescription(offerDescription);
     
             const offer = {
                 sdp: offerDescription.sdp,
@@ -72,9 +72,9 @@ const VideoCall = ({ roomId, setRoomId }) => {
     
             onSnapshot(callDoc, snapshot => {
                 const data = snapshot.data();
-                if (data?.answer && peerConnection.signalingState === 'have-local-offer') {
+                if (data?.answer && pc.signalingState === 'have-local-offer') {
                     const answerDescription = new RTCSessionDescription(data.answer);
-                    peerConnection.setRemoteDescription(answerDescription);
+                    pc.setRemoteDescription(answerDescription);
                 }
             });
     
@@ -82,7 +82,7 @@ const VideoCall = ({ roomId, setRoomId }) => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const candidate = new RTCIceCandidate(change.doc.data());
-                        peerConnection.addIceCandidate(candidate);
+                        pc.addIceCandidate(candidate);
                     }
                 });
             });
@@ -104,25 +104,30 @@ const VideoCall = ({ roomId, setRoomId }) => {
         };
 
         init();
+
+        return () => {
+            if (peerConnection) {
+                peerConnection.close();
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+        };
     }, []);
 
     useEffect(() => {
-        if (roomId && localStream) {
+        if (roomId && localStream && !peerConnection) {
             setupPeerConnection(roomId);
         }
-    }, [roomId, localStream, setupPeerConnection]);
+    }, [roomId, localStream, peerConnection, setupPeerConnection]);
 
     function toggleAudio() {
         if (localStream) {
             const audioTrack = localStream.getAudioTracks()[0];
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
-                // Update button text
-                if (audioTrack.enabled) {
-                    document.querySelector('#muteAudioButton').textContent = 'Mute Audio';
-                } else {
-                    document.querySelector('#muteAudioButton').textContent = 'Unmute Audio';
-                }
+                document.querySelector('#muteAudioButton').textContent = 
+                    audioTrack.enabled ? 'Mute Audio' : 'Unmute Audio';
             }
         }
     }
@@ -132,12 +137,8 @@ const VideoCall = ({ roomId, setRoomId }) => {
             const videoTrack = localStream.getVideoTracks()[0];
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
-                // Update button text
-                if (videoTrack.enabled) {
-                    document.querySelector('#muteVideoButton').textContent = 'Off Camera';
-                } else {
-                    document.querySelector('#muteVideoButton').textContent = 'Open Camera';
-                }
+                document.querySelector('#muteVideoButton').textContent = 
+                    videoTrack.enabled ? 'Mute Video' : 'Unmute Video';
             }
         }
     }
@@ -191,7 +192,7 @@ const VideoCall = ({ roomId, setRoomId }) => {
             <div className="flex justify-center space-x-4 mt-4">
                 <button 
                     id="muteAudioButton" 
-                    className="bg-color-5 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600" 
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600" 
                     onClick={toggleAudio}
                 >
                     Mute Audio
@@ -201,7 +202,7 @@ const VideoCall = ({ roomId, setRoomId }) => {
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600" 
                     onClick={toggleVideo}
                 >
-                    Off Camera
+                    Mute Video
                 </button>
                 <button 
                     className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600" 

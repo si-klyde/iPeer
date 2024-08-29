@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { firestore } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import VideoCall from '../components/VideoCall';
 import Chat from '../components/Chat';
 
@@ -16,12 +16,23 @@ const Counseling = () => {
 
     useEffect(() => {
         const checkRoom = async () => {
-            if (roomId && !isCreating) {
+            if (roomId) {
                 try {
                     const roomRef = doc(firestore, 'calls', roomId);
                     const roomSnapshot = await getDoc(roomRef);
-
+    
                     if (roomSnapshot.exists()) {
+                        if (location.state?.isCreating) {
+                            // If we're supposed to be creating a room but it already exists,
+                            // show an error and redirect to waiting room
+                            alert("This room already exists. Please try creating a new room.");
+                            navigate('/');
+                        } else {
+                            setIsValidRoom(true);
+                        }
+                    } else if (location.state?.isCreating) {
+                        // Creating a new room
+                        await setDoc(roomRef, { createdAt: new Date() });
                         setIsValidRoom(true);
                     } else {
                         alert("This room does not exist. Redirecting to waiting room.");
@@ -33,12 +44,13 @@ const Counseling = () => {
                     navigate('/');
                 }
             } else {
-                setIsValidRoom(true);
+                // If there's no roomId, set the room as invalid
+                setIsValidRoom(false);
             }
         };
-
+    
         checkRoom();
-    }, [roomId, navigate, isCreating]);
+    }, [roomId, navigate, location.state]);
 
     if (!isValidRoom) {
         return <div className="min-h-screen flex items-center justify-center text-white">Checking room validity...</div>;
