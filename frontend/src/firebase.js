@@ -3,13 +3,13 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBcq2eKJhCR9pnJRfbyoQlQeBDw3dLaMnM",
-    authDomain: "capstone-66c71.firebaseapp.com",
-    projectId: "capstone-66c71",
-    storageBucket: "capstone-66c71.appspot.com",
-    messagingSenderId: "870563062414",
-    appId: "1:870563062414:web:25762f8ea13c8cfdf79fdf",
-    measurementId: "G-7M6ZQ0GJH0"
+    apiKey: process.env.VITE_FIREBASE_API_KEY,
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: project.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.VITE_FIREBASE_APP_ID,
+    measurementId: process.env.VITE_FIREBASE_GOOGLE_CLIENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
