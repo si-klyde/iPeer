@@ -1,11 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { firestore } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { auth } from '../firebase';
 
 const Chat = ({ roomId }) => {
     const chatBoxRef = useRef(null);
     const messageInputRef = useRef(null);
     const [messages, setMessages] = useState([]);
+    const currentUser = auth.currentUser;
 
     useEffect(() => {
         let unsubscribe;
@@ -36,7 +38,11 @@ const Chat = ({ roomId }) => {
         const messageText = messageInputRef.current.value.trim();
         if (messageText) {
             const callDoc = doc(firestore, 'calls', roomId);
-            const newMessage = { text: messageText, sender: 'Me', timestamp: new Date().toISOString() };
+            const newMessage = {
+                text: messageText,
+                sender: currentUser ? currentUser.displayName : 'Anonymous', // Use current user's display name
+                timestamp: new Date().toISOString()
+            };
             const updatedMessages = [...messages, newMessage];
             await updateDoc(callDoc, { messages: updatedMessages });
             messageInputRef.current.value = '';
