@@ -176,7 +176,7 @@ const VideoCall = ({ roomId, setRoomId }) => {
         <div className="bg-gray-100 p-4 rounded-lg shadow-lg flex flex-col max-w-5xl">
             <div className="flex justify-center items-center h-full w-full space-x-4">
                 <video 
-                    className="w-1/2 h-1/2 object-cover rounded-lg border" 
+                    className="w-1/2 h-1/2 object-cover rounded-lg border transform scale-x-[-1]" 
                     ref={localVideoRef} 
                     autoPlay 
                     playsInline 

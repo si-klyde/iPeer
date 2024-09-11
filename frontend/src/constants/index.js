@@ -71,9 +71,9 @@ export const navigation = [
     onlyMobile: true,
   },
   {
-    id: "6 ",
+    id: "6",
     title: "Sign in",
-    url: "#login",
+    url: "/login",
     onlyMobile: true,
   },
 ];

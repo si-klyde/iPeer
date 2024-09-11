@@ -6,10 +6,15 @@ import { navigation } from "../constants";
 import Button from './Button';
 import { HamburgerMenu } from '../design/Header';
 import { disablePageScroll, enablePageScroll } from 'scroll-lock';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
+const Header = ({ user }) => {
   const pathname = useLocation();  
   const [openNavigation, setOpenNavigation] = useState(false);
+  const navigate = useNavigate();
+  
   const toggleNavigation = () => {
     if(openNavigation){
       setOpenNavigation(false);
@@ -24,6 +29,15 @@ const Header = () => {
     if(!openNavigation) return;
     enablePageScroll();
     setOpenNavigation(false);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      navigate('/home');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -59,14 +73,21 @@ const Header = () => {
 
                     <HamburgerMenu />
                 </nav>
-                <a href="#signup"
-                className="button hidden mr-8 lg:text-xs text-n-1 transition-colors hover:text-color-5 
-                lg:block" >
-                    New Account
-                </a>
-                <Button className="hidden lg:flex lg:text-xs text-n-1" href="#login" white>
-                    Sign In
-                </Button>
+
+                {user ? (
+                  <button onClick={handleSignOut}>
+                    Sign Out
+                  </button>
+                ) : (
+                  <>
+                    <a href="#signup" className="button hidden mr-8 lg:text-xs text-n-1 transition-colors hover:text-color-5 lg:block">
+                      New Account
+                    </a>
+                    <Button className="hidden lg:flex lg:text-xs text-n-1" href="/login" white>
+                      Sign In
+                    </Button>
+                  </>
+                )}
 
                 <Button className="ml-auto lg:hidden" px="px-3" onClick={toggleNavigation}>
                   <MenuSvg openNavigation={openNavigation} />

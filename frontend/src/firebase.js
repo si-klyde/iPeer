@@ -1,18 +1,22 @@
 // src/firebaseConfig.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithCustomToken } from 'firebase/auth';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBcq2eKJhCR9pnJRfbyoQlQeBDw3dLaMnM",
-    authDomain: "capstone-66c71.firebaseapp.com",
-    projectId: "capstone-66c71",
-    storageBucket: "capstone-66c71.appspot.com",
-    messagingSenderId: "870563062414",
-    appId: "1:870563062414:web:25762f8ea13c8cfdf79fdf",
-    measurementId: "G-7M6ZQ0GJH0"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_GOOGLE_CLIENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 
-export { firestore };
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export { auth, provider, signInWithPopup, signOut, signInWithCustomToken, firestore };
