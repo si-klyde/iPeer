@@ -5,6 +5,7 @@ import { heroImage, aboutImage } from "../assets";
 import TypingEffect from "./TypingEffect";
 import ProfileCard from "./Card";
 import { LinkIcon, ShareIcon, BoltIcon } from "@heroicons/react/24/outline";
+import { sectionImage } from "../assets";
 
 const Hero = () => {
   const parallaxRef = useRef(null);
@@ -72,7 +73,7 @@ const Hero = () => {
         </div>
       </motion.section>
 
-      {/* Featured Services Section */}
+      {/* Key Feaures Section */}
       <motion.section
         id="about"
         className="bg-slate-50 relative w-full h-[100vh] flex items-center justify-between px-10"
@@ -85,13 +86,13 @@ const Hero = () => {
           <img
             src={aboutImage}
             alt="About Image"
-            className="w-3/4 h-[450px] object-cover rounded-md"
+            className="ml-32 -mr-5 w-3/4 h-[450px] object-cover rounded-md"
           />
         </div>
 
         {/* Text Section */}
         <div className="w-1/2 flex flex-col justify-center space-y-4 text-black pl-16">
-          <p className="text-lg text-gray-600">Our Journey Together</p>
+          <p className="font-mono text-md text-gray-600">Our Journey Together</p>
           <p className="text-5xl font-bold leading-tight">
             Discover Your True Potential
           </p>
@@ -119,7 +120,7 @@ const Hero = () => {
         </div>
       </motion.section>
 
-      {/* About iPeer Section */}
+      {/* Tailored Guidance Section */}
       <motion.section
         id="more"
         className="bg-slate-50 relative w-full h-[100vh] flex items-center justify-center px-10"
@@ -128,6 +129,7 @@ const Hero = () => {
         animate={isVisible.more ? "visible" : "hidden"}
       >
         <div className="text-black">
+          <p className="flex justify-center font-mono text-md text-gray-500">Tailored Guidance</p>
           <h1 className="bg-clip-text font-sans mb-5 text-4xl font-semibold flex justify-center p-6">
             Key Features
           </h1>
@@ -142,14 +144,33 @@ const Hero = () => {
 
       {/* Upcoming Events/Seminars Section */}
       <motion.section
-        id="upcoming"
-        className="bg-slate-50 relative w-full h-[100vh]"
+        id="third"
+        className="bg-slate-50 relative w-full h-[100vh] flex items-center justify-between px-10"
         variants={fadeUpVariants}
         initial="hidden"
-        animate={isVisible.upcoming ? "visible" : "hidden"}
+        animate={isVisible.about ? "visible" : "hidden"}
       >
-        <div className="text-black">
-          <h1 className="h1 items-center flex justify-start p-6"></h1>
+        {/* Text Section */}
+        <div className="ml-32 w-1/2 flex flex-col justify-center space-y-4 text-black pl-16">
+          <p className="font-mono text-md text-gray-600">Your Wellness Partner</p>
+          <p className="text-5xl font-bold leading-tight">
+            Personalized Emotional Support Services
+          </p>
+          <p className="mt-20 text-md text-gray-700 w-3/4">
+             iPeer offers emotional support tailored to your needs, empowering you to achieve emotional resonance and wellness.          
+          </p>
+          <Button className="mb-5 w-48 bg-color-5">
+          Explore Now
+        </Button>
+        </div>
+        
+        {/* Image Section */}
+        <div className="w-1/2 -ml-18 mr-20 flex justify-center">
+          <img
+            src={sectionImage}
+            alt="About Image"
+            className="w-3/4 h-[450px] object-cover rounded-md"
+          />
         </div>
       </motion.section>
     </>

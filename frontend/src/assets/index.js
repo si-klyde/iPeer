@@ -26,6 +26,7 @@ import robot from "./hero/robot.jpg";
 import heroBackground from "./hero/hero-background.png";
 import heroImage from "./hero-image.png";
 import aboutImage from "./about-section.jpg";
+import sectionImage from "./third-section.jpg";
 
 import curve1 from "./collaboration/curve-1.svg";
 import curve2 from "./collaboration/curve-2.svg";
@@ -104,7 +105,8 @@ export {
   robot,
   heroBackground,
   heroImage, 
-  aboutImage, 
+  aboutImage,
+  sectionImage, 
   curve1,
   curve2,
   discord,
