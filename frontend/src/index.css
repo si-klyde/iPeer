@@ -1,6 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 @import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+
 
 @tailwind base;
 @tailwind components;
@@ -8,6 +14,10 @@
 
 :root {
     --font-sora: "Sora", sans-serif;
+    --font-lato: "Lato", sans-serif;
+    --font-poppins: "Poppins", sans-serif;
+    --font-open-sans: "Open Sans", sans-serif;
+    --font-roboto: "Roboto", sans-serif;
     --font-code: "Source Code Pro", monospace;
     --font-grotesk: "Space Grotesk", sans-serif;
     color-scheme: dark;
@@ -19,7 +29,7 @@
 
 @layer base {
     body {
-        @apply font-sans bg-color-5 text-color-4 text-base;
+        @apply font-sans bg-white text-color-4 text-base;
     }
 }
 
