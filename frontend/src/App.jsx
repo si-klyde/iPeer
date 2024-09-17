@@ -8,6 +8,7 @@ import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx'
 import Login from './pages/Login.jsx';
 import { auth } from './firebase';
+import Footer from './components/Footer.jsx';
 const App = () => {
     const [user, setUser] = useState(null); 
 
@@ -22,7 +23,7 @@ const App = () => {
     return (
         <>
             <Header user={ user }/>
-            <div className="pt-[4.75rem] lg:pt-[5.25rem] overflow-hidden">
+            <div className="pt-[4.75rem] lg:pt-[5rem] overflow-hidden">
                 <Routes>
                     <Route path="/" element={<Hero />} />
                     <Route path="/home" element={<Hero />} />
@@ -31,7 +32,7 @@ const App = () => {
                     <Route path="/counseling/:roomId" element={<Counseling />} />
                 </Routes>
             </div>
-            <ButtonGradient />
+            <Footer />
         </>
     );
 };

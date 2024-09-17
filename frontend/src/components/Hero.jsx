@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { BoltIcon, LinkIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { aboutImage, heroImage, sectionImage } from "../assets";
 import Button from "./Button";
-import { heroImage, aboutImage } from "../assets";
-import TypingEffect from "./TypingEffect";
 import ProfileCard from "./Card";
-import { LinkIcon, ShareIcon, BoltIcon } from "@heroicons/react/24/outline";
-import { sectionImage } from "../assets";
+import TypingEffect from "./TypingEffect";
+import ServicesCard from "./ServicesCard";
 
 const Hero = () => {
   const parallaxRef = useRef(null);
@@ -13,7 +13,7 @@ const Hero = () => {
     hero: false,
     about: false,
     more: false,
-    upcoming: false
+    upcoming: false,
   });
 
   const observerOptions = {
@@ -28,7 +28,7 @@ const Hero = () => {
         if (entry.isIntersecting) {
           setIsVisible((prev) => ({
             ...prev,
-            [entry.target.id]: true
+            [entry.target.id]: true,
           }));
         }
       });
@@ -48,13 +48,33 @@ const Hero = () => {
     <>
       {/* Top section */}
       <motion.section
-        className="bg-slate-50 relative w-full h-[100vh]"
+        className="relative w-full h-[100vh] bg-[#E6F4EA]"
         id="hero"
         ref={parallaxRef}
         variants={fadeUpVariants}
         initial="hidden"
         animate={isVisible.hero ? "visible" : "hidden"}
+        // style={{
+        //   background: "radial-gradient(circle at bottom right, rgba(217, 249, 157, 0.4) 20%, #FFFFFF 80%)",
+        // }}
       >
+         {/* Left background covering half of the screen */}
+        {/* <div
+          className="absolute top-0 left-0 w-1/2 h-full z-0"
+          style={{
+            background: 'radial-gradient(circle at top left, rgba(217, 249, 157, 0) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+          }}
+        >
+        </div> */}
+
+        {/* Right background with radial gradient positioned at the top-right */}
+        {/* <div
+          className="absolute top-0 right-0 w-1/2 h-full z-0"
+          style={{
+            background: 'radial-gradient(circle at bottom right, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+          }}
+        >
+        </div> */}
         <div className="relative ml-15 flex items-center justify-end w-full h-screen">
           <img src={heroImage} alt="Hero Image" className="w-2/3 h-auto" />
         </div>
@@ -73,63 +93,113 @@ const Hero = () => {
         </div>
       </motion.section>
 
-      {/* Key Feaures Section */}
+      {/* Key Features Section */}
       <motion.section
         id="about"
-        className="bg-slate-50 relative w-full h-[100vh] flex items-center justify-between px-10"
+        className="relative w-full h-[100vh] flex flex-col items-center justify-between p-20 bg-[#FFF9F9]"
         variants={fadeUpVariants}
         initial="hidden"
         animate={isVisible.about ? "visible" : "hidden"}
       >
-        {/* Image Section */}
-        <div className="w-1/2 flex justify-center">
-          <img
-            src={aboutImage}
-            alt="About Image"
-            className="ml-32 -mr-5 w-3/4 h-[450px] object-cover rounded-md"
-          />
+        {/* Background gradients */}
+        {/* <div
+          className="absolute top-0 left-0 w-1/2 h-full z-0"
+          style={{
+            background:
+              'radial-gradient(circle at bottom left, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)',
+          }}
+        ></div>
+
+        <div
+          className="absolute top-0 right-0 w-1/2 h-full z-0"
+          style={{
+            background:
+              'radial-gradient(circle at top right, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)',
+          }}
+        ></div> */}
+
+        {/* Image and Text Section */}
+        <div className="flex w-full justify-between items-center">
+          {/* Image Section */}
+          <div className="relative w-1/2 flex justify-center z-10">
+            <img
+              src={aboutImage}
+              alt="About Image"
+              className="ml-32 -mr-5 w-3/4 h-[400px] object-cover rounded-md"
+            />
+          </div>
+
+          {/* Text Section */}
+          <div className="relative w-1/2 flex flex-col justify-center space-y-4 text-black pl-16 z-10">
+            <p className="font-mono text-sm text-gray-600">Our Journey Together</p>
+            <p className="text-5xl font-bold leading-tight">
+              Discover Your True Potential
+            </p>
+            <p className="text-md text-gray-700 w-3/4 pb-5">
+              Here at MindSpace Hub, we foster personal growth and mental wellness
+              through peer counseling, supporting you every step of the way.
+            </p>
+            <Button className="w-64">
+              Learn More
+            </Button>
+          </div>
         </div>
 
-        {/* Text Section */}
-        <div className="w-1/2 flex flex-col justify-center space-y-4 text-black pl-16">
-          <p className="font-mono text-md text-gray-600">Our Journey Together</p>
-          <p className="text-5xl font-bold leading-tight">
-            Discover Your True Potential
-          </p>
-          <p className="text-lg text-gray-700 w-3/4">
-            Here at iPeer, we foster personal growth and mental wellness through peer counseling, supporting you every step of the way.
-          </p>
-
-          <div className="flex flex-row space-x-7 pr-4 py-4">
-            <div className="rounded-xl size-20 p-6 z-10 -top-8 hover:shadow-xl transition">
-              <div className="bg-transparent w-full h-full overflow-auto">
-                <LinkIcon className="w-auto h-auto" />
-              </div>
+        {/* Hero Icons */}
+        <div className="flex justify-around w-1/2 z-10 text-black">
+          <div className="flex flex-col items-center text-center">
+            <div className="p-6 rounded-full bg-transparent transition duration-300">
+              <LinkIcon className="size-8 text-black" />
             </div>
-            <div className="rounded-xl size-20 p-6 z-10 -top-8 hover:shadow-xl transition">
-              <div className="bg-transparent w-full h-full overflow-auto">
-                <ShareIcon className="w-auto h-auto" />
-              </div>
+            <p className="mt-2 font-bold">Connect.</p>
+          </div>
+          <div className="flex flex-col items-center text-center">
+          <div className="p-6 rounded-full bg-transparent transition duration-300">
+            <ShareIcon className="size-8 text-black" />
             </div>
-            <div className="rounded-xl size-20 p-6 z-10 -top-8 hover:shadow-xl transition">
-              <div className="bg-transparent w-full h-full overflow-auto">
-                <BoltIcon className="w-auto h-auto" />
-              </div>
+            <p className="mt-2 font-bold">Share.</p>
+          </div>
+          <div className="flex flex-col items-center text-center">
+          <div className="p-6 rounded-full bg-transparent transition duration-300">
+            <BoltIcon className="size-8 text-black" />
             </div>
+            <p className="mt-2 font-bold">Empower.</p>
           </div>
         </div>
       </motion.section>
 
+
       {/* Tailored Guidance Section */}
       <motion.section
         id="more"
-        className="bg-slate-50 relative w-full h-[100vh] flex items-center justify-center px-10"
+        className="relative w-full h-[100vh] flex items-center justify-center px-10 bg-[#E0F2F1]"
         variants={fadeUpVariants}
         initial="hidden"
         animate={isVisible.more ? "visible" : "hidden"}
+        // style={{
+        //   background: "radial-gradient(circle at 50% 50%, rgba(217, 249, 157, 0.2) 20%, #FFFFFF 80%)",
+        // }}
       >
-        <div className="text-black">
-          <p className="flex justify-center font-mono text-md text-gray-500">Tailored Guidance</p>
+        {/* Left background covering half of the screen */}
+      {/* <div
+        className="absolute top-0 left-0 w-1/2 h-full z-0"
+        style={{
+          background: 'radial-gradient(circle at top left, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+        }}
+      ></div> */}
+
+      {/* Right background with radial gradient positioned at the top-right */}
+      {/* <div
+        className="absolute top-0 right-0 w-1/2 h-full z-0"
+        style={{
+          background: 'radial-gradient(circle at bottom right, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+        }}
+      >
+      </div> */}
+        <div className="z-10 text-black">
+          <p className="flex justify-center font-mono text-md text-gray-500">
+            Tailored Guidance
+          </p>
           <h1 className="bg-clip-text font-sans mb-5 text-4xl font-semibold flex justify-center p-6">
             Key Features
           </h1>
@@ -144,33 +214,89 @@ const Hero = () => {
 
       {/* Upcoming Events/Seminars Section */}
       <motion.section
-        id="third"
-        className="bg-slate-50 relative w-full h-[100vh] flex items-center justify-between px-10"
+        id="upcoming"
+        className="relative w-full h-[100vh] flex items-center justify-between p-20 bg-[#FAFAFA]"
         variants={fadeUpVariants}
         initial="hidden"
-        animate={isVisible.about ? "visible" : "hidden"}
+        animate={isVisible.upcoming ? "visible" : "hidden"}
+        // style={{
+        //   background: "radial-gradient(circle at 50% 50%, rgba(217, 249, 157, 0.2) 20%, #FFFFFF 80%)",
+        // }}
       >
+         {/* Left background covering half of the screen */}
+          {/* <div
+            className="absolute top-0 left-0 w-1/2 h-full z-0"
+            style={{
+              background: 'radial-gradient(circle at bottom left, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+            }}
+          ></div> */}
+
+          {/* Right background with radial gradient positioned at the top-right */}
+          {/* <div
+            className="absolute top-0 right-0 w-1/2 h-full z-0"
+            style={{
+              background: 'radial-gradient(circle at top right, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+            }}
+          >
+          </div> */}
         {/* Text Section */}
-        <div className="ml-32 w-1/2 flex flex-col justify-center space-y-4 text-black pl-16">
+        <div className="z-10 ml-32 w-1/2 flex flex-col justify-center space-y-4 text-black pl-16">
           <p className="font-mono text-md text-gray-600">Your Wellness Partner</p>
           <p className="text-5xl font-bold leading-tight">
             Personalized Emotional Support Services
           </p>
           <p className="mt-20 text-md text-gray-700 w-3/4">
-             iPeer offers emotional support tailored to your needs, empowering you to achieve emotional resonance and wellness.          
+            iPeer offers emotional support tailored to your needs, empowering you to achieve emotional resonance and wellness.
           </p>
-          <Button className="mb-5 w-48 bg-color-5">
-          Explore Now
-        </Button>
+          <Button className="mb-5 w-48 bg-color-5">Explore Now</Button>
         </div>
-        
+
         {/* Image Section */}
-        <div className="w-1/2 -ml-18 mr-20 flex justify-center">
+        <div className=" z-10 w-1/2 -ml-18 mr-20 flex justify-center">
           <img
             src={sectionImage}
             alt="About Image"
             className="w-3/4 h-[450px] object-cover rounded-md"
           />
+        </div>
+      </motion.section>
+
+      <motion.section
+        id="services"
+        className="relative w-full h-[100vh] flex items-center justify-center px-10 bg-[#F5F5F5]"
+        variants={fadeUpVariants}
+        initial="hidden"
+        animate={isVisible.more ? "visible" : "hidden"}
+        // style={{
+        //   background: "radial-gradient(circle at 50% 50%, rgba(217, 249, 157, 0.2) 20%, #FFFFFF 80%)",
+        // }}
+      >
+        {/* Left background covering half of the screen */}
+      {/* <div
+        className="absolute top-0 left-0 w-1/2 h-full z-0"
+        style={{
+          background: 'radial-gradient(circle at top left, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+        }}
+      ></div> */}
+
+      {/* Right background with radial gradient positioned at the top-right */}
+      {/* <div
+        className="absolute top-0 right-0 w-1/2 h-full z-0"
+        style={{
+          background: 'radial-gradient(circle at bottom right, rgba(217, 249, 157, 0.1) 20%, #FFFFFF 80%)' // Subtle green to white gradient
+        }}
+      >
+      </div> */}
+        <div className="z-10 text-black">
+          <p className="flex justify-center font-mono text-md text-gray-500">
+            Our Services
+          </p>
+          <h1 className="bg-clip-text font-sans mb-5 text-4xl font-semibold flex justify-center p-6">
+            Peer Counseling and Support Services
+          </h1>
+          <div className="flex flex-wrap justify-center">
+            <ServicesCard />
+          </div>
         </div>
       </motion.section>
     </>

@@ -52,8 +52,8 @@ const Header = ({ user }) => {
   return (
     <div
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
-        isShrunk ? 'shadow-md bg-n-8 h-14' : 'shadow-sm bg-n-8 bg-opacity-70 backdrop-blur-sm h-20'
-      } lg:bg-white lg:backdrop-blur-sm`} // Adjust height based on navbar size
+        isShrunk ? 'bg-white shadow-md h-14' : 'bg-white shadow-md h-20'
+      }`}
     >
       <div className="flex items-center justify-between px-5 lg:px-7.5 xl:px-10 h-full">
         {/* Logo and Title */}
