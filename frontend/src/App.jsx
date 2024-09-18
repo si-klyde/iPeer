@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
 import ButtonGradient from './assets/svg/ButtonGradient.jsx';
 import Header from './components/Header.jsx';
 import Counseling from './pages/Counseling';
@@ -11,18 +10,22 @@ import Therapy from './pages/Therapy.jsx';
 import PlayTherapy from './pages/PlayTherapy.jsx'; // Add Play Therapy Page
 import MusicTherapy from './pages/MusicTherapy.jsx'; // Add Music Therapy Page
 import ArtTherapy from './pages/ArtTherapy.jsx'; // Add Art Therapy Page
-import { auth } from './firebase';
+import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
+import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
+import BookAppointment from './pages/BookAppointment.jsx';
+import ViewAppointments from './pages/ViewAppointments.jsx';
+import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-
-        return () => unsubscribe();
+      const unsubscribe = authStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+      });
+  
+      return () => unsubscribe();
     }, []);
 
     return (
@@ -35,6 +38,10 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/waitingroom" element={<WaitingRoom />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
+                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
+                    <Route path="/book-appointment" element={<BookAppointment />} />
+                    <Route path="/appointments" element={<ViewAppointments />} />
                     
                     {/* Therapy Routes */}
                     <Route path="/therapy" element={<Therapy />} /> {/* Therapy selection page */}
