@@ -12,6 +12,7 @@ import MusicTherapy from './pages/MusicTherapy.jsx'; // Add Music Therapy Page
 import ArtTherapy from './pages/ArtTherapy.jsx'; // Add Art Therapy Page
 import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
 import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
+import LoginClient from './pages/LoginClient.jsx';
 import BookAppointment from './pages/BookAppointment.jsx';
 import ViewAppointments from './pages/ViewAppointments.jsx';
 import { auth, authStateChanged } from './firebase';
@@ -39,6 +40,7 @@ const App = () => {
                     <Route path="/waitingroom" element={<WaitingRoom />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
                     <Route path="/book-appointment" element={<BookAppointment />} />
                     <Route path="/appointments" element={<ViewAppointments />} />

@@ -125,6 +125,8 @@ router.post('/register-peer-counselor', async (req, res) => {
 router.post('/login-peer-counselor', async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('Request body:', req.body); // Log the request body
+
   try {
     // Fetch user from Firestore
     const userDoc = await db.collection('users').where('email', '==', email).get();

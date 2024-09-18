@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { auth, signInWithCustomToken } from '../firebase';
 
 const LoginPeerCounselor = () => {
   const [email, setEmail] = useState('');
@@ -14,8 +15,9 @@ const LoginPeerCounselor = () => {
         email,
         password,
       });
+      await signInWithCustomToken(auth, response.data.token);
       console.log('Login successful:', response.data);
-      navigate('/peer-counselor-dashboard');
+      navigate('/home');
     } catch (error) {
       console.error('Login error:', error);
     }
