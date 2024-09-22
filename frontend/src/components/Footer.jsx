@@ -5,7 +5,7 @@ import logo from '../assets/ipeer-icon.png';
 
 const Footer = () => {
   return (
-    <footer className="bg-n-4/60 text-white py-8 font-mono">
+    <footer className="bg-green-600 text-white py-8 font-mono">
       <div className="container mx-auto flex justify-between items-start">
         {/* Left Section: Title */}
         <a href="" className='text-2xl font-semibold flex items-center space-x-3'>
