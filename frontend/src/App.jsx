@@ -1,28 +1,33 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import ButtonGradient from './assets/svg/ButtonGradient.jsx';
 import Header from './components/Header.jsx';
 import Counseling from './pages/Counseling';
 import WaitingRoom from './pages/WaitingRoom';
-import Hero from './components/Hero.jsx'
+import Hero from './components/Hero.jsx';
 import Login from './pages/Login.jsx';
+import Therapy from './pages/Therapy.jsx';
+import PlayTherapy from './pages/PlayTherapy.jsx'; // Add Play Therapy Page
+import MusicTherapy from './pages/MusicTherapy.jsx'; // Add Music Therapy Page
+import ArtTherapy from './pages/ArtTherapy.jsx'; // Add Art Therapy Page
 import { auth } from './firebase';
 import Footer from './components/Footer.jsx';
+
 const App = () => {
-    const [user, setUser] = useState(null); 
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-      });
-  
-      return () => unsubscribe();
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        return () => unsubscribe();
     }, []);
-    //console.log("App.jsx: ", user);
+
     return (
         <>
-            <Header user={ user }/>
+            <Header user={user} />
             <div className="pt-[4.75rem] lg:pt-[5rem] overflow-hidden">
                 <Routes>
                     <Route path="/" element={<Hero />} />
@@ -30,6 +35,12 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/waitingroom" element={<WaitingRoom />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
+                    
+                    {/* Therapy Routes */}
+                    <Route path="/therapy" element={<Therapy />} /> {/* Therapy selection page */}
+                    <Route path="/therapy/play" element={<PlayTherapy />} /> {/* Play Therapy page */}
+                    <Route path="/therapy/music" element={<MusicTherapy />} /> {/* Music Therapy page */}
+                    <Route path="/therapy/art" element={<ArtTherapy />} /> {/* Art Therapy page */}
                 </Routes>
             </div>
             <Footer />
