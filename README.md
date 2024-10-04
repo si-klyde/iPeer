@@ -9,7 +9,7 @@ Current goals:
 - Improve Sign-In page
 
 Team Members:
-- Kyle Clyde Baclao
-- Jean Carlo Celeste
-- Michael Jamil Cervaño
-- John Lloyd Dela Cruz
+- Kyle Clyde Baclao - Project Manager
+- Jean Carlo Celeste - Lead Backend Developer
+- Michael Jamil Cervaño - Lead Frontend Developer
+- John Lloyd Dela Cruz - UI/UX Designer and Developer
