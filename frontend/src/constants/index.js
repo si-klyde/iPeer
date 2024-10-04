@@ -47,7 +47,7 @@ export const navigation = [
   {
     id: "1",
     title: "Therapy",
-    url: "#therapy",
+    url: "/therapy",
   },
   {
     id: "2",
