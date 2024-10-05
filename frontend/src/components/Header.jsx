@@ -52,7 +52,7 @@ const Header = ({ user }) => {
   return (
     <div
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
-        isShrunk ? 'bg-white shadow-md h-14' : 'bg-white shadow-md h-20'
+        isShrunk ? 'bg-[#FFF9F9] shadow-md h-14' : 'bg-[#FFF9F9] shadow-md h-20'
       }`}
     >
       <div className="flex items-center justify-between px-5 lg:px-7.5 xl:px-10 h-full">
@@ -73,7 +73,7 @@ const Header = ({ user }) => {
                   item.onlyMobile ? "lg:hidden" : ""
                 } px-6 py-4 lg:py-2 lg:text-sm lg:font-medium ${
                   item.url === pathname.hash ? "text-n-5" : "text-n-8"
-                } lg:leading-5 lg:hover:text-color-5 xl:px-8 drop-shadow-lg`}>
+                } lg:leading-5 lg:hover:text-green-500 xl:px-8 drop-shadow-lg`}>
                 {item.title}
               </a>
             ))}

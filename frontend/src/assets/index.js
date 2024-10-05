@@ -27,6 +27,7 @@ import heroBackground from "./hero/hero-background.png";
 import heroImage from "./hero-image.png";
 import aboutImage from "./about-section.jpg";
 import sectionImage from "./third-section.jpg";
+import mindImage from "./mind-image.jpg";
 
 import curve1 from "./collaboration/curve-1.svg";
 import curve2 from "./collaboration/curve-2.svg";
@@ -107,6 +108,7 @@ export {
   heroImage, 
   aboutImage,
   sectionImage, 
+  mindImage,
   curve1,
   curve2,
   discord,

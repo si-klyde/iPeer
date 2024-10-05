@@ -54,7 +54,7 @@ const Therapy = () => {
                 </p>
                 <button
                     onClick={scrollToButtonsSection}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                    className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-700 transition"
                 >
                     Explore
                 </button>
