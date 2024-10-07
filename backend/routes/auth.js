@@ -1,6 +1,7 @@
 const express = require('express');
-const { auth } = require('../firebaseAdmin.js');
+const { auth, db } = require('../firebaseAdmin.js');
 const router = express.Router();
+const crypto = require('crypto');
 
 require('dotenv').config();
 
@@ -9,7 +10,7 @@ router.post('/google-signin', async (req, res) => {
   
   // Ensure token is present
   if (!token) {
-    console.log("token is missing");
+    console.log("Token is missing");
     return res.status(400).send('Token is missing');
   }
 
@@ -19,36 +20,37 @@ router.post('/google-signin', async (req, res) => {
     // Verify the Firebase token
     const decodedToken = await auth.verifyIdToken(token);
     console.log('Token verified successfully. Decoded token:', decodedToken);
-    
+
     if (!decodedToken.email_verified) {
       return res.status(400).send('Email not verified');
     }
 
-    // Proceed to check or create the user in Firebase
+    // Proceed to check the user in Firebase
     let userRecord;
     try {
       userRecord = await auth.getUser(decodedToken.uid);
       console.log('User found in Firebase:', userRecord);
-    } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        console.log('User not found, creating new user...');
-        try {
-          // User does not exist, create the user
-          userRecord = await auth.createUser({
-            uid: decodedToken.uid,
-            email: decodedToken.email,
-            displayName: decodedToken.name,
-            photoURL: decodedToken.picture,
-          });
-          console.log('New user created:', userRecord);
-        } catch (createError) {
-          console.error('Error creating new user:', createError);
-          return res.status(500).send('Failed to create user');
-        }
+
+      // Ensure the role is set correctly
+      const userDoc = await db.collection('users').doc(userRecord.uid).get();
+      if (!userDoc.exists) {
+        await db.collection('users').doc(userRecord.uid).set({
+          email: userRecord.email,
+          displayName: userRecord.displayName,
+          role: 'client',
+          createdAt: new Date(),
+        });
       } else {
-        console.error('Error fetching user:', error);
-        return res.status(500).send('Error fetching user');
+        const userData = userDoc.data();
+        if (!userData.role) {
+          await db.collection('users').doc(userRecord.uid).update({
+            role: 'client',
+          });
+        }
       }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return res.status(500).send('Error fetching user');
     }
 
     // Generate a custom Firebase token
@@ -66,6 +68,86 @@ router.post('/google-signin', async (req, res) => {
     console.error('Firebase token verification error:', error);
     if (error.message) console.error('Error message:', error.message);
     return res.status(400).send('Token verification failed: ' + error.message);
+  }
+});
+
+// Function to hash a password with salt and iterations
+const hashPassword = (password, salt, iterations) => {
+  let hash = crypto.createHmac('sha256', salt).update(password).digest('hex');
+  for (let i = 0; i < iterations; i++) {
+    hash = crypto.createHmac('sha256', salt).update(hash).digest('hex');
+  }
+  return hash;
+};
+
+// Function to verify a password
+const verifyPassword = (password, salt, iterations, hash) => {
+  const hashedPassword = hashPassword(password, salt, iterations);
+  return hashedPassword === hash;
+};
+
+router.post('/register-peer-counselor', async (req, res) => {
+  const { email, password, displayName } = req.body;
+
+  try {
+    // Generate a salt
+    const salt = crypto.randomBytes(16).toString('hex');
+    const iterations = 10000; // Number of iterations
+
+    // Hash the password with salt and iterations
+    const hash = hashPassword(password, salt, iterations);
+
+    // Create user in Firebase Auth
+    const userRecord = await auth.createUser({
+      email,
+      password: hash, // Use the hashed password
+      displayName,
+    });
+
+    // Add user to Firestore with role 'peer-counselor'
+    await db.collection('users').doc(userRecord.uid).set({
+      email: userRecord.email,
+      displayName: userRecord.displayName,
+      role: 'peer-counselor',
+      createdAt: new Date(),
+      salt: salt, // Store the salt
+      iterations: iterations, // Store the number of iterations
+      password: hash, // Store the hashed password
+    });
+
+    res.status(201).send({ message: 'Peer counselor registered successfully' });
+  } catch (error) {
+    console.error('Error registering peer counselor:', error);
+    res.status(500).send({ error: 'Error registering peer counselor' });
+  }
+});
+
+router.post('/login-peer-counselor', async (req, res) => {
+  const { email, password } = req.body;
+
+  console.log('Request body:', req.body); // Log the request body
+
+  try {
+    // Fetch user from Firestore
+    const userDoc = await db.collection('users').where('email', '==', email).get();
+    if (userDoc.empty) {
+      return res.status(400).send({ error: 'User not found' });
+    }
+
+    const userData = userDoc.docs[0].data();
+    const { salt, iterations, password: storedHash } = userData;
+
+    // Verify the password
+    if (!verifyPassword(password, salt, iterations, storedHash)) {
+      return res.status(400).send({ error: 'Invalid password' });
+    }
+
+    // Generate a custom Firebase token
+    const customToken = await auth.createCustomToken(userDoc.docs[0].id);
+    res.status(200).send({ token: customToken });
+  } catch (error) {
+    console.error('Error logging in peer counselor:', error);
+    res.status(500).send({ error: 'Error logging in peer counselor' });
   }
 });
 

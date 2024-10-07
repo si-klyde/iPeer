@@ -1,39 +1,42 @@
 import React from 'react';
-import axios from 'axios';
-import { auth, provider, signInWithPopup, signInWithCustomToken } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const handleSignIn = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log('User info:', user);
+  const handleClientLogin = () => {
+    navigate('/login-client');
+  };
 
-    // Get the Firebase ID token
-    const idToken = await user.getIdToken();
-    console.log('Firebase ID token:', idToken);
+  const handleCounselorRegistration = () => {
+    navigate('/register-peer-counselor');
+  };
 
-    const apiUrl = 'http://localhost:5000/api/google-signin';
-    console.log('Attempting to fetch from:', apiUrl);
-
-    const response = await axios.post(apiUrl, { token: idToken });
-
-    await signInWithCustomToken(auth, response.data.token);
-
-    navigate('/');
-  } catch (error) {
-    console.error('Detailed error:', error);
-  }
-};
+  const handlePeerCounselorLogin = () => {
+    navigate('/login-peer-counselor');
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-3 bg-black shadow-md rounded-lg">
-        <button onClick={handleSignIn} className="text-n-1">
-          Sign In with Google
+      <div className="p-6 bg-white shadow-md rounded-lg">
+        <h2 className="text-2xl mb-4">Welcome to iPeer</h2>
+        <button
+          onClick={handleClientLogin}
+          className="w-full bg-blue-500 text-white p-2 rounded mb-4"
+        >
+          Login as Client
+        </button>
+        <button
+          onClick={handleCounselorRegistration}
+          className="w-full bg-green-500 text-white p-2 rounded mb-4"
+        >
+          Register as Peer Counselor
+        </button>
+        <button
+          onClick={handlePeerCounselorLogin}
+          className="w-full bg-purple-500 text-white p-2 rounded"
+        >
+          Login as Peer Counselor
         </button>
       </div>
     </div>
