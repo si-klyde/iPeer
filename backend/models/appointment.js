@@ -15,15 +15,22 @@ const createAppointment = async (appointmentData) => {
   return appointmentRef.id;
 };
 
-const getAppointments = async (userId) => {
+const getAppointmentsClient = async (userId) => {
   const appointmentsSnapshot = await db.collection('appointments').where('userId', '==', userId).get();
   return appointmentsSnapshot.docs.map(doc => 
     Object.assign({}, { id: doc.id }, doc.data())
   );
   
 };
-
+const getAppointmentsPeer = async (peerCounselorId) => {
+  const appointmentsSnapshot = await db.collection('appointments').where('peerCounselorId', '==', peerCounselorId).get();
+  return appointmentsSnapshot.docs.map(doc => 
+    Object.assign({}, { id: doc.id }, doc.data())
+  );
+  
+};
 module.exports = {
   createAppointment,
-  getAppointments,
+  getAppointmentsClient,
+  getAppointmentsPeer,
 };
