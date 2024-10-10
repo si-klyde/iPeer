@@ -75,7 +75,7 @@ const Therapy = () => {
                                 alt={therapyData[type].title}
                                 className="absolute inset-0 object-cover w-full h-full"
                             />
-                            <span className="relative z-10 flex items-center justify-center h-full w-full text-lg md:text-2xl font-bold text-white bg-black bg-opacity-50 rounded-md text-center uppercase">
+                            <span className="ease-in duration-500 hover:text-green-500 relative z-10 flex items-center justify-center h-full w-full text-lg md:text-2xl font-bold text-white bg-black bg-opacity-40 rounded-md text-center uppercase">
                                 {therapyData[type].title}
                             </span>
                         </button>
