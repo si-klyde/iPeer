@@ -5,8 +5,8 @@ const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = requir
 router.post('/create-appointment', async (req, res) => {
   const appointmentData = req.body;
   try {
-    const appointmentId = await createAppointment(appointmentData);
-    res.status(201).send({ message: 'Appointment created successfully', appointmentId });
+    const { appointmentId, roomId } = await createAppointment(appointmentData);
+    res.status(201).send({ message: 'Appointment created successfully', appointmentId, roomId });
   } catch (error) {
     console.error('Error creating appointment:', error);
     res.status(500).send({ error: 'Error creating appointment' });

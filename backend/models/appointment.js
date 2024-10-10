@@ -5,14 +5,22 @@ const createAppointment = async (appointmentData) => {
   const appointmentRef = db.collection('appointments').doc();
   const roomId = uuidv4();
 
+  //Create the appointment document
   await appointmentRef.set(
     Object.assign({}, appointmentData, { 
       createdAt: new Date(), 
       roomId,
     })
   );
+
+  // Create a call document in the 'calls' document
+  const roomRef = db.collection('calls').doc(roomId);
+  await roomRef.set({
+    createdAt: new Date(),
+    appointmentId: appointmentRef.id,
+  });
   
-  return appointmentRef.id;
+  return { appointmentId: appointmentRef.id, roomId }
 };
 
 const getAppointmentsClient = async (userId) => {
