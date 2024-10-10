@@ -46,7 +46,8 @@ const BookAppointment = () => {
         userId: currentUserId,
       });
       console.log('Appointment booked successfully:', response.data);
-      navigate('/appointments');
+      //const { appointmentId, roomId } = response.data;
+      navigate(`/appointments/client`);
     } catch (error) {
       console.error('Error booking appointment:', error);
     }
