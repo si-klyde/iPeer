@@ -47,7 +47,7 @@
           </div>
 
           {/* Wave SVG */}
-          <div className="absolute bottom-0 left-0 w-full z-10">
+          <div className="absolute bottom-0 left-0 w-full z-10 drop-shadow-xl">
             <svg className='w-full h-auto' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
               <path fill="#f3fbf5" fillOpacity="1" d="M0,64L48,90.7C96,117,192,171,288,192C384,213,480,203,576,170.7C672,139,768,85,864,69.3C960,53,1056,75,1152,90.7C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
             </svg>
@@ -181,7 +181,7 @@
         </div>
 
         {/* Wave SVG at the bottom */}
-        <div className="my-auto h-1/3 absolute top-0 left-0 w-full">
+        <div className="my-auto h-1/3 absolute top-0 left-0 w-full drop-shadow-xl">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
             <path fill="#f3fbf5" fill-opacity="1" d="M0,160L30,160C60,160,120,160,180,144C240,128,300,96,360,69.3C420,43,480,21,540,10.7C600,0,660,0,720,0C780,0,840,0,900,16C960,32,1020,64,1080,106.7C1140,149,1200,203,1260,202.7C1320,203,1380,149,1410,122.7L1440,96L1440,0L1410,0C1380,0,1320,0,1260,0C1200,0,1140,0,1080,0C1020,0,960,0,900,0C840,0,780,0,720,0C660,0,600,0,540,0C480,0,420,0,360,0C300,0,240,0,180,0C120,0,60,0,30,0L0,0Z"></path>
           </svg>
