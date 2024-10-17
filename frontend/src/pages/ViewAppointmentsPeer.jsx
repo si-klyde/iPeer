@@ -3,10 +3,10 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { auth, authStateChanged } from '../firebase';
 
-const ViewAppointments = () => {
+const ViewAppointmentsPeer = () => {
   const [appointments, setAppointments] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [peerCounselors, setPeerCounselors] = useState({});
+  const [clients, setClients] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const ViewAppointments = () => {
     const fetchAppointments = async () => {
       if (!currentUserId) return;
       try {
-        const response = await axios.get(`http://localhost:5000/api/appointments/${currentUserId}`);
+        const response = await axios.get(`http://localhost:5000/api/appointments/peer-counselor/${currentUserId}`);
         setAppointments(response.data);
       } catch (error) {
         console.error('Error fetching appointments:', error);
@@ -34,37 +34,37 @@ const ViewAppointments = () => {
   }, [currentUserId]);
 
   useEffect(() => {
-    const fetchPeerCounselorDetails = async (peerCounselorId) => {
-      console.log(`Fetching details for peer counselor ID: ${peerCounselorId}`);
+    const fetchClientDetails = async (userId) => {
+      console.log(`Fetching details for client ID: ${userId}`);
       try {
-        const response = await axios.get(`http://localhost:5000/api/peer-counselors/${peerCounselorId}`);
-        setPeerCounselors(prevState => ({
+        const response = await axios.get(`http://localhost:5000/api/client/${userId}`);
+        setClients(prevState => ({
           ...prevState,
-          [peerCounselorId]: response.data.displayName || 'Name not available'
+          [userId]: response.data.displayName || 'Name not available'
         }));
       } catch (error) {
         if (error.response && error.response.status === 404) {
-          console.error(`Peer counselor with ID ${peerCounselorId} not found.`);
-          setPeerCounselors(prevState => ({
+          console.error(`Client with ID ${userId} not found.`);
+          setClients(prevState => ({
             ...prevState,
-            [peerCounselorId]: 'Peer counselor not found'
+            [userId]: 'Client not found'
           }));
         } else {
-          console.error('Error fetching peer counselor details:', error);
-          setPeerCounselors(prevState => ({
+          console.error('Error fetching client details:', error);
+          setClients(prevState => ({
             ...prevState,
-            [peerCounselorId]: 'Error fetching name'
+            [userId]: 'Error fetching name'
           }));
         }
       }
     };
 
     appointments.forEach(appointment => {
-      if (appointment.peerCounselorId && !peerCounselors[appointment.peerCounselorId]) {
-        fetchPeerCounselorDetails(appointment.peerCounselorId);
+      if (appointment.userId && !clients[appointment.userId]) {
+        fetchClientDetails(appointment.userId);
       }
     });
-  }, [appointments, peerCounselors]);
+  }, [appointments, clients]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -76,7 +76,7 @@ const ViewAppointments = () => {
               <p>Date: {appointment.date}</p>
               <p>Time: {appointment.time}</p>
               <p>Description: {appointment.description}</p>
-              <p>Peer Counselor: {peerCounselors[appointment.peerCounselorId] || 'Loading...'}</p>
+              <p>Client: {clients[appointment.userId] || 'Loading...'}</p>
               <p>Video Call Room: <a href={`/counseling/${appointment.roomId}`} target="_blank" rel="noopener noreferrer">Join Call</a></p>
             </li>
           ))}
@@ -86,4 +86,4 @@ const ViewAppointments = () => {
   );
 };
 
-export default ViewAppointments;
+export default ViewAppointmentsPeer;

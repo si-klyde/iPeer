@@ -5,25 +5,40 @@ const createAppointment = async (appointmentData) => {
   const appointmentRef = db.collection('appointments').doc();
   const roomId = uuidv4();
 
+  //Create the appointment document
   await appointmentRef.set(
     Object.assign({}, appointmentData, { 
       createdAt: new Date(), 
       roomId,
     })
   );
+
+  // Create a call document in the 'calls' document
+  const roomRef = db.collection('calls').doc(roomId);
+  await roomRef.set({
+    createdAt: new Date(),
+    appointmentId: appointmentRef.id,
+  });
   
-  return appointmentRef.id;
+  return { appointmentId: appointmentRef.id, roomId }
 };
 
-const getAppointments = async (userId) => {
+const getAppointmentsClient = async (userId) => {
   const appointmentsSnapshot = await db.collection('appointments').where('userId', '==', userId).get();
   return appointmentsSnapshot.docs.map(doc => 
     Object.assign({}, { id: doc.id }, doc.data())
   );
   
 };
-
+const getAppointmentsPeer = async (peerCounselorId) => {
+  const appointmentsSnapshot = await db.collection('appointments').where('peerCounselorId', '==', peerCounselorId).get();
+  return appointmentsSnapshot.docs.map(doc => 
+    Object.assign({}, { id: doc.id }, doc.data())
+  );
+  
+};
 module.exports = {
   createAppointment,
-  getAppointments,
+  getAppointmentsClient,
+  getAppointmentsPeer,
 };

@@ -15,8 +15,10 @@ import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
 import LoginClient from './pages/LoginClient.jsx';
 import BookAppointment from './pages/BookAppointment.jsx';
 import ViewAppointments from './pages/ViewAppointments.jsx';
+import ViewAppointmentsPeer from './pages/ViewAppointmentsPeer.jsx';
 import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
+import Information from './pages/Information.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -38,13 +40,14 @@ const App = () => {
                     <Route path="/home" element={<Hero />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/waitingroom" element={<WaitingRoom />} />
+                    <Route path="/information" element={<Information />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
                     <Route path="/book-appointment" element={<BookAppointment />} />
-                    <Route path="/appointments" element={<ViewAppointments />} />
-                    
+                    <Route path="/appointments/client" element={<ViewAppointments />} />
+                    <Route path="/appointments/peer-counselor" element={<ViewAppointmentsPeer/>}/>
                     {/* Therapy Routes */}
                     <Route path="/therapy" element={<Therapy />} /> {/* Therapy selection page */}
                     <Route path="/therapy/play" element={<PlayTherapy />} /> {/* Play Therapy page */}
