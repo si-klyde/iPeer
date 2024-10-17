@@ -9,6 +9,7 @@ import Hero from './components/Hero.jsx'
 import Login from './pages/Login.jsx';
 import { auth } from './firebase';
 import Footer from './components/Footer.jsx';
+import Calendar from './pages/Calendar.jsx';
 const App = () => {
     const [user, setUser] = useState(null); 
 
@@ -30,6 +31,7 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/waitingroom" element={<WaitingRoom />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
+                    <Route path="/calendar" element={<Calendar />} />
                 </Routes>
             </div>
             <Footer />

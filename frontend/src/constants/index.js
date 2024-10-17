@@ -52,7 +52,7 @@ export const navigation = [
   {
     id: "2",
     title: "Calendar",
-    url: "#calendar",
+    url: "/calendar",
   },
   {
     id: "3",
