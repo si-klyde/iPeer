@@ -28,6 +28,11 @@ import heroImage from "./hero-image.png";
 import aboutImage from "./about-section.jpg";
 import sectionImage from "./third-section.jpg";
 import mindImage from "./mind-image.jpg";
+import aboutGif from "./gif/about-animation.gif";
+import aboutSecondSection from "./information/about-second-image.jpg";
+import aboutThird from "./information/about-third-image.jpg";
+import infoImage from "./information/info-image.jpg";
+import infoImage2 from "./information/info-image2.jpg"
 
 import curve1 from "./collaboration/curve-1.svg";
 import curve2 from "./collaboration/curve-2.svg";
@@ -110,6 +115,11 @@ export {
   sectionImage, 
   mindImage,
   curve1,
+  aboutGif,
+  aboutSecondSection,
+  aboutThird,
+  infoImage,
+  infoImage2,
   curve2,
   discord,
   figma,
