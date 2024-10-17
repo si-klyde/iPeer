@@ -18,6 +18,7 @@ import ViewAppointments from './pages/ViewAppointments.jsx';
 import ViewAppointmentsPeer from './pages/ViewAppointmentsPeer.jsx';
 import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
+import Information from './pages/Information.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -39,6 +40,7 @@ const App = () => {
                     <Route path="/home" element={<Hero />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/waitingroom" element={<WaitingRoom />} />
+                    <Route path="/information" element={<Information />} />
                     <Route path="/counseling/:roomId" element={<Counseling />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
