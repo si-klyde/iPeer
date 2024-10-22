@@ -14,11 +14,17 @@ const BookAppointment = () => {
 
   useEffect(() => {
     const fetchPeerCounselors = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/peer-counselors');
-        setPeerCounselors(response.data);
-      } catch (error) {
-        console.error('Error fetching peer counselors:', error);
+      const cachedCounselors = localStorage.getItem('peerCounselors');
+      if (cachedCounselors) {
+        setPeerCounselors(JSON.parse(cachedCounselors));
+      } else {
+        try {
+          const response = await axios.get('http://localhost:5000/api/peer-counselors');
+          setPeerCounselors(response.data);
+          localStorage.setItem('peerCounselors', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Error fetching peer counselors:', error);
+        }
       }
     };
 
