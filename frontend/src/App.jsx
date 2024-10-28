@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import ButtonGradient from './assets/svg/ButtonGradient.jsx';
 import Header from './components/Header.jsx';
+import ProtectedRoute from './context/ProtectedRoute.jsx';
 import Counseling from './pages/Counseling';
 import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx';
 import Login from './pages/Login.jsx';
 import Therapy from './pages/Therapy.jsx';
-import PlayTherapy from './pages/PlayTherapy.jsx'; // Add Play Therapy Page
-import MusicTherapy from './pages/MusicTherapy.jsx'; // Add Music Therapy Page
-import ArtTherapy from './pages/ArtTherapy.jsx'; // Add Art Therapy Page
+import PlayTherapy from './pages/PlayTherapy.jsx';
+import MusicTherapy from './pages/MusicTherapy.jsx';
+import ArtTherapy from './pages/ArtTherapy.jsx';
 import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
 import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
 import LoginClient from './pages/LoginClient.jsx';
@@ -24,11 +25,11 @@ const App = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-      const unsubscribe = authStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-      });
-  
-      return () => unsubscribe();
+        const unsubscribe = authStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        return () => unsubscribe();
     }, []);
 
     return (
@@ -36,23 +37,68 @@ const App = () => {
             <Header user={user} />
             <div className="pt-[4.75rem] lg:pt-[5rem] overflow-hidden">
                 <Routes>
+                    {/* Public Routes - No authentication required */}
                     <Route path="/" element={<Hero />} />
                     <Route path="/home" element={<Hero />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/waitingroom" element={<WaitingRoom />} />
                     <Route path="/information" element={<Information />} />
-                    <Route path="/counseling/:roomId" element={<Counseling />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-                    <Route path="/book-appointment" element={<BookAppointment />} />
-                    <Route path="/appointments/client" element={<ViewAppointments />} />
-                    <Route path="/appointments/peer-counselor" element={<ViewAppointmentsPeer/>}/>
-                    {/* Therapy Routes */}
-                    <Route path="/therapy" element={<Therapy />} /> {/* Therapy selection page */}
-                    <Route path="/therapy/play" element={<PlayTherapy />} /> {/* Play Therapy page */}
-                    <Route path="/therapy/music" element={<MusicTherapy />} /> {/* Music Therapy page */}
-                    <Route path="/therapy/art" element={<ArtTherapy />} /> {/* Art Therapy page */}
+                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+
+                    {/* Client-Only Routes */}
+                    <Route path="/book-appointment" element={
+                        <ProtectedRoute allowedRoles={['client']}>
+                            <BookAppointment />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/appointments/client" element={
+                        <ProtectedRoute allowedRoles={['client']}>
+                            <ViewAppointments />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* All Therapy Routes are Client-Only */}
+                    <Route path="/therapy" element={
+                        <ProtectedRoute allowedRoles={['client']}>
+                            <Therapy />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/therapy/play" element={
+                        <ProtectedRoute allowedRoles={['client']}>
+                            <PlayTherapy />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/therapy/music" element={
+                        <ProtectedRoute allowedRoles={['client']}>
+                            <MusicTherapy />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/therapy/art" element={
+                        <ProtectedRoute allowedRoles={['client']}>
+                            <ArtTherapy />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Peer Counselor-Only Routes */}
+                    <Route path="/appointments/peer-counselor" element={
+                        <ProtectedRoute allowedRoles={['peer-counselor']}>
+                            <ViewAppointmentsPeer />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Shared Routes - Both Client and Peer Counselor can access */}
+                    <Route path="/waitingroom" element={
+                        <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
+                            <WaitingRoom />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/counseling/:roomId" element={
+                        <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
+                            <Counseling />
+                        </ProtectedRoute>
+                    } />
                 </Routes>
             </div>
             <Footer />
