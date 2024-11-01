@@ -8,9 +8,7 @@ import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx';
 import Login from './pages/Login.jsx';
 import Therapy from './pages/Therapy.jsx';
-import PlayTherapy from './pages/PlayTherapy.jsx';
-import MusicTherapy from './pages/MusicTherapy.jsx';
-import ArtTherapy from './pages/ArtTherapy.jsx';
+import { GameRoom, MusicRoom, ArtRoom } from './components/Rooms';
 import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
 import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
 import LoginClient from './pages/LoginClient.jsx';
@@ -45,7 +43,6 @@ const App = () => {
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={
@@ -59,25 +56,27 @@ const App = () => {
                         </ProtectedRoute>
                     } />
 
-                    {/* All Therapy Routes are Client-Only */}
+                    {/* Therapy Routes */}
                     <Route path="/therapy" element={
                         <ProtectedRoute allowedRoles={['client']}>
                             <Therapy />
                         </ProtectedRoute>
                     } />
+                    
+                    {/* Individual Therapy Room Routes */}
                     <Route path="/therapy/play" element={
                         <ProtectedRoute allowedRoles={['client']}>
-                            <PlayTherapy />
+                            <GameRoom />
                         </ProtectedRoute>
                     } />
                     <Route path="/therapy/music" element={
                         <ProtectedRoute allowedRoles={['client']}>
-                            <MusicTherapy />
+                            <MusicRoom />
                         </ProtectedRoute>
                     } />
                     <Route path="/therapy/art" element={
                         <ProtectedRoute allowedRoles={['client']}>
-                            <ArtTherapy />
+                            <ArtRoom />
                         </ProtectedRoute>
                     } />
 

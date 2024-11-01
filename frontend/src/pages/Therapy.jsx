@@ -1,10 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import playTherapyImage from '../assets/therapy/play-therapy.webp';
 import musicTherapyImage from '../assets/therapy/music-therapy.webp';
 import artTherapyImage from '../assets/therapy/art-therapy.webp';
 
-const TherapySection = ({ title, description, backgroundImage, isExpanded, onExpand }) => {
+const TherapySection = ({ id, title, description, backgroundImage, isExpanded, onExpand }) => {
+  const navigate = useNavigate();
+  
+  const handleEnterRoom = (e) => {
+    e.stopPropagation(); // Prevent triggering the expand/collapse
+    navigate(`/therapy/${id}`);
+  };
+
   return (
     <motion.div
       layout
@@ -47,7 +55,7 @@ const TherapySection = ({ title, description, backgroundImage, isExpanded, onExp
                 <div className="bg-black/30 p-6 rounded-lg backdrop-blur-sm">
                   <h3 className="text-xl font-semibold mb-4">Features</h3>
                   <ul className="space-y-3">
-                    {title === 'Game Room' ? (
+                    {id === 'play' ? (
                       <>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
@@ -66,7 +74,7 @@ const TherapySection = ({ title, description, backgroundImage, isExpanded, onExp
                           <span>Perfect study break activity</span>
                         </li>
                       </>
-                    ) : title === 'Music Room' ? (
+                    ) : id === 'music' ? (
                       <>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
@@ -111,7 +119,7 @@ const TherapySection = ({ title, description, backgroundImage, isExpanded, onExp
                 <div className="bg-black/30 p-6 rounded-lg backdrop-blur-sm">
                   <h3 className="text-xl font-semibold mb-4">Benefits</h3>
                   <ul className="space-y-3">
-                    {title === 'Game Room' ? (
+                    {id === 'play' ? (
                       <>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
@@ -130,7 +138,7 @@ const TherapySection = ({ title, description, backgroundImage, isExpanded, onExp
                           <span>Take mindful breaks between study sessions</span>
                         </li>
                       </>
-                    ) : title === 'Music Room' ? (
+                    ) : id === 'music' ? (
                       <>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
@@ -174,8 +182,22 @@ const TherapySection = ({ title, description, backgroundImage, isExpanded, onExp
               </div>
               
               <div className="mt-12 flex justify-center">
-                <button className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transition-colors">
-                  Enter Room
+                <button 
+                  onClick={handleEnterRoom}
+                  className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transition-colors flex items-center space-x-2"
+                >
+                  <span>Enter Room</span>
+                  <svg 
+                    className="w-5 h-5" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth="2" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             </motion.div>
@@ -229,9 +251,20 @@ const Therapy = () => {
         </p>
         <button 
           onClick={scrollToTherapies}
-          className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-700 transition"
+          className="px-6 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors flex items-center space-x-2"
         >
-          Explore Rooms
+          <span>Explore Rooms</span>
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth="2" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
         </button>
       </div>
 
@@ -239,6 +272,7 @@ const Therapy = () => {
         {therapyOptions.map((therapy) => (
           <TherapySection
             key={therapy.id}
+            id={therapy.id}
             title={therapy.title}
             description={therapy.description}
             backgroundImage={therapy.backgroundImage}
