@@ -37,6 +37,7 @@ router.post('/google-signin', async (req, res) => {
         await db.collection('users').doc(userRecord.uid).set({
           email: userRecord.email,
           displayName: userRecord.displayName,
+          photoURL: userRecord.photoURL,
           role: 'client',
           createdAt: new Date(),
         });
