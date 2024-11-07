@@ -2,6 +2,8 @@
   import { DotLottieReact } from '@lottiefiles/dotlottie-react';
   import Button from '../components/Button';
   import { aboutThird, additional1, additional2, infoImage, infoImage2 } from '../assets';
+  import OnCampus from './OnCampus.jsx'
+  import { Link } from 'react-router-dom';
 
   const Information = () => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -15,7 +17,7 @@
       <>
       <div className='bg-[#f3fbf5]'>
         {/* Hero Section */}
-        <section id='top' className="relative w-full h-[90vh] bg-gradient-to-b from-[#88E5BE] to-[#E6F4EA] overflow-hidden">
+        <section id='top' className="relative w-full h-[90vh] bg-[#88E5BE] to-[#E6F4EA] overflow-hidden">
           <div className="relative flex float-right items-center justify-end">
             {!isLoaded && <p className='text-transparent'>loading</p>}
             <DotLottieReact
@@ -31,10 +33,12 @@
           <div className="lg:ml-20 absolute inset-0 flex flex-col items-start justify-center p-10 space-y-6 z-20">
             <div className="text-left">
               <h1 className='h1 -mt-32 text-white font-semibold drop-shadow-lg'>
-                About and Information
+                Information and Resources
               </h1>
               <p className="body-1/2 max-w-3xl my-6 text-gray-700 text-opacity-90 lg:mb-8 drop-shadow-lg transition-opacity duration-500">
-                Learn more about mental illness. This section covers mental health conditions such as schizophrenia, PTSD, bipolar, borderline personality disorder, ADHD, OCD, depression, anxiety, eating disorders, suicide, addiction, and others.
+              Bicol University’s Mental Health Resources offer a wealth of information, including self-help articles and guided exercises, 
+              to support students' personal growth and resilience. With resources on mindfulness and stress management, 
+              students can find valuable guidance for enhancing their mental well-being.   
               </p>
             </div>
             
@@ -58,11 +62,11 @@
         <section id="second" className="relative w-full h-[70vh] bg-[#f3fbf5] flex flex-col lg:flex-row items-center justify-between">
           <div className="lg:w-1/2 lg:ml-20 p-10 z-20">
             <div className="text-left">
-              <h1 className="h3 text-[#3BA693] font-bold drop-shadow-md animate-fadeIn">About Mental Health</h1>
+              <h1 className="h3 text-[#3BA693] font-bold drop-shadow-md animate-fadeIn">On-Campus Resources</h1>
               <p className="body-1/2 max-w-2xl my-6 text-gray-800 lg:mb-8">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam hendrerit nisi sed sollicitudin pellentesque. Nunc posuere purus rhoncus pulvinar aliquam. Ut aliquet tristique nisl vitae volutpat.
-              </p>
-              <Button className="mb-5 w-48 bg-[#4A9E90] text-white shadow-lg transition-all duration-300 hover:scale-110" href="#services">
+               Bicol University offers students safe and private mental health support on campus. With counseling, 
+               workshops, and peer support, students can find guidance and build skills to handle stress and challenges in a supportive environment.</p>
+              <Button className="mb-5 w-48 bg-[#4A9E90] text-white shadow-lg transition-all duration-300 hover:scale-110" href="/onCampus">
                 Learn More
               </Button>
             </div>
@@ -85,12 +89,12 @@
         <section id="third" className="relative w-full h-[70vh] bg-[#f3fbf5] flex flex-col lg:flex-row items-center justify-between">
           <div className="lg:w-1/2 lg:ml-20 p-10 z-20">
             <div className="text-left">
-              <h1 className="h3 font-bold mb-4 text-[#3BA693] animate-slideInLeft">Mental Disorders</h1>
+              <h1 className="h3 font-bold mb-4 text-[#3BA693] animate-slideInLeft">Off-Campus Resources</h1>
               <p className="body-1/2 max-w-2xl my-6 text-gray-800 lg:mb-8">
-              A mental disorder affects a person's thinking, mood, or behavior, often causing distress or difficulty in daily functioning. 
-              Common examples include depression, anxiety, and schizophrenia. Treatment may involve therapy, medication, or both.
+              For students needing additional help, Bicol University connects them with trusted off-campus options, including nearby clinics and hotlines. 
+              These resources offer further support for those who may need it outside the university
               </p>
-              <Button className="mb-5 w-48 bg-[#4A9E90] text-white shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-110" href="#learn-more">
+              <Button className="mb-5 w-48 bg-[#4A9E90] text-white shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-110" href="/offCampus">
                 Learn More
               </Button>
             </div>
@@ -113,12 +117,12 @@
         <section id="fourth" className="relative w-full h-[70vh] bg-[#f3fbf5] flex flex-col lg:flex-row items-center justify-between">
           <div className="lg:w-1/2 lg:ml-20 p-10 z-20">
             <div className="text-left">
-              <h2 className="h3 font-bold mb-4 text-[#3BA693] animate-slideInLeft">Mental Health Institutions</h2>
+              <h2 className="h3 font-bold mb-4 text-[#3BA693] animate-slideInLeft">Self-Help Resources</h2>
               <p className="body-1/2 max-w-2xl my-6 text-gray-800 lg:mb-8">
-              Mental health institutions provide treatment and support for individuals with mental disorders, 
-              offering services like therapy, medication management, and crisis intervention to help improve patients' well-being.
+                A range of self-help tools is available to support students in managing their well-being independently. 
+                With guided exercises, helpful apps, and easy-to-access articles and videos, these resources offer flexible support for building healthy habits and personal growth anytime.
               </p>
-              <Button className="mb-5 w-48 bg-[#4A9E90] text-white shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-110" href="#learn-more">
+              <Button className="mb-5 w-48 bg-[#4A9E90] text-white shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-110" href="/selfHelp">
                 Learn More
               </Button>
             </div>
@@ -138,7 +142,7 @@
         {/* <div className="w-5/6 h-0.5 bg-black/25 mx-auto"></div> */}
 
         {/* 5th Section - Additional Resources */}
-      <section id="additional" className="relative h-[110vh] w-full bg-[#00A7A2] py-20">
+      <section id="additional" className="relative h-[110vh] w-full bg-[#88E5BE] py-20">
         <div className="container mx-auto px-6">
           <h2 className="mt-20 text-center text-[#F5F5F5] text-4xl font-bold mb-20 drop-shadow-lg animate-fadeIn">Additional Resources</h2>
 
@@ -152,10 +156,10 @@
                 className="relative h-96"
               />
               <div className="absolute inset-0 bg-[#00a7a233] bg-opacity-20 flex flex-col justify-end p-6 transition-opacity hover:bg-opacity-70">
-                <h3 className="text-white text-2xl font-bold mb-2">Find a NAMIWalk</h3>
-                <button className="bg-[#f96900] text-white py-2 px-4 rounded-lg font-bold mt-4 transition-transform hover:scale-105">
+                <h3 className="text-white text-2xl font-bold mb-2">National Helplines and Mental Health Organizations</h3>
+                <button className="bg-[#faffd5] text-color-5 py-2 px-4 rounded-lg font-bold mt-4 transition-transform hover:scale-105">
                   Read More
-                </button>
+                </button>   
               </div>
             </div>
 
@@ -167,7 +171,7 @@
                 className="w-full h-96 object-cover"
               />
               <div className="absolute inset-0 bg-[#00a7a233] bg-opacity-20 flex flex-col justify-end p-6 transition-opacity hover:bg-opacity-70">
-                <h3 className="text-white text-2xl font-bold mb-2">Attend the NAMI National Convention</h3>
+                <h3 className="text-white text-2xl font-bold mb-2">Educational Material, Blogs, Articles, and Recommended Readings on Mental Health Topic</h3>
                 <button className="bg-[#f96900] text-white py-2 px-4 rounded-lg font-bold mt-4 transition-transform hover:scale-105">
                   Read More
                 </button>
