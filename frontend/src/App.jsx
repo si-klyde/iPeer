@@ -17,6 +17,8 @@ import LoginClient from './pages/LoginClient.jsx';
 import BookAppointment from './pages/BookAppointment.jsx';
 import ViewAppointments from './pages/ViewAppointments.jsx';
 import ViewAppointmentsPeer from './pages/ViewAppointmentsPeer.jsx';
+import Unauthorized from './pages/Unauthorized.jsx';
+import UserProfile from './pages/UserProfile.jsx';
 import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
 import Information from './pages/Information.jsx';
@@ -52,6 +54,7 @@ const App = () => {
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={
@@ -105,6 +108,14 @@ const App = () => {
                             <Counseling />
                         </ProtectedRoute>
                     } />
+                    <Route path="/profile" element={
+                        <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
+                            <UserProfile />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Unauthorized Access Route */}
+                    <Route path="/unauthorized" element={<Unauthorized />} />
                 </Routes>
             </div>
             <Footer />

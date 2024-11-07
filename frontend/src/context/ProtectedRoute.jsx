@@ -53,7 +53,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!allowedRoles.includes(userRole)) {
     console.log('Access denied. User role:', userRole, 'Allowed roles:', allowedRoles);
-    return <Navigate to="/" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

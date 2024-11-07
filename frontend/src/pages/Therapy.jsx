@@ -1,107 +1,254 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import playTherapyImage from '../assets/therapy/play-therapy.webp';
 import musicTherapyImage from '../assets/therapy/music-therapy.webp';
 import artTherapyImage from '../assets/therapy/art-therapy.webp';
 
-const Therapy = () => {
-    const [selectedTherapy, setSelectedTherapy] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const buttonsSectionRef = useRef(null); // Create a ref for the buttons section
-    
-    const therapyData = {
-        play: {
-            title: 'Play Therapy',
-            details: 'Play therapy uses play to help children express feelings and develop problem-solving skills.',
-            image: playTherapyImage,
-        },
-        music: {
-            title: 'Music Therapy',
-            details: 'Music therapy uses music to address emotional, cognitive, and social needs.',
-            image: musicTherapyImage,
-        },
-        art: {
-            title: 'Art Therapy',
-            details: 'Art therapy allows individuals to express themselves creatively while addressing emotional challenges.',
-            image: artTherapyImage,
-        },
-    };
-
-    const handleButtonClick = (type) => {
-        if (selectedTherapy !== type) {
-            setSelectedTherapy(type);
-            setIsModalOpen(true);
-        }
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedTherapy(null);
-    };
-
-    const scrollToButtonsSection = () => {
-        buttonsSectionRef.current.scrollIntoView({ behavior: 'smooth' }); // Smooth scroll to the buttons section
-    };
-
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#E6F4EA] relative">
-            {/* Full-Screen Text Section */}
-            <div className="w-full h-screen flex flex-col items-center justify-center bg-[#E6F4EA] mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-                    Explore Different Types of Therapy
-                </h1>
-                <p className="text-lg md:text-xl text-gray-600 max-w-2xl text-center mb-8">
-                    Discover how different therapeutic approaches can help you or your loved ones on a journey of healing and self-expression. Each therapy offers unique benefits tailored to individual needs and preferences.
-                </p>
-                <button
-                    onClick={scrollToButtonsSection}
-                    className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-700 transition"
-                >
-                    Explore
+const TherapySection = ({ title, description, backgroundImage, isExpanded, onExpand }) => {
+  return (
+    <motion.div
+      layout
+      onClick={onExpand}
+      className={`relative cursor-pointer transition-all duration-500 ease-in-out ${
+        isExpanded ? 'w-screen' : 'w-[33.33vw]'
+      } h-screen`}
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      <div 
+        className={`absolute inset-0 flex items-center transition-all duration-500 ${
+          isExpanded ? 'bg-opacity-85 justify-center' : 'bg-opacity-60 hover:bg-opacity-70 justify-center'
+        } bg-black`}
+      >
+        {!isExpanded && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h2 className="text-4xl font-bold text-white transform -rotate-0 px-4 text-center">
+              {title}
+            </h2>
+          </div>
+        )}
+        
+        {isExpanded && (
+          <div className="w-full max-w-4xl px-8 py-6 text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h2 className="text-4xl font-bold mb-6 text-center">{title}</h2>
+              <p className="text-lg mb-8 text-center max-w-2xl mx-auto leading-relaxed">
+                {description}
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div className="bg-black/30 p-6 rounded-lg backdrop-blur-sm">
+                  <h3 className="text-xl font-semibold mb-4">Features</h3>
+                  <ul className="space-y-3">
+                    {title === 'Game Room' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Casual multiplayer games to help you unwind</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Chess, word games, and puzzle options</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Play solo or connect with other students</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Perfect study break activity</span>
+                        </li>
+                      </>
+                    ) : title === 'Music Room' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Curated playlists for studying and relaxation</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Focus-enhancing background music</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Ambient sounds for stress relief</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Create and share your own playlists</span>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Digital canvas for creative expression</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Calming gallery of student artwork</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Simple drawing tools and templates</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Share your artwork with the community</span>
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+                
+                <div className="bg-black/30 p-6 rounded-lg backdrop-blur-sm">
+                  <h3 className="text-xl font-semibold mb-4">Benefits</h3>
+                  <ul className="space-y-3">
+                    {title === 'Game Room' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Reduce academic stress through casual gaming</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Build connections with fellow students</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Improve focus and problem-solving skills</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Take mindful breaks between study sessions</span>
+                        </li>
+                      </>
+                    ) : title === 'Music Room' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Enhance study session productivity</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Manage stress through music therapy</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Improve sleep and relaxation</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Connect through shared musical experiences</span>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Express emotions through creativity</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Reduce anxiety through artistic activities</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Build a supportive creative community</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2 mt-1">•</span>
+                          <span>Take breaks from academic pressure</span>
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="mt-12 flex justify-center">
+                <button className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transition-colors">
+                  Enter Room
                 </button>
-            </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
-            {/* New Section with Background Color */}
-            <div ref={buttonsSectionRef} className="w-full h-screen bg-[rgb(255_249_249/var(--tw-bg-opacity))] flex flex-col items-center justify-center">
-                {/* Image Buttons Section with Even Distribution */}
-                <div className="flex justify-evenly w-full max-w-8xl px-4">
-                    {Object.keys(therapyData).map((type) => (
-                        <button
-                            key={type}
-                            onClick={() => handleButtonClick(type)}
-                            className={`relative w-full h-[calc(100vh/1-8rem)] rounded-md overflow-hidden shadow-lg cursor-pointer transition-transform duration-300 transform hover:scale-105 mx-2`} // Increased height for buttons
-                        >
-                            <img
-                                src={therapyData[type].image}
-                                alt={therapyData[type].title}
-                                className="absolute inset-0 object-cover w-full h-full"
-                            />
-                            <span className="ease-in duration-500 hover:text-green-500 relative z-10 flex items-center justify-center h-full w-full text-lg md:text-2xl font-bold text-white bg-black bg-opacity-40 rounded-md text-center uppercase">
-                                {therapyData[type].title}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+const Therapy = () => {
+  const [expandedSection, setExpandedSection] = useState(null);
+  const therapySectionRef = useRef(null);
 
-            {/* Modal */}
-            {isModalOpen && selectedTherapy && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white rounded-lg shadow-lg p-6 w-[800px] h-[600px] mx-auto flex flex-col"> {/* Modal now uses flex column */}
-                        <h2 className="text-2xl font-bold mb-2 text-center text-black">{therapyData[selectedTherapy].title}</h2> {/* Changed to black */}
-                        <img 
-                            src={therapyData[selectedTherapy].image} 
-                            alt={therapyData[selectedTherapy].title} 
-                            className="w-full h-1/2 object-cover rounded-md mb-4" // Set the image height to half of the modal
-                        />
-                        <p className="text-lg mb-4 flex-1 text-center text-black">{therapyData[selectedTherapy].details}</p> {/* Changed to black and allowed the text to take remaining space */}
-                        <div className="mt-auto flex justify-end"> {/* Align the button to the bottom right */}
-                            <button onClick={closeModal} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+  const scrollToTherapies = () => {
+    therapySectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
+
+  const therapyOptions = [
+    {
+      id: 'play',
+      title: 'Game Room',
+      description: 'Take a break from academic stress with our collection of relaxing games. Whether you want to play solo or connect with other students, our Game Room offers a perfect escape for quick study breaks and stress relief.',
+      backgroundImage: playTherapyImage
+    },
+    {
+      id: 'music',
+      title: 'Music Room',
+      description: 'Immerse yourself in carefully curated playlists designed for studying, relaxation, and stress relief. Our Music Room provides the perfect soundscape for focused study sessions, meditation, or simply unwinding after a long day of classes.',
+      backgroundImage: musicTherapyImage
+    },
+    {
+      id: 'art',
+      title: 'Art Room',
+      description: 'Express yourself through digital art or find peace in viewing our student art gallery. Our Art Room provides simple creative tools and a supportive space for artistic expression, whether you are an experienced artist or just looking to doodle away some stress.',
+      backgroundImage: artTherapyImage
+    }
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#E6F4EA] to-[#fff9f9] px-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 text-center">
+          Find Your Space to Unwind
+        </h1>
+        <p className="text-lg md:text-xl text-gray-600 max-w-2xl text-center mb-8">
+          Discover different ways to de-stress and relax between classes, during study breaks, or whenever you need a moment for yourself.
+        </p>
+        <button 
+          onClick={scrollToTherapies}
+          className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-700 transition"
+        >
+          Explore Rooms
+        </button>
+      </div>
+
+      <div ref={therapySectionRef} className="relative h-screen flex overflow-hidden">
+        {therapyOptions.map((therapy) => (
+          <TherapySection
+            key={therapy.id}
+            title={therapy.title}
+            description={therapy.description}
+            backgroundImage={therapy.backgroundImage}
+            isExpanded={expandedSection === therapy.id}
+            onExpand={() => setExpandedSection(expandedSection === therapy.id ? null : therapy.id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default Therapy;
