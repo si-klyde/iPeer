@@ -10,15 +10,22 @@ const BookAppointment = () => {
   const [peerCounselors, setPeerCounselors] = useState([]);
   const [selectedPeerCounselor, setSelectedPeerCounselor] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [availabilityError, setAvailabilityError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPeerCounselors = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/peer-counselors');
-        setPeerCounselors(response.data);
-      } catch (error) {
-        console.error('Error fetching peer counselors:', error);
+      const cachedCounselors = localStorage.getItem('peerCounselors');
+      if (cachedCounselors) {
+        setPeerCounselors(JSON.parse(cachedCounselors));
+      } else {
+        try {
+          const response = await axios.get('http://localhost:5000/api/peer-counselors');
+          setPeerCounselors(response.data);
+          localStorage.setItem('peerCounselors', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Error fetching peer counselors:', error);
+        }
       }
     };
 
@@ -35,9 +42,32 @@ const BookAppointment = () => {
     });
   }, [navigate]);
 
+  const checkAvailability = async (peerCounselorId, date, time) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/check-availability/${peerCounselorId}`,
+        { params: { date, time } }
+      );
+      return response.data.available;
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      return false;
+    }
+  };
+
   const handleBookAppointment = async (e) => {
     e.preventDefault();
+    setAvailabilityError('');
+
     try {
+      // Check availability first
+      const isAvailable = await checkAvailability(selectedPeerCounselor, date, time);
+      
+      if (!isAvailable) {
+        setAvailabilityError('The selected peer counselor is not available at this time. Please choose another date/time.');
+        return;
+      }
+
       const response = await axios.post('http://localhost:5000/api/create-appointment', {
         date,
         time,
@@ -45,11 +75,15 @@ const BookAppointment = () => {
         peerCounselorId: selectedPeerCounselor,
         userId: currentUserId,
       });
+      
       console.log('Appointment booked successfully:', response.data);
-      //const { appointmentId, roomId } = response.data;
       navigate(`/appointments/client`);
     } catch (error) {
-      console.error('Error booking appointment:', error);
+      if (error.response && error.response.status === 409) {
+        setAvailabilityError(error.response.data.error);
+      } else {
+        console.error('Error booking appointment:', error);
+      }
     }
   };
 
@@ -57,28 +91,35 @@ const BookAppointment = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <form onSubmit={handleBookAppointment} className="p-6 bg-white shadow-md rounded-lg">
         <h2 className="text-2xl mb-4">Book an Appointment</h2>
+        
+        {availabilityError && (
+          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+            {availabilityError}
+          </div>
+        )}
+
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="mb-4 p-2 border rounded"
+          className="mb-4 p-2 border rounded w-full"
         />
         <input
           type="time"
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          className="mb-4 p-2 border rounded"
+          className="mb-4 p-2 border rounded w-full"
         />
         <textarea
           placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="mb-4 p-2 border rounded"
+          className="mb-4 p-2 border rounded w-full"
         />
         <select
           value={selectedPeerCounselor}
           onChange={(e) => setSelectedPeerCounselor(e.target.value)}
-          className="mb-4 p-2 border rounded"
+          className="mb-4 p-2 border rounded w-full"
         >
           <option value="">Select a Peer Counselor</option>
           {peerCounselors.map((counselor) => (
@@ -87,7 +128,13 @@ const BookAppointment = () => {
             </option>
           ))}
         </select>
-        <button type="submit" className="p-2 bg-blue-500 text-white rounded">Book Appointment</button>
+        <button 
+          type="submit" 
+          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          disabled={!date || !time || !selectedPeerCounselor}
+        >
+          Book Appointment
+        </button>
       </form>
     </div>
   );

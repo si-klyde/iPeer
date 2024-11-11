@@ -5,7 +5,7 @@ import logo from '../assets/ipeer-icon.png';
 
 const Footer = () => {
   return (
-    <footer className="bg-green-600 text-white py-8 font-mono">
+    <footer className="bg-green-600 text-white py-8 font-mono h-[50vh]">
       <div className="container mx-auto flex justify-between items-start">
         {/* Left Section: Title */}
         <a href="" className='text-2xl font-semibold flex items-center space-x-3'>
@@ -20,19 +20,19 @@ const Footer = () => {
           <div>
             <h4 className="text-sm font-semibold mb-4">MENU</h4>
             <ul>
-              <li className="mb-2"><a href="#" className="hover:underline">About</a></li>
-              <li className="mb-2"><a href="#" className="hover:underline">Service</a></li>
-              <li><a href="#" className="hover:underline">Contact</a></li>
+              <li className="mb-2"><a href="/home" className="hover:underline">Home</a></li>
+              <li className="mb-2"><a href="/therapy" className="hover:underline">Therapy</a></li>
+              <li className="mb-2"><a href="#" className="hover:underline">Calendar</a></li>
+              <li className="mb-2"><a href="/information" className="hover:underline">Information</a></li>
+              <li><a href="/waitingroom" className="hover:underline">Counseling</a></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-sm font-semibold mb-4">SERVICE</h4>
             <ul>
-              <li className="mb-2"><a href="#" className="hover:underline">Health Promotion</a></li>
-              <li className="mb-2"><a href="#" className="hover:underline">Disease Prevention</a></li>
-              <li className="mb-2"><a href="#" className="hover:underline">Diagnosis & Treatment</a></li>
-              <li><a href="#" className="hover:underline">Rehabilitation</a></li>
+              <li className="mb-2"><a href="#" className="hover:underline">Peer Counseling</a></li>
+              <li className="mb-2"><a href="#" className="hover:underline">Online Therapy</a></li>
             </ul>
           </div>
         </div>
