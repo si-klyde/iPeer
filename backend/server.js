@@ -7,6 +7,8 @@ const peerCounselorRoutes = require('./routes/peerCounselor');
 const clientRoutes = require('./routes/client');
 const cors = require('cors');
 
+require('./services/schedulerService');
+
 app.use(cors({
   origin: 'http://localhost:5173' //frontend URL
 }));
