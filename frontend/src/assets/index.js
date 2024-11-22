@@ -116,7 +116,7 @@ export {
   aboutImage,
   sectionImage, 
   mindImage,
-  calendarImage,
+  // calendarImage,
   curve1,
   aboutGif,
   aboutSecondSection,
