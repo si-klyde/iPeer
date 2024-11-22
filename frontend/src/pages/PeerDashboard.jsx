@@ -6,7 +6,7 @@ import axios from 'axios';
 
 const PeerDashboard = () => {
   const navigate = useNavigate();
-  const [isOnline, setIsOnline] = useState(true);
+  //const [isOnline, setIsOnline] = useState(true);
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [clients, setClients] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -105,7 +105,7 @@ const PeerDashboard = () => {
                 </div>
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => navigate(`/counseling/${appointment.id}`)}
+                    onClick={() => navigate(`/counseling/${appointment.roomId}`)}
                     className="px-3 py-1 text-sm border border-gray-300 rounded-md
                              hover:bg-gray-50 transition-colors duration-200"
                   >
