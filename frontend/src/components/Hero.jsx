@@ -52,7 +52,7 @@ const Hero = () => {
       {/* Top section */}
       <motion.section
         className="relative w-full h-[100vh] bg-[#E6F4EA]"
-        id="hero"
+        id="hero" 
         ref={parallaxRef}
         variants={fadeUpVariants}
         initial="hidden"
@@ -61,7 +61,7 @@ const Hero = () => {
         <div className="relative ml-15 flex items-center justify-end w-full h-screen md:h-screen">
           <img src={heroImage} alt="Hero Image" className="w-2/3 md:w-1/3 md:h-96 lg:h-auto lg:w-2/3 h-auto sd:w-1/3" />
         </div>
-
+    
         {/* Text on top of the background */}
         <div className="lg:ml-20 absolute inset-0 flex items-center justify-start p-10">
           <div className="text-left">

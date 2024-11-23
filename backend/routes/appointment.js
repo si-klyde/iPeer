@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = require('../models/appointment');
 const { db } = require('../firebaseAdmin');
+const { sendAppointmentConfirmation } = require('../services/emailService');
 
 // Function to check peer counselor availability
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
@@ -24,7 +25,6 @@ const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
 router.post('/create-appointment', async (req, res) => {
   const appointmentData = req.body;
   try {
-    // Check availability before creating appointment
     const isAvailable = await checkPeerCounselorAvailability(
       appointmentData.peerCounselorId,
       appointmentData.date,
@@ -38,7 +38,24 @@ router.post('/create-appointment', async (req, res) => {
     }
 
     const { appointmentId, roomId } = await createAppointment(appointmentData);
-    res.status(201).send({ message: 'Appointment created successfully', appointmentId, roomId });
+    
+    // Fetch client and counselor details for email
+    const clientDoc = await db.collection('users').doc(appointmentData.userId).get();
+    const counselorDoc = await db.collection('users').doc(appointmentData.peerCounselorId).get();
+    
+    await sendAppointmentConfirmation(
+      clientDoc.data().email,
+      counselorDoc.data().email,
+      {
+        date: appointmentData.date,
+        time: appointmentData.time,
+        clientName: clientDoc.data().name,
+        peerCounselorName: counselorDoc.data().name,
+        roomLink: `http://localhost:5173/counseling/${roomId}` //palitan kapag idedeploy na
+      }
+    );
+
+    res.status(201).send({ appointmentId, roomId });
   } catch (error) {
     console.error('Error creating appointment:', error);
     res.status(500).send({ error: 'Error creating appointment' });

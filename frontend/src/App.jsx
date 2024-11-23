@@ -21,7 +21,8 @@ import Unauthorized from './pages/Unauthorized.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
-import Information from './pages/Information.jsx';
+import Information from './pages/Information.jsx';  
+import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
 import SelfHelp from './pages/SelfHelp.jsx';
@@ -54,6 +55,7 @@ const App = () => {
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    
                     
 
                     {/* Client-Only Routes */}
@@ -94,6 +96,11 @@ const App = () => {
                     <Route path="/appointments/peer-counselor" element={
                         <ProtectedRoute allowedRoles={['peer-counselor']}>
                             <ViewAppointmentsPeer />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/peer-dashboard" element={
+                        <ProtectedRoute allowedRoles={['peer-counselor']}>
+                            <PeerDashboard />
                         </ProtectedRoute>
                     } />
 
