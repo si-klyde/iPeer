@@ -7,5 +7,9 @@ export default defineConfig(() => {
       outDir: 'build',
     },
     plugins: [react()],
+    assetsInclude: ['**/*.JPG'], // Include uppercase .JPG files as assets
+    optimizeDeps: {
+      include: ['swiper']
+    }
   };
 });

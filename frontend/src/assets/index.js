@@ -35,6 +35,8 @@ import infoImage from "./information/info-image.jpg";
 import infoImage2 from "./information/info-image2.jpg"
 import additional1 from "./information/additional-1.jpg";
 import additional2 from "./information/additional-2.jpg";
+import onCampusBG from "./information/onCampusBG.JPG";
+import kaugos from "./information/kaugos.jpg";
 
 import curve1 from "./collaboration/curve-1.svg";
 import curve2 from "./collaboration/curve-2.svg";
@@ -124,6 +126,8 @@ export {
   infoImage2,
   additional1,
   additional2,
+  onCampusBG,
+  kaugos,
   curve2,
   discord,
   figma,
