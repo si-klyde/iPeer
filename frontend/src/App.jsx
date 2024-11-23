@@ -21,8 +21,11 @@ import Unauthorized from './pages/Unauthorized.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
-import Information from './pages/Information.jsx';
+import Information from './pages/Information.jsx';  
 import PeerDashboard from './pages/PeerDashboard.jsx';
+import OnCampus from './pages/OnCampus.jsx';
+import OffCampus from './pages/OffCampus.jsx';
+import SelfHelp from './pages/SelfHelp.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -45,6 +48,9 @@ const App = () => {
                     <Route path="/home" element={<Hero />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/information" element={<Information />} />
+                    <Route path="/onCampus" element={<OnCampus/>} />
+                    <Route path="/offCampus" element={<OffCampus/>} />
+                    <Route path="/selfHelp" element={<SelfHelp/>} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
