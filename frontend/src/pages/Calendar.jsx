@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Button from '../components/Button';
+import { aboutThird, additional1, additional2, infoImage, infoImage2 } from '../assets';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -24,7 +26,7 @@ const Calendar = () => {
   
   const years = Array.from({ length: 10 }, (_, i) => selectedDate.getFullYear() - 5 + i);
 
-  // Mock Event Data (added event per day as an example)
+  // Mock Event Data (added event per day as an example)      
   const eventsPerDay = {
     1: 'Event A',
     3: 'Event B',
@@ -246,9 +248,10 @@ const Calendar = () => {
       )}
 
       {/* Modal for individual events */}
+      {/* Modal for individual events */}
       {eventModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-950 bg-opacity-50">
-          <div className="bg-white p-8 rounded shadow-lg w-3/4 h-3/4 relative text-color-5">
+          <div className="bg-white p-8 rounded shadow-lg w-3/4 h-3/4 relative text-color-5 overflow-y-auto">
             {/* Close button */}
             <button 
               className="absolute top-4 right-4 text-2xl font-bold text-white bg-green-500 rounded-full w-10 h-10 flex items-center justify-center hover:bg-green-600 hover:scale-110 transition-transform duration-200 ease-in-out"
@@ -257,15 +260,51 @@ const Calendar = () => {
               &times;
             </button>
             
-            <h2 className="text-3xl font-semibold mb-4">Event Details</h2>
+            <h2 className="text-3xl font-semibold mb-8 text-center">Event Details</h2>
             
-            {/* Display selected event details */}
-            <div className="text-lg text-black bg-gray-100 p-6 rounded-md border border-green-500">
-              {selectedEvent}
+            
+              {/* Display selected event details */}
+              <div className="text-lg text-black bg-gray-100 p-6 rounded-md border-2 border-green-500 mb-8">
+              <div className="align-center mb-2 text-xl font-sans text-black p-3 inline-block rounded-full border border-green-500">
+               {selectedEvent}
+              </div>
+
+                {/* Wrapper for horizontal alignment */}
+                <div className="flex flex-col lg:flex-row items-center lg:items-start w-full space-y-8 lg:space-y-0 lg:space-x-8">
+
+                {/* Image with overlay text */}
+                <div className="relative w-full lg:w-1/2 h-96 max-w-lg overflow-hidden bg-white rounded-lg shadow-xl">
+                  <img 
+                    src={additional1} 
+                    alt="Find a NAMIWalk" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-[#00a7a233] bg-opacity-20 flex flex-col justify-end p-6 transition-opacity hover:bg-opacity-70">
+                    <h3 className="text-black text-2xl font-bold mb-2 text-center">Find a NAMIWalk</h3>
+                  </div> 
+                </div>
+
+                {/* Text content and CTA button */}
+                <div className="flex flex-col items-start w-full lg:w-1/2 space-y-4 text-black max-w-lg">
+                  <p className="text-5xl font-bold leading-tight mt-7">
+                    A GENEtle Reminder
+                  </p>
+                  <p className="text-md text-gray-700 pb-5">
+                  Stay tuned for our uplifting weekly activities this month—safe spaces to grow, share, 
+                  and find comfort in community. Healing is a journey, and every step is worth celebrating!👣
+                  </p>
+                  <button className="bg-green-500 text-white ml-40 py-2 px-8 rounded-lg font-bold transition-transform hover:scale-105">
+                    View Event
+                  </button>
+                </div>
+
+              </div>
+
             </div>
           </div>
         </div>
       )}
+
 
     </div>
   );
