@@ -68,12 +68,14 @@ const VideoCall = ({ roomId, setRoomId }) => {
                 sdp: offerDescription.sdp,
                 type: offerDescription.type
             };
-            await setDoc(callDoc, { offer });
+            await updateDoc(callDoc, { 
+                rtcData: { offer }
+            }, { merge: true });
     
             onSnapshot(callDoc, snapshot => {
                 const data = snapshot.data();
-                if (data?.answer && pc.signalingState === 'have-local-offer') {
-                    const answerDescription = new RTCSessionDescription(data.answer);
+                if (data?.rtcData?.offer && pc.signalingState === 'have-local-offer') {
+                    const answerDescription = new RTCSessionDescription(data.rtcData.offer);
                     pc.setRemoteDescription(answerDescription);
                 }
             });

@@ -158,19 +158,12 @@ const Counseling = () => {
                 try {
                     const roomRef = doc(firestore, 'calls', roomId);
                     const roomSnapshot = await getDoc(roomRef);
-    
+        
                     if (roomSnapshot.exists()) {
-                        if (location.state?.isCreating) {
-                            // If we're supposed to be creating a room but it already exists,
-                            // show an error and redirect to waiting room
-                            alert("This room already exists. Please try creating a new room.");
-                            navigate('/');
-                        } else {
-                            setIsValidRoom(true);
-                        }
+                        // Room exists and we're not creating it - this is fine
+                        setIsValidRoom(true);
                     } else if (location.state?.isCreating) {
-                        // Creating a new room
-                        await setDoc(roomRef, { createdAt: new Date() });
+                        // We're creating the room - this is also fine
                         setIsValidRoom(true);
                     } else {
                         alert("This room does not exist. Redirecting to waiting room.");
@@ -182,13 +175,13 @@ const Counseling = () => {
                     navigate('/');
                 }
             } else {
-                // If there's no roomId, set the room as invalid
                 setIsValidRoom(false);
             }
         };
     
         checkRoom();
     }, [roomId, navigate, location.state]);
+    
 
     if (!isValidRoom) {
         return <div className="min-h-screen flex items-center justify-center text-white">Checking room validity...</div>;
