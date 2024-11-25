@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { doc, getDoc, setDoc,updateDoc } from 'firebase/firestore';
 import VideoCall from '../components/VideoCall';
 import Chat from '../components/Chat';
 import { Save, X, ClipboardEdit } from 'lucide-react';
@@ -63,15 +63,43 @@ const Counseling = () => {
     useEffect(() => {
         const fetchNotes = async () => {
             if (roomId) {
-                const roomRef = doc(firestore, 'calls', roomId);
-                const roomDoc = await getDoc(roomRef);
-                if (roomDoc.exists() && roomDoc.data().notes) {
-                    setNotes(roomDoc.data().notes);
+                try {
+                    const token = await auth.currentUser.getIdToken();
+                    const response = await axios.get(`http://localhost:5000/api/notes/${roomId}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                    setNotes(response.data.content);
+                } catch (error) {
+                    console.error('Error fetching notes:', error);
                 }
             }
         };
         fetchNotes();
     }, [roomId]);
+
+    const handleSaveNotes = async () => {
+        if (!notes.trim() || !isValidRoom) return;
+        
+        setIsSaving(true);
+        try {
+            const token = await auth.currentUser.getIdToken();
+            await axios.post('http://localhost:5000/api/save-note', {
+                roomId,
+                notes
+                //clientId: location.state?.clientId
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setLastSaved(new Date());
+        } catch (error) {
+            console.error('Error saving notes:', error);
+        }
+        setIsSaving(false);
+    };
 
     useEffect(() => {
         const autoSaveInterval = setInterval(async () => {
@@ -83,22 +111,6 @@ const Counseling = () => {
         return () => clearInterval(autoSaveInterval);
     }, [notes, isValidRoom]);
 
-    const handleSaveNotes = async () => {
-        if (!notes.trim() || !isValidRoom) return;
-        
-        setIsSaving(true);
-        try {
-            const roomRef = doc(firestore, 'calls', roomId);
-            await updateDoc(roomRef, {
-                notes: notes,
-                lastUpdated: new Date()
-            });
-            setLastSaved(new Date());
-        } catch (error) {
-            console.error('Error saving notes:', error);
-        }
-        setIsSaving(false);
-    };
 
     const NotesModal = () => (
         <div className={`fixed right-4 bottom-4 z-50 ${isModalOpen ? '' : 'hidden'}`}>
