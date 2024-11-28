@@ -24,13 +24,15 @@ const ensureNotesCollection = async (req, res, next) => {
 // Route to save notes
 router.post('/save-note', ensureNotesCollection, async (req, res) => {
     const authHeader = req.headers.authorization;
-    const { roomId, notes } = req.body;
+    const { roomId, notes, clientId } = req.body;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('Missing fields:', { roomId, notes, clientId });
         return res.status(401).json({ error: 'No token provided' });
     }
 
-    if (!roomId || notes === undefined) {
+    if (!roomId || !notes || !clientId) {
+        console.log('Missing fields:', { roomId, notes, clientId });
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -40,17 +42,25 @@ router.post('/save-note', ensureNotesCollection, async (req, res) => {
         const decodedToken = await auth.verifyIdToken(token);
         const userDoc = await db.collection('users').doc(decodedToken.uid).get();
         
+        console.log('User role:', userDoc.data()?.role);
+
         if (!userDoc.exists || userDoc.data().role !== 'peer-counselor') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
         const notesRef = db.collection('notes');
-        const existingNotesQuery = await notesRef.where('roomId', '==', roomId).get();
+        
+        const existingNotesQuery = await notesRef
+            .where('clientId', '==', clientId)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
 
         if (existingNotesQuery.empty) {
-            // Create new note document
+            console.log('Creating new note');
             const newNoteRef = await notesRef.add({
                 roomId,
+                clientId,
                 counselorId: decodedToken.uid,
                 content: notes,
                 createdAt: new Date(),
@@ -58,13 +68,13 @@ router.post('/save-note', ensureNotesCollection, async (req, res) => {
             });
             console.log('New note created with ID:', newNoteRef.id);
         } else {
-            // Update existing note
+            console.log('Updating existing note');
             const noteDoc = existingNotesQuery.docs[0];
             await noteDoc.ref.update({
                 content: notes,
                 lastUpdated: new Date()
             });
-            console.log('Note updated for room:', roomId);
+            console.log('Note updated');
         }
 
         res.status(200).json({ message: 'Notes saved successfully' });
@@ -75,16 +85,12 @@ router.post('/save-note', ensureNotesCollection, async (req, res) => {
 });
 
 // Route to get notes
-router.get('/notes/:roomId', ensureNotesCollection, async (req, res) => {
+router.get('/notes/client/:clientId', ensureNotesCollection, async (req, res) => {
     const authHeader = req.headers.authorization;
-    const { roomId } = req.params;
+    const { clientId } = req.params;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'No token provided' });
-    }
-
-    if (!roomId) {
-        return res.status(400).json({ error: 'Room ID is required' });
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -97,28 +103,17 @@ router.get('/notes/:roomId', ensureNotesCollection, async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        // Check if notes collection exists (double-check)
-        const collections = await db.listCollections();
-        const notesCollection = collections.find(col => col.id === 'notes');
-        
-        if (!notesCollection) {
-            console.log('Notes collection does not exist during fetch, creating...');
-            await db.collection('notes').doc('_placeholder').set({
-                isPlaceholder: true,
-                createdAt: new Date(),
-                lastUpdated: new Date()
-            });
-        }
-
         const notesRef = db.collection('notes');
-        const notesQuery = await notesRef.where('roomId', '==', roomId).get();
+        const notesQuery = await notesRef
+            .where('clientId', '==', clientId)
+            .orderBy('createdAt', 'desc')
+            .get();
 
         if (notesQuery.empty) {
             return res.status(200).json({ content: '' });
         }
 
         const noteData = notesQuery.docs[0].data();
-        console.log('Note fetched for room:', roomId);
         res.status(200).json({ content: noteData.content });
     } catch (error) {
         console.error('Error fetching notes:', error);

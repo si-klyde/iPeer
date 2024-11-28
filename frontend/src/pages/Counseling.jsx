@@ -13,6 +13,8 @@ const Counseling = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const isCreating = location.state?.isCreating;
+    const [clientId, setClientId] = useState(null);
+
 
     const [isValidRoom, setIsValidRoom] = useState(false);
     const [currentRoomId, setCurrentRoomId] = useState(roomId);
@@ -47,6 +49,30 @@ const Counseling = () => {
         checkUserRole();
     }, []);
     
+    useEffect(() => {
+        const fetchRoomData = async () => {
+            if (roomId) {
+                try {
+                    const roomRef = doc(firestore, 'calls', roomId);
+                    const roomSnapshot = await getDoc(roomRef);
+                    if (roomSnapshot.exists()) {
+                        const roomData = roomSnapshot.data();
+                        console.log('Room data fetched:', roomData); // Add this line
+                        setClientId(roomData.clientId);
+                        console.log('Setting clientId:', roomData.clientId); // Add this line
+                    } else {
+                        console.log('Room does not exist'); // Add this line
+                    }
+                } catch (error) {
+                    console.error("Error fetching room data:", error);
+                }
+            } else {
+                console.log('No roomId provided'); // Add this line
+            }
+        };
+    
+        fetchRoomData();
+    }, [roomId]);
 
     const handleNotesChange = (e) => {
         const { selectionStart } = e.target;
@@ -62,10 +88,12 @@ const Counseling = () => {
 
     useEffect(() => {
         const fetchNotes = async () => {
-            if (roomId) {
+            const currentClientId = clientId || location.state?.clientId;
+            
+            if (currentClientId) {
                 try {
                     const token = await auth.currentUser.getIdToken();
-                    const response = await axios.get(`http://localhost:5000/api/notes/${roomId}`, {
+                    const response = await axios.get(`http://localhost:5000/api/notes/client/${currentClientId}`, {
                         headers: {
                             Authorization: `Bearer ${token}`
                         }
@@ -74,21 +102,40 @@ const Counseling = () => {
                 } catch (error) {
                     console.error('Error fetching notes:', error);
                 }
+            } else {
+                console.log('No clientId available for fetching notes');
             }
         };
         fetchNotes();
-    }, [roomId]);
+    }, [roomId, clientId, location.state]);
 
     const handleSaveNotes = async () => {
-        if (!notes.trim() || !isValidRoom) return;
+        // Try to get clientId from location state if not set from room data
+        const currentClientId = clientId || location.state?.clientId;
+        
+        console.log('Save notes details:', { 
+            roomId, 
+            clientId: currentClientId, 
+            notesLength: notes.length,
+            locationState: location.state
+        });
+    
+        if (!notes.trim() || !isValidRoom || !currentClientId) {
+            console.log('Save notes conditions not met', { 
+                notesEmpty: !notes.trim(), 
+                isValidRoom, 
+                clientId: currentClientId 
+            });
+            return;
+        }
         
         setIsSaving(true);
         try {
             const token = await auth.currentUser.getIdToken();
             await axios.post('http://localhost:5000/api/save-note', {
                 roomId,
-                notes
-                //clientId: location.state?.clientId
+                notes,
+                clientId: currentClientId
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -97,6 +144,9 @@ const Counseling = () => {
             setLastSaved(new Date());
         } catch (error) {
             console.error('Error saving notes:', error);
+            if (error.response) {
+                console.error('Error response:', error.response.data);
+            }
         }
         setIsSaving(false);
     };
