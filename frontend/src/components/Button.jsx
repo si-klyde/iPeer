@@ -1,4 +1,4 @@
-const Button = ({ className, href, onClick, children, px, white }) => {
+const Button = ({ className, href, onClick, children, px, white, target, rel }) => {
   // Set the base class names for the button, including padding, colors, and border
   const classes = `button relative inline-flex items-center justify-center h-11 transition-colors ${
     px || "px-7"
@@ -19,7 +19,7 @@ const Button = ({ className, href, onClick, children, px, white }) => {
 
   // Function to render an anchor (link) element
   const renderLink = () => (
-    <a href={href} className={classes}>
+    <a href={href} className={classes} target={target} rel={rel}>
       <span className={spanClasses}>{children}</span>
     </a>
   );

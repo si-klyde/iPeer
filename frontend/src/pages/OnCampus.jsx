@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../components/Button';
 import { FaBuilding, FaPeopleCarry, FaPhone, FaBook, FaUsers, FaUserNurse } from 'react-icons/fa';
-import { onCampusBG, aboutImage, kaugos } from '../assets';
+import { hotlines } from '../assets';
 import Carousel from '../components/Carousel';
 
 
@@ -23,7 +23,7 @@ const OnCampus = () => {
         <div className="absolute inset-0 bg-[#FFF9F9]"></div> {/* Background overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center p-10 space-y-6 z-20">
           <div className="text-center">
-            <h1 className="text-5xl lg:text-6xl text-black font-extrabold tracking-wide drop-shadow-2xl mb-10">
+            <h1 className="text-5xl lg:text-6xl text-black font-extrabold tracking-normal drop-shadow-2xl mb-10">
               On-Campus Resources
             </h1>
             <p className="text-md lg:text-md text-gray-700 text-opacity-90 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
@@ -46,18 +46,18 @@ const OnCampus = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             
             {/* Card 1: Location */}
-            <a href="#" className="group bg-white h-80 shadow-lg rounded-lg p-10 transition-colors duration-300 hover:shadow-xl">
+            <a href="#guidance-offices" className="group bg-white h-80 shadow-lg rounded-lg p-10 transition-colors duration-300 hover:shadow-xl">
               <div className="flex items-center justify-center">
                 <FaBuilding className="size-14 text-black mb-8" />
               </div>
-              <h3 className="text-xl text-black font-semibold mb-6 group-hover:text-green-500">Guidance Offices and Counseling Centers</h3>
+              <h3 className="text-xl text-black font-semibold mb-6 group-hover:text-green-500">Guidance Offices</h3>
               <p className="text-gray-600 mt-4">
                 Explore on-campus locations for guidance and counseling services.
               </p>
             </a>
 
-            {/* Card 2: Operating Hours */}
-            <a href="#" className="group bg-white h-80 shadow-lg rounded-lg p-10 transition-colors duration-300 hover:shadow-xl">
+            {/* Card 2: Support Staff */}
+            <a href="#carousel-section" className="group bg-white h-80 shadow-lg rounded-lg p-10 transition-colors duration-300 hover:shadow-xl">
               <div className="flex items-center justify-center">
                 <FaPeopleCarry className="size-14 text-black mb-8" />
               </div>
@@ -67,8 +67,8 @@ const OnCampus = () => {
               </p>
             </a>
 
-            {/* Card 3: Counseling Services */}
-            <a href="#" className="group bg-white h-80 shadow-lg rounded-lg p-10 transition-colors duration-300 hover:shadow-xl">
+            {/* Card 3: Hotlines */}
+            <a href="#hotlines" className="group bg-white h-80 shadow-lg rounded-lg p-10 transition-colors duration-300 hover:shadow-xl">
               <div className="flex items-center justify-center">
                 <FaPhone className="size-14 text-black mb-8" />
               </div>
@@ -82,81 +82,184 @@ const OnCampus = () => {
         </div>
       </section>
 
+          {/* Divider */}
+        <div className="w-5/6 h-0.5 bg-black/25 mx-auto my-12"></div>
 
       {/* Guidance Offices Section */}
       <section
-        id="top"
-        className="relative w-full h-[80vh] flex flex-col items-center justify-between p-20 bg-[#E6F4EA] bg-opacity-90 mt-20"
+        id="guidance-offices"
+        className="relative w-full py-20 bg-[#FFF9F9] flex flex-col items-center"
       >
-        {/* Image and Text Section */}
-        <div className="flex w-full justify-between items-center">
-          {/* Image Section */}
-          <div className="relative w-1/2 flex justify-center z-10">
-            <img
-              src={aboutImage}
-              alt="About Image"
-              className="ml-12 -mr-5 w-3/4 h-[400px] object-cover rounded-md"
-            />
+        <div className="container mx-auto px-6 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Text Content */}
+          <div>
+            <h2 className="text-4xl font-bold text-gray-800 mb-6">On-Campus Guidance Office</h2>
+            <p className="text-gray-700 text-sm text-justify mb-4">
+              The Guidance Office located inside the Bicol University Office of Student Affairs and Services (OSAS) is dedicated to supporting the mental health and
+              well-being of students. The Office facilities offer individual counseling, 
+              group sessions, and a range of workshops to enhance personal growth 
+              and academic success.
+            </p>
+            <ul className="text-gray-700 space-y-2 mb-6">
+              <li>• Professional counseling staff</li>
+              <li>• Private consultation rooms</li>
+              <li>• Support for academic and personal challenges</li>
+              <li>• Telecounseling</li>
+            </ul>
+            <div className="flex flex-col space-y-4">
+            <Button
+              className="bg-green-500 w-2/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
+              onClick={() => window.open(
+                "https://docs.google.com/forms/d/1gXlsWQNrgqh2ORWlw4heOfSlaw1jxd1GOXBegycZErc/viewform?ts=5f6ac62e&edit_requested=true&fbclid=IwZXh0bgNhZW0CMTAAAR3tFViEYFwYgpXlEgLlhVtDDxC8NoEw-f8w2M7ZfU-cMuOcoVaKThMbY4Y_aem_M6OIsCvUEoHKXVHpIPsXAA",
+                "_blank",
+                "noopener,noreferrer"
+              )}
+            >
+              Bicol University Counseling Intake Form
+            </Button>
+
+            </div>
           </div>
 
-          {/* Text Section */}
-          <div className="relative w-1/2 flex flex-col justify-center space-y-4 text-black pl-16 z-10">
-            <p className="font-mono text-sm text-white opacity-90">On-Campus Resources</p>
-            <p className="text-5xl font-bold leading-tight text-gray-100 drop-shadow-xl">
-              Guidance Offices and Counseling Centers
-            </p>
-            <p className="text-md text-gray-50 drop-shadow-lg w-3/4 pb-5">
-              Here at MindSpace Hub, we foster personal growth and mental wellness
-              through peer counseling, supporting you every step of the way.
-            </p>
-            <Button white className="w-64" href="#features">
-              View
-            </Button>
+          {/* Map and Contact Details */}
+          <div>
+            <div className="mb-6">
+              <iframe
+                title="Campus Location"
+                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d461.6343251888323!2d123.72186574735191!3d13.14240346731504!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2sph!4v1732343629831!5m2!1sen!2sphreferrerpolicy=%22no-referrer-when-downgrade"
+                width="100%"
+                height="300"
+                className="rounded-md shadow-lg"
+                allowFullScreen=""
+                loading="lazy"
+              ></iframe>
+            </div>
+            <div className=" flex flex-row space-y-0 space-x-10">
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Contact Us</h3>
+                <p className="text-md text-gray-700">4PRC+XHQ, BU Main Campus Rd, Daraga, Albay</p>
+                <p className="text-md text-gray-700">Bicol University</p>
+                <p className="text-blue-600 hover:underline">
+                  <a href="tel:+1234567890">+1 234 567 890</a>
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Hours of Operation</h3>
+                <p className="text-gray-700">Mon-Fri: 8 AM - 5 PM</p>
+                <p className="text-gray-700">Sat-Sun: Closed</p>
+              </div>
+            </div>
           </div>
         </div>
-
       </section>
+
+      {/* Divider */}
+      <div className="w-5/6 h-0.5 bg-black/25 mx-auto my-12"></div>
 
       {/* Staff Section */}
-       <Carousel className="h-[100vh]" />
+       <section id="carousel-section">
+        <Carousel className="h-[100vh]" />
+      </section>
+
+       {/* Divider */}
+       <div className="w-5/6 h-0.5 bg-black/25 mx-auto my-12"></div>
 
       {/* Hotlines Section */}
-      <section
-        id="top"
-        className="relative w-full h-[120vh] flex flex-col items-center justify-between p-20 bg-[#FFF9F9] bg-opacity-90"
-      >
-      {/* Header Section */}
-      <h2 className="text-4xl font-bold text-gray-800 ">
-        Telecounseling and Emergency Hotlines 
-      </h2>
-      <h3 className="text-2xl text-gray-700 font-semibold mb-6">
-        Need an Appointment ASAP?
-      </h3>
-        {/* Image and Text Section */}
-        <div className="flex w-full justify-between items-center">
-          {/* Image Section */}
-          <div className="relative w-1/2 flex justify-center z-10">
-            <img
-              src={kaugos}
-              alt="About Image"
-              className="ml-12 -mr-5 w-3/4 h-1/4 object-cover rounded-md"
-            />
-          </div>
+<section
+  id="hotlines"
+  className="relative w-full min-h-screen flex flex-col items-center p-20 bg-[#FFF9F9] bg-opacity-90"
+>
+  {/* Title */}
+  <h2 className="text-5xl font-bold text-gray-800 mb-6 text-center">
+    Telecounseling and Emergency Hotlines
+  </h2>
 
-          {/* Text Section */}
-          <div className="relative w-1/2 flex flex-col justify-center space-y-4 text-black pl-16 z-10">
-            <p className="font-mono text-sm text-white opacity-90">On-Campus Resources</p>
-            <p className="text-5xl font-bold leading-tight text-black drop-shadow-xl">
-              Guidance Offices and Counseling Centers
-            </p>
-            <p className="text-md text-black-50 drop-shadow-lg w-3/4 pb-5">
-              Here at MindSpace Hub, we foster personal growth and mental wellness
-              through peer counseling, supporting you every step of the way.
-            </p>
-          </div>
-        </div>
+  {/* Introductory Text */}
+  <p className="text-md text-black/80 text-center mb-12 max-w-4xl">
+    The Bicol University "Be with U" or "BUronyog" Student Assistance Program offers key hotlines for student support during emergencies. It includes <b>TARABANGAN</b> for stranded students, <b>PAGHERAS</b> for student info assistance, and <b>KAUGOS</b> for telecounseling.
+  </p>
 
-      </section>
+  {/* Image and Text Layout */}
+  <div className="flex flex-wrap lg:flex-nowrap justify-between items-start w-full space-y-12 lg:space-y-0 lg:space-x-12">
+    {/* Image Section */}
+    <div className="flex justify-center w-full lg:w-1/2">
+      <img
+        src={hotlines}
+        alt="Hotlines Illustration"
+        className="w-full max-w-lg h-auto object-cover rounded-md"
+      />
+    </div>
+
+    {/* Text Section */}
+    <div className=" w-full lg:w-1/2 space-y-8 ml-96">
+      {/* TARABANGAN Section */}
+      <div className="bg-[#FFF9F9] p-6 rounded-lg">
+        <h3 className="text-2xl font-semibold text-black">TARABANGAN</h3>
+        <p className="text-md w-3/5  text-gray-700 mt-2">
+          A program for stranded students with the University Student Development Services Division.
+        </p>
+        <ul className="text-md text-gray-700 mt-2">
+          <li className=" text-green-600 font-bold">
+            📞 0917 703 4031
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0930 668 9482
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0945 104 2650
+          </li>
+        </ul>
+      </div>
+
+      {/* PAGHERAS Section */}
+      <div className="bg-[#FFF9F9] p-6 rounded-lg">
+        <h3 className="text-2xl font-semibold text-black">PAGHERAS</h3>
+        <p className="text-md text-gray-700 mt-2">
+          Provides student information assistance.
+        </p>
+        <ul className="text-md text-black-700 mt-2">
+          <li className=" text-green-600 font-bold">
+            📞 0936 937 5671
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0906 513 0151
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0998 573 3104
+          </li>
+        </ul>
+      </div>
+
+      {/* KAUGOS Section */}
+      <div className="bg-[#FFF9F9] p-6 rounded-lg">
+        <h3 className="text-2xl font-semibold text-black">KAUGOS</h3>
+        <p className="text-md w-3/5 text-gray-700 mt-2">
+          Telecounseling for students with the University Student Welfare Services Division.
+        </p>
+        <ul className="text-md text-gray-700 mt-2">
+          <li className=" text-green-600 font-bold">
+            📞 0925 254 5242
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0917 484 5355
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0923 628 0612
+          </li>
+          <li className=" text-green-600 font-bold">
+            📞 0922 957 0534
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
 
        
 
