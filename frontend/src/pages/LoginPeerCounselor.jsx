@@ -22,10 +22,10 @@ const LoginPeerCounselor = () => {
     setErrorMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/login-peer-counselor', {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        'http://localhost:5000/api/login-peer-counselor',
+        { email, password }
+      );
 
       await signInWithCustomToken(auth, response.data.token);
       console.log('Login successful:', response.data);
@@ -43,46 +43,59 @@ const LoginPeerCounselor = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
-      <form 
-        onSubmit={handleLogin} 
-        className="w-full max-w-md p-6 bg-white shadow-md rounded-lg"
+    <div className="w-full h-full flex items-center justify-center bg-transparent px-4 py-6">
+      <form
+        onSubmit={handleLogin}
+        className="w-full max-w-md bg-transparent rounded-lg p-8"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-700">
-          Login as Peer Counselor
+        <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
+          Peer Counselor Login
         </h2>
 
         {errorMessage && (
-          <div className="mb-4 text-red-600 text-sm text-center">
-            {errorMessage}
-          </div>
+          <div className="text-red-600 text-center mb-4">{errorMessage}</div>
         )}
 
-        <div className="mb-4">
+        {/* Email Input */}
+        <div className="mb-6">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address
+          </label>
           <input
+            id="email"
             type="email"
-            placeholder="Email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 bg-green-100 text-black py-2 border shadow-inner border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             disabled={loading}
           />
         </div>
 
-        <div className="mb-4">
+        {/* Password Input */}
+        <div className="mb-6">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
-            placeholder="Password"
+            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 bg-green-100 text-black py-2 border shadow-inner border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             disabled={loading}
           />
         </div>
 
+        {/* Login Button */}
         <button
           type="submit"
-          className={`w-full p-2 rounded text-white ${loading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-600'} transition`}
+          className={`w-full px-4 py-2 text-white font-semibold rounded-lg transition ${
+            loading
+              ? 'bg-green-300 cursor-not-allowed'
+              : 'bg-green-500 hover:bg-green-600'
+          }`}
           disabled={loading}
         >
           {loading ? 'Logging in...' : 'Login'}
