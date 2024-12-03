@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../components/Button';
-import { FaBuilding, FaPeopleCarry, FaPhone, FaBook, FaUsers, FaUserNurse } from 'react-icons/fa';
+import { FaBuilding, FaPeopleCarry, FaPhone } from 'react-icons/fa';
 import { hotlines } from '../assets';
 import Carousel from '../components/Carousel';
 
@@ -139,9 +139,6 @@ const OnCampus = () => {
                 <h3 className="text-lg font-bold text-gray-800">Contact Us</h3>
                 <p className="text-md text-gray-700">4PRC+XHQ, BU Main Campus Rd, Daraga, Albay</p>
                 <p className="text-md text-gray-700">Bicol University</p>
-                <p className="text-blue-600 hover:underline">
-                  <a href="tel:+1234567890">+1 234 567 890</a>
-                </p>
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Hours of Operation</h3>
@@ -165,95 +162,95 @@ const OnCampus = () => {
        <div className="w-5/6 h-0.5 bg-black/25 mx-auto my-12"></div>
 
       {/* Hotlines Section */}
-<section
-  id="hotlines"
-  className="relative w-full min-h-screen flex flex-col items-center p-20 bg-[#FFF9F9] bg-opacity-90"
->
-  {/* Title */}
-  <h2 className="text-5xl font-bold text-gray-800 mb-6 text-center">
-    Telecounseling and Emergency Hotlines
-  </h2>
+      <section
+        id="hotlines"
+        className="relative w-full min-h-screen flex flex-col items-center p-20 bg-[#FFF9F9] bg-opacity-90"
+      >
+        {/* Title */}
+        <h2 className="text-5xl font-bold text-gray-800 mb-6 text-center">
+          Telecounseling and Emergency Hotlines
+        </h2>
 
-  {/* Introductory Text */}
-  <p className="text-md text-black/80 text-center mb-12 max-w-4xl">
-    The Bicol University "Be with U" or "BUronyog" Student Assistance Program offers key hotlines for student support during emergencies. It includes <b>TARABANGAN</b> for stranded students, <b>PAGHERAS</b> for student info assistance, and <b>KAUGOS</b> for telecounseling.
-  </p>
-
-  {/* Image and Text Layout */}
-  <div className="flex flex-wrap lg:flex-nowrap justify-between items-start w-full space-y-12 lg:space-y-0 lg:space-x-12">
-    {/* Image Section */}
-    <div className="flex justify-center w-full lg:w-1/2">
-      <img
-        src={hotlines}
-        alt="Hotlines Illustration"
-        className="w-full max-w-lg h-auto object-cover rounded-md"
-      />
-    </div>
-
-    {/* Text Section */}
-    <div className=" w-full lg:w-1/2 space-y-8 ml-96">
-      {/* TARABANGAN Section */}
-      <div className="bg-[#FFF9F9] p-6 rounded-lg">
-        <h3 className="text-2xl font-semibold text-black">TARABANGAN</h3>
-        <p className="text-md w-3/5  text-gray-700 mt-2">
-          A program for stranded students with the University Student Development Services Division.
+        {/* Introductory Text */}
+        <p className="text-md text-black/80 text-center mb-12 max-w-4xl">
+          The Bicol University "Be with U" or "BUronyog" Student Assistance Program offers key hotlines for student support during emergencies. It includes <b>TARABANGAN</b> for stranded students, <b>PAGHERAS</b> for student info assistance, and <b>KAUGOS</b> for telecounseling.
         </p>
-        <ul className="text-md text-gray-700 mt-2">
-          <li className=" text-green-600 font-bold">
-            📞 0917 703 4031
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0930 668 9482
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0945 104 2650
-          </li>
-        </ul>
-      </div>
 
-      {/* PAGHERAS Section */}
-      <div className="bg-[#FFF9F9] p-6 rounded-lg">
-        <h3 className="text-2xl font-semibold text-black">PAGHERAS</h3>
-        <p className="text-md text-gray-700 mt-2">
-          Provides student information assistance.
-        </p>
-        <ul className="text-md text-black-700 mt-2">
-          <li className=" text-green-600 font-bold">
-            📞 0936 937 5671
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0906 513 0151
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0998 573 3104
-          </li>
-        </ul>
-      </div>
+        {/* Image and Text Layout */}
+        <div className="flex flex-wrap lg:flex-nowrap justify-between items-start w-full space-y-12 lg:space-y-0 lg:space-x-12">
+          {/* Image Section */}
+          <div className="flex justify-center w-full lg:w-1/2">
+            <img
+              src={hotlines}
+              alt="Hotlines Illustration"
+              className="w-full max-w-lg h-auto object-cover rounded-md"
+            />
+          </div>
 
-      {/* KAUGOS Section */}
-      <div className="bg-[#FFF9F9] p-6 rounded-lg">
-        <h3 className="text-2xl font-semibold text-black">KAUGOS</h3>
-        <p className="text-md w-3/5 text-gray-700 mt-2">
-          Telecounseling for students with the University Student Welfare Services Division.
-        </p>
-        <ul className="text-md text-gray-700 mt-2">
-          <li className=" text-green-600 font-bold">
-            📞 0925 254 5242
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0917 484 5355
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0923 628 0612
-          </li>
-          <li className=" text-green-600 font-bold">
-            📞 0922 957 0534
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+          {/* Text Section */}
+          <div className=" w-full lg:w-1/2 space-y-8 ml-96">
+            {/* TARABANGAN Section */}
+            <div className="bg-[#FFF9F9] p-6 rounded-lg">
+              <h3 className="text-2xl font-semibold text-black">TARABANGAN</h3>
+              <p className="text-md w-3/5  text-gray-700 mt-2">
+                A program for stranded students with the University Student Development Services Division.
+              </p>
+              <ul className="text-md text-gray-700 mt-2">
+                <li className=" text-green-600 font-bold">
+                  📞 0917 703 4031
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0930 668 9482
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0945 104 2650
+                </li>
+              </ul>
+            </div>
+
+            {/* PAGHERAS Section */}
+            <div className="bg-[#FFF9F9] p-6 rounded-lg">
+              <h3 className="text-2xl font-semibold text-black">PAGHERAS</h3>
+              <p className="text-md text-gray-700 mt-2">
+                Provides student information assistance.
+              </p>
+              <ul className="text-md text-black-700 mt-2">
+                <li className=" text-green-600 font-bold">
+                  📞 0936 937 5671
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0906 513 0151
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0998 573 3104
+                </li>
+              </ul>
+            </div>
+
+            {/* KAUGOS Section */}
+            <div className="bg-[#FFF9F9] p-6 rounded-lg">
+              <h3 className="text-2xl font-semibold text-black">KAUGOS</h3>
+              <p className="text-md w-3/5 text-gray-700 mt-2">
+                Telecounseling for students with the University Student Welfare Services Division.
+              </p>
+              <ul className="text-md text-gray-700 mt-2">
+                <li className=" text-green-600 font-bold">
+                  📞 0925 254 5242
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0917 484 5355
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0923 628 0612
+                </li>
+                <li className=" text-green-600 font-bold">
+                  📞 0922 957 0534
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
 
 

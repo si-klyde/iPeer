@@ -190,8 +190,8 @@ const Information = () => {
                 alt="Find a NAMIWalk" 
                 className="relative h-96 ml-15"
               />
-              <div className="absolute inset-0 bg-[#00a7a233] bg-opacity-20 flex flex-col justify-end p-6 transition-opacity hover:bg-opacity-70">
-                <h3 className="text-gray-100 text-2xl text-justify drop-shadow-xl font-bold mb-2">National Helplines and Mental Health Organizations</h3>
+              <div className="absolute inset-0 bg-[#0c541c33] bg-opacity-20 flex flex-col justify-end p-6 transition-opacity hover:bg-opacity-70">
+                <h3 className="text-white text-2xl text-justify drop-shadow-xl font-bold mb-2">National Helplines and Mental Health Organizations</h3>
                 <a href="https://www.silakbo.ph/help/" target="_blank" rel="noopener noreferrer">
                   <button className="bg-[#faffd5] w-full text-[#3a5a40] py-2 px-4 rounded-lg font-bold mt-4 transition-transform hover:scale-105">
                     Read More

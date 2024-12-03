@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const therapists = [
   {
@@ -34,93 +38,94 @@ const therapists = [
 ];
 
 const Carousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [animation, setAnimation] = useState(""); // State for animation class
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
-
-  const visibleTherapists = therapists.slice(currentIndex, currentIndex + 3);
-
-  const handlePrev = () => {
-    setAnimation("slide-right");
-    setTimeout(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === 0 ? therapists.length - 3 : prevIndex - 1
-      );
-      setAnimation("");
-    }, 500); // Duration should match the CSS animation
-  };
-
-  const handleNext = () => {
-    setAnimation("slide-left");
-    setTimeout(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex + 3 >= therapists.length ? 0 : prevIndex + 1
-      );
-      setAnimation("");
-    }, 500); // Duration should match the CSS animation
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
+  // Custom Arrow Components
+  const PrevArrow = ({ onClick }) => (
+    <button
+      className="absolute left-[-50px] top-1/2 transform -translate-y-1/2 bg-white shadow-xl drop-shadow-md rounded-full p-2 hover:bg-gray-100 z-10"
+      onClick={onClick}
+    >
+      <ChevronLeftIcon className="h-6 w-6 text-gray-600" />
+    </button>
+  );
+
+  const NextArrow = ({ onClick }) => (
+    <button
+      className="absolute right-[-50px] top-1/2 transform -translate-y-1/2 bg-white shadow-xl drop-shadow-md rounded-full p-2 hover:bg-gray-100 z-10"
+      onClick={onClick}
+    >
+      <ChevronRightIcon className="h-6 w-6 text-gray-600" />
+    </button>
+  );
+
+  // Slick Carousel settings
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    centerPadding: "30px",
+    nextArrow: <NextArrow />,
+    prevArrow: <PrevArrow />,
+    responsive: [
+      {
+        breakpoint: 1024, // Medium screens
+        settings: {
+          slidesToShow: 2, // Show 2 cards
+        },
+      },
+      {
+        breakpoint: 768, // Small screens
+        settings: {
+          slidesToShow: 1, // Show 1 card
+        },
+      },
+    ],
+  };
+
   return (
-    <div className="flex flex-col items-center bg-[#FFF9F9] py-8 mt-10">
+    <div className="flex flex-col items-center bg-[#FFF9F9] py-10">
       {/* Header Section */}
       <h2 className="text-4xl font-bold text-gray-800 mb-4">
         On-Campus Mental Health Support Staff
       </h2>
-      <h3 className="text-md text-black/80 mb-6">
+      <h3 className="text-md text-gray-600 mt-4">
         Meet the professionals available to support mental health and wellness.
       </h3>
 
-      {/* Carousel Section */}
-      <div className="relative flex items-center justify-center w-full my-10">
-        {/* Left Arrow */}
-        <button
-          className="absolute left-20 text-black bg-[#E6F4EA] size-16 p-2 rounded-full shadow-lg border border-gray-200 hover:bg-purple-100"
-          onClick={handlePrev}
-        >
-          &#8592;
-        </button>
-
-        {/* Therapist Profiles */}
-        <div
-          className={`flex space-x-20 overflow-hidden transition-transform duration-500 drop-shadow-md my-10 ${animation}`}
-        >
-          {visibleTherapists.map((therapist, index) => (
-            <div
-              key={index}
-              className="w-72 h-64 flex flex-col items-center bg-[#FFF9F9] rounded-lg shadow-lg border border-gray-200"
-            >
-              {/* Colored top bar */}
-              <div className="w-full h-2 bg-green-600 rounded-t-lg"></div>
-
-              <div className="p-6 mt-8 text-center">
-                <p className="font-semibold text-lg text-gray-800 mb-2">
-                  {therapist.name}
-                </p>
-                <p className="text-gray-600 text-base">{therapist.position}</p>
-                <p className="text-gray-500 text-sm mt-2">
-                  {therapist.department}
-                </p>
-                <p className="text-gray-500 text-sm mt-2">{therapist.email}</p>
+      {/* Carousel Container */}
+      <div className="w-[85%]">
+        <Slider {...settings}>
+          {therapists.map((therapist, index) => (
+            <div key={index} className="px-8 py-10">
+              {/* Card */}
+              <div className="flex flex-col h-64 mt-5 items-center bg-[#FFF9F9] rounded-lg shadow-lg drop-shadow-md border border-gray-200">
+                {/* Green Top Bar */}
+                <div className="w-full h-2 bg-green-600 rounded-t-lg"></div>
+                <div className="p-10 space-y-4 text-center">
+                  <p className="font-semibold text-lg text-gray-800 mb-2">
+                    {therapist.name}
+                  </p>
+                  <p className="text-gray-600">{therapist.position}</p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    {therapist.department}
+                  </p>
+                  <p className="text-gray-500 text-sm mt-2">{therapist.email}</p>
+                </div>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Right Arrow */}
-        <button
-          className="absolute right-20 text-black bg-[#E6F4EA] size-16 p-2 rounded-full shadow-lg border border-gray-200 hover:bg-purple-100"
-          onClick={handleNext}
-        >
-          &#8594;
-        </button>
+        </Slider>
       </div>
 
       {/* Footer Section */}
       <button
         onClick={toggleModal}
-        className="mt-6 text-green-700 hover:underline font-medium"
+        className="mt-20 text-lg text-green-700 hover:underline font-medium"
       >
         See full list →
       </button>

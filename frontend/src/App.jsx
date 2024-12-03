@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Route, Routes } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import ProtectedRoute from './context/ProtectedRoute.jsx';
@@ -27,6 +28,8 @@ import OffCampus from './pages/OffCampus.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
+    const location = useLocation();
+    const hideHeaderFooterPaths = ['/login'];
 
     useEffect(() => {
         const unsubscribe = authStateChanged(auth, (currentUser) => {
@@ -38,8 +41,12 @@ const App = () => {
 
     return (
         <>
-            <Header user={user} />
-            <div className="pt-[4.75rem] lg:pt-[5rem] overflow-hidden">
+            {!hideHeaderFooterPaths.includes(location.pathname) && <Header user={user} />}
+            <div
+            className={`${
+                hideHeaderFooterPaths.includes(location.pathname) ? '' : 'pt-[4.75rem] lg:pt-[5rem]'
+            } overflow-hidden`}
+            >
                 <Routes>
                     {/* Public Routes - No authentication required */}
                     <Route path="/" element={<Hero />} />
@@ -122,7 +129,7 @@ const App = () => {
                     <Route path="/unauthorized" element={<Unauthorized />} />
                 </Routes>
             </div>
-            <Footer />
+            {!hideHeaderFooterPaths.includes(location.pathname) && <Footer />}
         </>
     );
 };
