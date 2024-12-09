@@ -10,7 +10,12 @@ const TherapySection = ({ id, title, description, backgroundImage, isExpanded, o
   
   const handleEnterRoom = (e) => {
     e.stopPropagation(); // Prevent triggering the expand/collapse
-    navigate(`/therapy/${id}`);
+    // Scroll to top before navigating
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Add a small delay to allow smooth scroll before navigation
+    setTimeout(() => {
+      navigate(`/therapy/${id}`);
+    }, 500); // Adjust timing if needed
   };
 
   return (
@@ -59,19 +64,19 @@ const TherapySection = ({ id, title, description, backgroundImage, isExpanded, o
                       <>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
-                          <span>Casual multiplayer games to help you unwind</span>
+                          <span>Mindful word puzzles for vocabulary and relaxation</span>
                         </li>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
-                          <span>Chess, word games, and puzzle options</span>
+                          <span>Strategic chess with AI for focused decision-making</span>
                         </li>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
-                          <span>Play solo or connect with other students</span>
+                          <span>Memory matching to enhance concentration</span>
                         </li>
                         <li className="flex items-start">
                           <span className="mr-2 mt-1">•</span>
-                          <span>Perfect study break activity</span>
+                          <span>Calming sudoku for mathematical mindfulness</span>
                         </li>
                       </>
                     ) : id === 'music' ? (
