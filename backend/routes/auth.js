@@ -37,6 +37,7 @@ router.post('/google-signin', async (req, res) => {
         await db.collection('users').doc(userRecord.uid).set({
           email: userRecord.email,
           displayName: userRecord.displayName,
+          photoURL: userRecord.photoURL,
           role: 'client',
           createdAt: new Date(),
         });
@@ -73,17 +74,35 @@ router.post('/google-signin', async (req, res) => {
 
 // Function to hash a password with salt and iterations
 const hashPassword = (password, salt, iterations) => {
-  let hash = crypto.createHmac('sha256', salt).update(password).digest('hex');
-  for (let i = 0; i < iterations; i++) {
-    hash = crypto.createHmac('sha256', salt).update(hash).digest('hex');
+  if (!password || !salt) {
+    throw new Error('Password and salt are required for hashing');
+  }
+  
+  let hash = crypto.createHmac('sha256', Buffer.from(salt, 'hex'))
+    .update(password)
+    .digest('hex');
+    
+  for (let i = 1; i < iterations; i++) {
+    hash = crypto.createHmac('sha256', Buffer.from(salt, 'hex'))
+      .update(hash)
+      .digest('hex');
   }
   return hash;
 };
 
 // Function to verify a password
-const verifyPassword = (password, salt, iterations, hash) => {
-  const hashedPassword = hashPassword(password, salt, iterations);
-  return hashedPassword === hash;
+const verifyPassword = (password, salt, iterations, storedHash) => {
+  if (!password || !salt || !iterations || !storedHash) {
+    throw new Error('Missing required parameters for password verification');
+  }
+  
+  try {
+    const hashedPassword = hashPassword(password, salt, iterations);
+    return hashedPassword === storedHash;
+  } catch (error) {
+    console.error('Error in password verification:', error);
+    return false;
+  }
 };
 
 router.post('/register-peer-counselor', async (req, res) => {
@@ -125,30 +144,44 @@ router.post('/register-peer-counselor', async (req, res) => {
 router.post('/login-peer-counselor', async (req, res) => {
   const { email, password } = req.body;
 
-  console.log('Request body:', req.body); // Log the request body
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).send({ error: 'Email and password are required.' });
+  }
 
   try {
     // Fetch user from Firestore
-    const userDoc = await db.collection('users').where('email', '==', email).get();
-    if (userDoc.empty) {
-      return res.status(400).send({ error: 'User not found' });
+    const userSnapshot = await db.collection('users')
+      .where('email', '==', email)
+      .where('role', '==', 'peer-counselor')
+      .get();
+
+    if (userSnapshot.empty) {
+      return res.status(404).send({ error: 'User not found.' });
     }
 
-    const userData = userDoc.docs[0].data();
+    const userData = userSnapshot.docs[0].data();
     const { salt, iterations, password: storedHash } = userData;
 
+    // Additional validation for required fields
+    if (!salt || !iterations || !storedHash) {
+      console.error('Missing required authentication fields:', { salt: !!salt, iterations: !!iterations, storedHash: !!storedHash });
+      return res.status(500).send({ error: 'Authentication configuration error.' });
+    }
+
     // Verify the password
-    if (!verifyPassword(password, salt, iterations, storedHash)) {
-      return res.status(400).send({ error: 'Invalid password' });
+    const isPasswordValid = verifyPassword(password, salt, iterations, storedHash);
+    if (!isPasswordValid) {
+      return res.status(401).send({ error: 'Invalid password.' });
     }
 
     // Generate a custom Firebase token
-    const customToken = await auth.createCustomToken(userDoc.docs[0].id);
-    
-    res.status(200).send({ token: customToken });
+    const customToken = await auth.createCustomToken(userSnapshot.docs[0].id);
+    res.status(200).send({ token: customToken, message: 'Login successful' });
+
   } catch (error) {
-    console.error('Error logging in peer counselor:', error);
-    res.status(500).send({ error: 'Error logging in peer counselor' });
+    console.error('Error logging in peer counselor:', error.message);
+    res.status(500).send({ error: 'Internal Server Error.' });
   }
 });
 
