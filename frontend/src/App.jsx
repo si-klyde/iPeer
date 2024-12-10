@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Route, Routes } from 'react-router-dom';
-import ButtonGradient from './assets/svg/ButtonGradient.jsx';
 import Header from './components/Header.jsx';
 import ProtectedRoute from './context/ProtectedRoute.jsx';
 import Counseling from './pages/Counseling';
@@ -8,9 +8,7 @@ import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx';
 import Login from './pages/Login.jsx';
 import Therapy from './pages/Therapy.jsx';
-import PlayTherapy from './pages/PlayTherapy.jsx';
-import MusicTherapy from './pages/MusicTherapy.jsx';
-import ArtTherapy from './pages/ArtTherapy.jsx';
+import { GameRoom, MusicRoom, ArtRoom } from './components/Rooms';
 import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
 import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
 import LoginClient from './pages/LoginClient.jsx';
@@ -21,11 +19,15 @@ import Unauthorized from './pages/Unauthorized.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import { auth, authStateChanged } from './firebase';
 import Footer from './components/Footer.jsx';
-import Information from './pages/Information.jsx';
+import Information from './pages/Information.jsx';  
 import PeerDashboard from './pages/PeerDashboard.jsx';
+import OnCampus from './pages/OnCampus.jsx';
+import OffCampus from './pages/OffCampus.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
+    const location = useLocation();
+    const hideHeaderFooterPaths = ['/login'];
 
     useEffect(() => {
         const unsubscribe = authStateChanged(auth, (currentUser) => {
@@ -37,20 +39,24 @@ const App = () => {
 
     return (
         <>
-            <Header user={user} />
-            <div className="pt-[4.75rem] lg:pt-[5rem] overflow-hidden">
+            {!hideHeaderFooterPaths.includes(location.pathname) && <Header user={user} />}
+            <div
+            className={`${
+                hideHeaderFooterPaths.includes(location.pathname) ? '' : 'pt-[4.75rem] lg:pt-[5rem]'
+            } overflow-hidden`}
+            >
                 <Routes>
                     {/* Public Routes - No authentication required */}
                     <Route path="/" element={<Hero />} />
                     <Route path="/home" element={<Hero />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/information" element={<Information />} />
+                    <Route path="/onCampus" element={<OnCampus/>} />
+                    <Route path="/offCampus" element={<OffCampus/>} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
-                    
-                    
+
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={
@@ -64,25 +70,27 @@ const App = () => {
                         </ProtectedRoute>
                     } />
 
-                    {/* All Therapy Routes are Client-Only */}
+                    {/* Therapy Routes */}
                     <Route path="/therapy" element={
                         <ProtectedRoute allowedRoles={['client']}>
                             <Therapy />
                         </ProtectedRoute>
                     } />
+                    
+                    {/* Individual Therapy Room Routes */}
                     <Route path="/therapy/play" element={
                         <ProtectedRoute allowedRoles={['client']}>
-                            <PlayTherapy />
+                            <GameRoom />
                         </ProtectedRoute>
                     } />
                     <Route path="/therapy/music" element={
                         <ProtectedRoute allowedRoles={['client']}>
-                            <MusicTherapy />
+                            <MusicRoom />
                         </ProtectedRoute>
                     } />
                     <Route path="/therapy/art" element={
                         <ProtectedRoute allowedRoles={['client']}>
-                            <ArtTherapy />
+                            <ArtRoom />
                         </ProtectedRoute>
                     } />
 
@@ -119,7 +127,7 @@ const App = () => {
                     <Route path="/unauthorized" element={<Unauthorized />} />
                 </Routes>
             </div>
-            <Footer />
+            {!hideHeaderFooterPaths.includes(location.pathname) && <Footer />}
         </>
     );
 };

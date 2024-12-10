@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MenuSvg from '../assets/svg/MenuSvg';
-import { navigation } from "../constants";
+import { navigation } from '../constants';
 import Button from './Button';
 import { disablePageScroll, enablePageScroll } from 'scroll-lock';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
-import { useNavigate } from 'react-router-dom';
 import logo from '../assets/ipeer-icon.png';
 
 const Header = ({ user }) => {
-  const pathname = useLocation();  
+  const location = useLocation(); // Renamed for clarity
   const [openNavigation, setOpenNavigation] = useState(false);
   const [isShrunk, setIsShrunk] = useState(false); // New state for navbar size
   const navigate = useNavigate();
-  
+
+  // Define paths where Header should not appear
+  const hideHeaderPaths = ['/login'];
+
   const toggleNavigation = () => {
     if (openNavigation) {
       setOpenNavigation(false);
@@ -49,6 +51,11 @@ const Header = ({ user }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Check if the current path is in the list of paths where the header should be hidden
+  if (hideHeaderPaths.includes(location.pathname)) {
+    return null; // Do not render the header on these paths
+  }
+
   return (
     <div
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
@@ -57,23 +64,29 @@ const Header = ({ user }) => {
     >
       <div className="flex items-center justify-between px-5 lg:px-7.5 xl:px-10 h-full">
         {/* Logo and Title */}
-        <a href="" className='text-2xl font-semibold flex items-center space-x-3'>
-          <img src={logo} alt='' className='w-15 inline-block' />
-          <span className='text-[#0e0e0e] font-code'>
-            iPeer
-          </span>
+        <a href="" className="text-2xl font-semibold flex items-center space-x-3">
+          <img src={logo} alt="" className="w-15 inline-block" />
+          <span className="text-[#0e0e0e] font-code">iPeer</span>
         </a>
 
         {/* Navigation Links */}
-        <nav className={`${openNavigation ? 'flex' : 'hidden'} fixed top-[4rem] left-0 right-0 bottom-0 bg-n-8 lg:static lg:flex lg:mx-auto lg:bg-transparent`}>
+        <nav
+          className={`${
+            openNavigation ? 'flex' : 'hidden'
+          } fixed top-[4rem] left-0 right-0 bottom-0 bg-n-8 lg:static lg:flex lg:mx-auto lg:bg-transparent`}
+        >
           <div className="relative z-10 flex flex-col items-center justify-center m-auto lg:flex-row">
             {navigation.map((item) => (
-              <a key={item.id} href={item.url} onClick={handleClick}
+              <a
+                key={item.id}
+                href={item.url}
+                onClick={handleClick}
                 className={`block relative font-roboto text-2xl transition-colors hover:text-n-5 ${
-                  item.onlyMobile ? "lg:hidden" : ""
+                  item.onlyMobile ? 'lg:hidden' : ''
                 } px-6 py-4 lg:py-2 lg:text-sm lg:font-medium ${
-                  item.url === pathname.hash ? "text-n-5" : "text-n-8"
-                } lg:leading-5 lg:hover:text-green-500 xl:px-8 drop-shadow-lg`}>
+                  item.url === location.pathname ? 'text-n-5' : 'text-n-8'
+                } lg:leading-5 lg:hover:text-green-500 xl:px-8 drop-shadow-lg`}
+              >
                 {item.title}
               </a>
             ))}
