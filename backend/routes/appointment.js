@@ -4,7 +4,6 @@ const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = requir
 const { db } = require('../firebaseAdmin');
 const { sendAppointmentConfirmation } = require('../services/emailService');
 
-// Function to check peer counselor availability
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
     const appointmentsRef = db.collection('appointments');
@@ -25,7 +24,7 @@ const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
 router.post('/create-appointment', async (req, res) => {
   const appointmentData = {
     ...req.body,
-    status: 'pending' // Default status for new appointments
+    status: 'pending'
   };
   
   try {
@@ -65,32 +64,21 @@ router.post('/create-appointment', async (req, res) => {
   }
 });
 
-// Route to update appointment status
-router.put('/appointments/:appointmentId/status', async (req, res) => {
-  const { appointmentId } = req.params;
-  const { status } = req.body;
+// Route to check availability
+router.get('/check-availability/:peerCounselorId', async (req, res) => {
+  const { peerCounselorId } = req.params;
+  const { date, time } = req.query;
 
   try {
-    const appointmentRef = db.collection('appointments').doc(appointmentId);
-    await appointmentRef.update({ status });
-
-    // Fetch updated appointment
-    const updatedAppointment = await appointmentRef.get();
-    
-    // Send notification email based on status
-    const appointmentData = updatedAppointment.data();
-    const clientDoc = await db.collection('users').doc(appointmentData.userId).get();
-    const counselorDoc = await db.collection('users').doc(appointmentData.peerCounselorId).get();
-
-    // You can add email notification for status updates here
-
-    res.status(200).send({ message: 'Appointment status updated successfully' });
+    const isAvailable = await checkPeerCounselorAvailability(peerCounselorId, date, time);
+    res.status(200).json({ available: isAvailable });
   } catch (error) {
-    console.error('Error updating appointment status:', error);
-    res.status(500).send({ error: 'Error updating appointment status' });
+    console.error('Error checking availability:', error);
+    res.status(500).json({ error: 'Error checking availability' });
   }
 });
 
+// Route to get client appointments
 router.get('/appointments/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -102,6 +90,7 @@ router.get('/appointments/:userId', async (req, res) => {
   }
 });
 
+// Route to get peer counselor appointments
 router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => {
   const { peerCounselorId } = req.params;
   try {
