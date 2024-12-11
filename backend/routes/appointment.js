@@ -102,4 +102,23 @@ router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => 
   }
 });
 
+// Route to update appointment status
+router.put('/appointments/:appointmentId/status', async (req, res) => {
+  const { appointmentId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const appointmentRef = db.collection('appointments').doc(appointmentId);
+    await appointmentRef.update({ status });
+
+    // Fetch updated appointment
+    const updatedAppointment = await appointmentRef.get();
+    
+    res.status(200).send({ message: 'Appointment status updated successfully' });
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    res.status(500).send({ error: 'Error updating appointment status' });
+  }
+});
+
 module.exports = router;
