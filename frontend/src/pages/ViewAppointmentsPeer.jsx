@@ -7,6 +7,7 @@ const ViewAppointmentsPeer = () => {
   const [appointments, setAppointments] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [clients, setClients] = useState({});
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +15,7 @@ const ViewAppointmentsPeer = () => {
       if (user) {
         setCurrentUserId(user.uid);
       } else {
-        navigate('/login'); // Redirect to login if not authenticated
+        navigate('/login');
       }
     });
   }, [navigate]);
@@ -27,6 +28,8 @@ const ViewAppointmentsPeer = () => {
         setAppointments(response.data);
       } catch (error) {
         console.error('Error fetching appointments:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -35,52 +38,115 @@ const ViewAppointmentsPeer = () => {
 
   useEffect(() => {
     const fetchClientDetails = async (userId) => {
-      console.log(`Fetching details for client ID: ${userId}`);
-      try {
-        const response = await axios.get(`http://localhost:5000/api/client/${userId}`);
-        setClients(prevState => ({
-          ...prevState,
-          [userId]: response.data.displayName || 'Name not available'
-        }));
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error(`Client with ID ${userId} not found.`);
+      if (!clients[userId]) {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/client/${userId}`);
           setClients(prevState => ({
             ...prevState,
-            [userId]: 'Client not found'
+            [userId]: response.data.displayName || 'Name not available'
           }));
-        } else {
+        } catch (error) {
           console.error('Error fetching client details:', error);
           setClients(prevState => ({
             ...prevState,
-            [userId]: 'Error fetching name'
+            [userId]: 'Client information unavailable'
           }));
         }
       }
     };
 
     appointments.forEach(appointment => {
-      if (appointment.userId && !clients[appointment.userId]) {
+      if (appointment.userId) {
         fetchClientDetails(appointment.userId);
       }
     });
   }, [appointments, clients]);
 
+  const handleAppointmentStatus = async (appointmentId, status) => {
+    try {
+      await axios.put(`http://localhost:5000/api/appointments/${appointmentId}/status`, { status });
+      
+      setAppointments(appointments.map(appointment => 
+        appointment.id === appointmentId 
+          ? { ...appointment, status }
+          : appointment
+      ));
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading appointments...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-6 bg-white shadow-md rounded-lg">
-        <h2 className="text-2xl mb-4">Your Appointments</h2>
-        <ul>
-          {appointments.map((appointment) => (
-            <li key={appointment.id} className="mb-4 p-2 border rounded">
-              <p>Date: {appointment.date}</p>
-              <p>Time: {appointment.time}</p>
-              <p>Description: {appointment.description}</p>
-              <p>Client: {clients[appointment.userId] || 'Loading...'}</p>
-              <p>Video Call Room: <a href={`/counseling/${appointment.roomId}`} target="_blank" rel="noopener noreferrer">Join Call</a></p>
-            </li>
-          ))}
-        </ul>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-6">
+      <div className="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-3xl font-bold mb-6 text-gray-800">Appointment Management</h2>
+        
+        {appointments.length === 0 ? (
+          <p className="text-gray-600 text-center">No appointments found</p>
+        ) : (
+          <div className="space-y-4">
+            {appointments.map((appointment) => (
+              <div key={appointment.id} 
+                   className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                <div className="flex justify-between flex-wrap gap-4">
+                  <div className="space-y-2">
+                    <p className="font-semibold text-lg">
+                      Client: {clients[appointment.userId] || 'Loading...'}
+                    </p>
+                    <p className="text-gray-600">Date: {appointment.date}</p>
+                    <p className="text-gray-600">Time: {appointment.time}</p>
+                    <p className="text-gray-600">Description: {appointment.description}</p>
+                    <p className={`font-medium ${
+                      appointment.status === 'accepted' ? 'text-green-600' : 
+                      appointment.status === 'declined' ? 'text-red-600' : 
+                      'text-yellow-600'
+                    }`}>
+                      Status: {appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : 'Pending'}
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    {(!appointment.status || appointment.status === 'pending') && (
+                      <>
+                        <button
+                          onClick={() => handleAppointmentStatus(appointment.id, 'accepted')}
+                          className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleAppointmentStatus(appointment.id, 'declined')}
+                          className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                        >
+                          Decline
+                        </button>
+                      </>
+                    )}
+                    
+                    {appointment.status === 'accepted' && (
+                      <a
+                        href={`/counseling/${appointment.roomId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors text-center"
+                      >
+                        Join Call
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
