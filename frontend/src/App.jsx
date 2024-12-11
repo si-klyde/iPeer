@@ -7,6 +7,7 @@ import Counseling from './pages/Counseling';
 import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx';
 import Login from './pages/Login.jsx';
+import Calendar from './pages/Calendar.jsx';
 import Therapy from './pages/Therapy.jsx';
 import { GameRoom, MusicRoom, ArtRoom } from './components/Rooms';
 import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
@@ -120,6 +121,11 @@ const App = () => {
                     <Route path="/profile" element={
                         <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
                             <UserProfile />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/calendar" element={
+                        <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
+                            <Calendar />
                         </ProtectedRoute>
                     } />
 
