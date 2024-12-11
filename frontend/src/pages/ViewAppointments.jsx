@@ -20,16 +20,25 @@ const ViewAppointments = () => {
   }, [navigate]);
 
   useEffect(() => {
+    const sortAppointmentsByCreatedAt = (appointments) => {
+      return [...appointments].sort((a, b) => {
+        const aSeconds = a.createdAt?._seconds ?? 0;
+        const bSeconds = b.createdAt?._seconds ?? 0;
+        return bSeconds - aSeconds;
+      });
+    };
+  
     const fetchAppointments = async () => {
       if (!currentUserId) return;
       try {
-        const response = await axios.get(`http://localhost:5000/api/appointments/${currentUserId}`);
-        setAppointments(response.data);
+        const { data: appointments } = await axios.get(`http://localhost:5000/api/appointments/${currentUserId}`);
+        const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
+        setAppointments(sortedAppointments);
       } catch (error) {
         console.error('Error fetching appointments:', error);
       }
     };
-
+  
     fetchAppointments();
   }, [currentUserId]);
 
@@ -120,18 +129,44 @@ const ViewAppointments = () => {
                 </div>
 
                 <div className="mt-4">
-                  <a
-                    href={`/counseling/${appointment.roomId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    <svg className="h-5 w-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    Join Video Call
-                  </a>
+                  <p className={`text-sm font-medium mb-2 ${
+                    appointment.status === 'accepted' ? 'text-green-600' : 
+                    appointment.status === 'declined' ? 'text-red-600' : 
+                    'text-yellow-600'
+                  }`}>
+                    Status: {appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : 'Pending'}
+                  </p>
+
+                  {appointment.status === 'accepted' && (() => {
+                    const now = new Date();
+                    const appointmentDateTime = new Date(`${appointment.date} ${appointment.time}`);
+                    
+                    // Add grace periods (30 mins before and after)
+                    const earliestJoinTime = new Date(appointmentDateTime.getTime() - 30 * 60000); // 30 mins before
+                    const latestJoinTime = new Date(appointmentDateTime.getTime() + 30 * 60000);  // 30 mins after
+                    
+                    const isTimeToJoin = now >= earliestJoinTime && now <= latestJoinTime;
+
+                    return isTimeToJoin ? (
+                      <a
+                        href={`/counseling/${appointment.roomId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <svg className="h-5 w-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Join Video Call
+                      </a>
+                    ) : (
+                      <span className="text-gray-500 italic">
+                        You can join 30 minutes before or after scheduled time—no rush, we’re here for you.
+                      </span>
+                    );
+                  })()}
                 </div>
+
               </div>
             ))}
           </div>
