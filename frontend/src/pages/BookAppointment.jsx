@@ -11,6 +11,8 @@ const BookAppointment = () => {
   const [selectedPeerCounselor, setSelectedPeerCounselor] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
   const [availabilityError, setAvailabilityError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +39,7 @@ const BookAppointment = () => {
       if (user) {
         setCurrentUserId(user.uid);
       } else {
-        navigate('/login'); // Redirect to login if not authenticated
+        navigate('/login');
       }
     });
   }, [navigate]);
@@ -58,13 +60,15 @@ const BookAppointment = () => {
   const handleBookAppointment = async (e) => {
     e.preventDefault();
     setAvailabilityError('');
+    setIsLoading(true);
+    setBookingSuccess(false);
 
     try {
-      // Check availability first
       const isAvailable = await checkAvailability(selectedPeerCounselor, date, time);
       
       if (!isAvailable) {
         setAvailabilityError('The selected peer counselor is not available at this time. Please choose another date/time.');
+        setIsLoading(false);
         return;
       }
 
@@ -76,14 +80,19 @@ const BookAppointment = () => {
         userId: currentUserId,
       });
       
-      console.log('Appointment booked successfully:', response.data);
-      navigate(`/appointments/client`);
+      setBookingSuccess(true);
+      setTimeout(() => {
+        navigate(`/appointments/client`);
+      }, 2000);
+
     } catch (error) {
       if (error.response && error.response.status === 409) {
         setAvailabilityError(error.response.data.error);
       } else {
         console.error('Error booking appointment:', error);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,6 +104,12 @@ const BookAppointment = () => {
         {availabilityError && (
           <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
             {availabilityError}
+          </div>
+        )}
+
+        {bookingSuccess && (
+          <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+            Appointment booked successfully! Redirecting...
           </div>
         )}
 
@@ -130,10 +145,19 @@ const BookAppointment = () => {
         </select>
         <button 
           type="submit" 
-          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          disabled={!date || !time || !selectedPeerCounselor}
+          className={`w-full p-2 ${
+            isLoading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-600'
+          } text-white rounded flex items-center justify-center`}
+          disabled={!date || !time || !selectedPeerCounselor || isLoading}
         >
-          Book Appointment
+          {isLoading ? (
+            <>
+              <span className="animate-spin mr-2">⌛</span>
+              Booking...
+            </>
+          ) : (
+            'Book Appointment'
+          )}
         </button>
       </form>
     </div>
