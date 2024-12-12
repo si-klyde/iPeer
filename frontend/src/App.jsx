@@ -18,7 +18,8 @@ import ViewAppointments from './pages/ViewAppointments.jsx';
 import ViewAppointmentsPeer from './pages/ViewAppointmentsPeer.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
 import UserProfile from './pages/UserProfile.jsx';
-import { auth, authStateChanged } from './firebase';
+import { auth, authStateChanged, firestore } from './firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import Footer from './components/Footer.jsx';
 import Information from './pages/Information.jsx';  
 import PeerDashboard from './pages/PeerDashboard.jsx';
@@ -31,11 +32,45 @@ const App = () => {
     const hideHeaderFooterPaths = ['/login'];
 
     useEffect(() => {
-        const unsubscribe = authStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
+        let unsubscribeAuth;
+        let unsubscribeSnapshot;
 
-        return () => unsubscribe();
+        const setupUserListener = (currentUser) => {
+            if (currentUser) {
+                const userDocRef = doc(firestore, 'users', currentUser.uid);
+                
+                // Set up real-time listener for user document
+                unsubscribeSnapshot = onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        // Combine Firebase Auth user with Firestore user data
+                        const userData = doc.data();
+                        
+                        // Prioritize custom photo URL
+                        const photoURL = userData.customPhotoURL || 
+                                         `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
+                        
+                        setUser({
+                            ...currentUser, 
+                            ...userData,
+                            photoURL: photoURL
+                        });
+                    }
+                }, (error) => {
+                    console.error('Error listening to user document:', error);
+                });
+            } else {
+                setUser(null);
+            }
+        };
+
+        // Initial auth state listener
+        unsubscribeAuth = authStateChanged(auth, setupUserListener);
+    
+        // Cleanup function
+        return () => {
+            if (unsubscribeAuth) unsubscribeAuth();
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+        };
     }, []);
 
     return (

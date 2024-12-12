@@ -4,7 +4,6 @@ const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = requir
 const { db } = require('../firebaseAdmin');
 const { sendAppointmentConfirmation } = require('../services/emailService');
 
-// Function to check peer counselor availability
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
     const appointmentsRef = db.collection('appointments');
@@ -23,7 +22,11 @@ const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
 
 // Route to create an appointment
 router.post('/create-appointment', async (req, res) => {
-  const appointmentData = req.body;
+  const appointmentData = {
+    ...req.body,
+    status: 'pending'
+  };
+  
   try {
     const isAvailable = await checkPeerCounselorAvailability(
       appointmentData.peerCounselorId,
@@ -39,7 +42,6 @@ router.post('/create-appointment', async (req, res) => {
 
     const { appointmentId, roomId } = await createAppointment(appointmentData);
     
-    // Fetch client and counselor details for email
     const clientDoc = await db.collection('users').doc(appointmentData.userId).get();
     const counselorDoc = await db.collection('users').doc(appointmentData.peerCounselorId).get();
     
@@ -51,7 +53,7 @@ router.post('/create-appointment', async (req, res) => {
         time: appointmentData.time,
         clientName: clientDoc.data().name,
         peerCounselorName: counselorDoc.data().name,
-        roomLink: `http://localhost:5173/counseling/${roomId}` //palitan kapag idedeploy na
+        roomLink: `http://localhost:5173/counseling/${roomId}`
       }
     );
 
@@ -62,20 +64,21 @@ router.post('/create-appointment', async (req, res) => {
   }
 });
 
-// Route to check availability for a peer counselor
+// Route to check availability
 router.get('/check-availability/:peerCounselorId', async (req, res) => {
   const { peerCounselorId } = req.params;
   const { date, time } = req.query;
-  
+
   try {
     const isAvailable = await checkPeerCounselorAvailability(peerCounselorId, date, time);
-    res.status(200).send({ available: isAvailable });
+    res.status(200).json({ available: isAvailable });
   } catch (error) {
     console.error('Error checking availability:', error);
-    res.status(500).send({ error: 'Error checking availability' });
+    res.status(500).json({ error: 'Error checking availability' });
   }
 });
 
+// Route to get client appointments
 router.get('/appointments/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -87,7 +90,7 @@ router.get('/appointments/:userId', async (req, res) => {
   }
 });
 
-// Route to get appointments for a specific peer counselor
+// Route to get peer counselor appointments
 router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => {
   const { peerCounselorId } = req.params;
   try {
@@ -98,4 +101,24 @@ router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => 
     res.status(500).send({ error: 'Error fetching appointments' });
   }
 });
+
+// Route to update appointment status
+router.put('/appointments/:appointmentId/status', async (req, res) => {
+  const { appointmentId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const appointmentRef = db.collection('appointments').doc(appointmentId);
+    await appointmentRef.update({ status });
+
+    // Fetch updated appointment
+    const updatedAppointment = await appointmentRef.get();
+    
+    res.status(200).send({ message: 'Appointment status updated successfully' });
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    res.status(500).send({ error: 'Error updating appointment status' });
+  }
+});
+
 module.exports = router;

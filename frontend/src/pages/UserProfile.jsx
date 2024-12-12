@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth, firestore, storage } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const UserProfile = () => {
@@ -9,34 +9,31 @@ const UserProfile = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          // Get the Firestore profile data
-          const userDocRef = doc(firestore, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const profileData = userDoc.data();
-            
-            // If there's no custom uploaded photo, use the Google photo URL
-            if (!profileData.customPhotoURL) {
-              profileData.photoURL = user.photoURL || profileData.photoURL;
-            } else {
-              profileData.photoURL = profileData.customPhotoURL;
-            }
-            
-            setUserProfile(profileData);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching user profile:', err);
-        setError('Failed to load profile');
-      }
-    };
+    const user = auth.currentUser;
+    if (!user) return;
 
-    fetchUserProfile();
+    const userDocRef = doc(firestore, 'users', user.uid);
+    
+    // Set up real-time listener for user document
+    const unsubscribe = onSnapshot(userDocRef, (doc) => {
+      if (doc.exists()) {
+        const profileData = doc.data();
+        
+        // Prioritize custom photo URL, fallback to Google photo or default
+        profileData.photoURL = profileData.customPhotoURL || 
+                                user.photoURL || 
+                                profileData.photoURL || 
+                                'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+';
+        
+        setUserProfile(profileData);
+      }
+    }, (error) => {
+      console.error('Error fetching user profile:', error);
+      setError('Failed to load profile');
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const validateImage = (file) => {
@@ -76,19 +73,12 @@ const UserProfile = () => {
       const snapshot = await uploadBytes(storageRef, file, metadata);
       const downloadURL = await getDownloadURL(snapshot.ref);
       
-      // Store both the custom photo URL and maintain the original photoURL
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, {
         customPhotoURL: downloadURL,
-        photoURL: downloadURL, // Update current display photo
         lastUpdated: new Date().toISOString()
       });
-      
-      setUserProfile(prev => ({
-        ...prev,
-        photoURL: downloadURL,
-        customPhotoURL: downloadURL
-      }));
+
     } catch (err) {
       console.error('Error uploading image:', err);
       setError(err.message || 'Failed to upload image');
@@ -112,10 +102,10 @@ const UserProfile = () => {
         <div className="mb-4 flex flex-col items-center">
           <div className="relative">
             <img 
-              src={userProfile.photoURL || 'https://via.placeholder.com/150'} 
+              src={userProfile.photoURL}
               alt="Profile" 
               className="w-32 h-32 rounded-full object-cover"
-              referrerPolicy="no-referrer" // Important for Google Photos
+              referrerPolicy="no-referrer"
             />
             <label 
               htmlFor="photo-upload" 
