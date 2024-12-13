@@ -24,7 +24,7 @@ const createAppointment = async (appointmentData) => {
 };
 
 const getAppointmentsClient = async (userId) => {
-  const appointmentsSnapshot = await db.collection('appointments').where('userId', '==', userId).get();
+  const appointmentsSnapshot = await db.collection('appointments').where('clientId', '==', userId).get();
   return appointmentsSnapshot.docs.map(doc => 
     Object.assign({}, { id: doc.id }, doc.data())
   );

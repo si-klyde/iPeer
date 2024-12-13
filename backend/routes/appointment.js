@@ -42,7 +42,7 @@ router.post('/create-appointment', async (req, res) => {
 
     const { appointmentId, roomId } = await createAppointment(appointmentData);
     
-    const clientDoc = await db.collection('users').doc(appointmentData.userId).get();
+    const clientDoc = await db.collection('users').doc(appointmentData.clientId).get();
     const counselorDoc = await db.collection('users').doc(appointmentData.peerCounselorId).get();
     
     await sendAppointmentConfirmation(
@@ -79,10 +79,10 @@ router.get('/check-availability/:peerCounselorId', async (req, res) => {
 });
 
 // Route to get client appointments
-router.get('/appointments/:userId', async (req, res) => {
-  const { userId } = req.params;
+router.get('/appointments/client/:clientId', async (req, res) => {
+  const { clientId } = req.params;
   try {
-    const appointments = await getAppointmentsClient(userId);
+    const appointments = await getAppointmentsClient(clientId);
     res.status(200).send(appointments);
   } catch (error) {
     console.error('Error fetching appointments:', error);

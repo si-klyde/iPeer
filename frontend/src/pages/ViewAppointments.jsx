@@ -31,7 +31,7 @@ const ViewAppointments = () => {
     const fetchAppointments = async () => {
       if (!currentUserId) return;
       try {
-        const { data: appointments } = await axios.get(`http://localhost:5000/api/appointments/${currentUserId}`);
+        const { data: appointments } = await axios.get(`http://localhost:5000/api/appointments/client/${currentUserId}`);
         const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
         setAppointments(sortedAppointments);
       } catch (error) {

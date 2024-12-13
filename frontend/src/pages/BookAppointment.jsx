@@ -77,7 +77,7 @@ const BookAppointment = () => {
         time,
         description,
         peerCounselorId: selectedPeerCounselor,
-        userId: currentUserId,
+        clientId: currentUserId,
       });
       
       setBookingSuccess(true);
