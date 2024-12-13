@@ -25,6 +25,7 @@ import Information from './pages/Information.jsx';
 import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
+import EventCatalog from './pages/Events.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -92,7 +93,7 @@ const App = () => {
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-
+                    <Route path="/event" element={<EventCatalog />} />
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={
