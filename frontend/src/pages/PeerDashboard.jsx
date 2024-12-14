@@ -6,11 +6,12 @@ import axios from 'axios';
 
 const PeerDashboard = () => {
   const navigate = useNavigate();
-  //const [isOnline, setIsOnline] = useState(true);
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [clients, setClients] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [peerStatus, setPeerStatus] = useState('online');
 
   useEffect(() => {
     authStateChanged(auth, (user) => {
@@ -80,8 +81,63 @@ const PeerDashboard = () => {
   const todayFormattedAppointments = formatAppointments(todayAppointments);
   const upcomingFormattedAppointments = formatAppointments(upcomingAppointments);
 
+  const StatusToggle = () => {
+    const statusOptions = ['online', 'away', 'busy', 'offline'];
+    
+    const handleStatusChange = async (newStatus) => {
+      setPeerStatus(newStatus);
+      setIsAvailable(newStatus === 'online');
+      
+      try {
+        await axios.put(`http://localhost:5000/api/peer-counselor/status/${currentUserId}`, {
+          status: newStatus,
+          isAvailable: newStatus === 'online'
+        });
+      } catch (error) {
+        console.error('Error updating status:', error);
+      }
+    };
+
+    // useEffect(() => {
+    //   console.log('Status Updated:', {
+    //     currentStatus: peerStatus,
+    //     availabilityState: isAvailable
+    //   });
+    // }, [peerStatus, isAvailable]);
+  
+    return (
+      <div className="flex items-center space-x-4 mb-6 bg-white p-4 rounded-lg shadow">
+        <span className="font-medium">Status:</span>
+        <div className="flex space-x-2">
+          {statusOptions.map((status) => (
+            <button
+              key={status}
+              onClick={() => handleStatusChange(status)}
+              className={`px-4 py-2 rounded-full text-sm capitalize
+                ${peerStatus === status 
+                  ? 'bg-green-500 text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        <div className={`flex items-center space-x-2 
+          ${isAvailable ? 'text-green-500' : 'text-gray-500'}`}>
+          <div className={`w-3 h-3 rounded-full 
+            ${isAvailable ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+          <span className="text-sm">
+            {isAvailable ? 'Available' : 'Unavailable'}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <StatusToggle />
       {/* Today's Schedule */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
