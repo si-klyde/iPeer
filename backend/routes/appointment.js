@@ -111,10 +111,31 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
     const appointmentRef = db.collection('appointments').doc(appointmentId);
     await appointmentRef.update({ status });
 
-    // Fetch updated appointment
-    const updatedAppointment = await appointmentRef.get();
-    
+    // Send immediate response
     res.status(200).send({ message: 'Appointment status updated successfully' });
+
+    // Handle email sending in background
+    if (status === 'accepted') {
+      const updatedAppointment = await appointmentRef.get();
+      const appointmentData = updatedAppointment.data();
+
+      Promise.all([
+        db.collection('users').doc(appointmentData.clientId).get(),
+        db.collection('users').doc(appointmentData.peerCounselorId).get()
+      ]).then(([clientDoc, counselorDoc]) => {
+        sendAppointmentConfirmation(
+          clientDoc.data().email,
+          counselorDoc.data().email,
+          {
+            date: appointmentData.date,
+            time: appointmentData.time,
+            clientName: clientDoc.data().displayName,
+            peerCounselorName: counselorDoc.data().displayName,
+            roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
+          }
+        ).catch(error => console.error('Error sending email:', error));
+      }).catch(error => console.error('Error fetching user data:', error));
+    }
   } catch (error) {
     console.error('Error updating appointment status:', error);
     res.status(500).send({ error: 'Error updating appointment status' });

@@ -13,13 +13,14 @@ const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointm
   const clientMailOptions = {
     from: process.env.EMAIL_USER,
     to: clientEmail,
-    subject: 'Appointment Confirmation',
+    subject: 'Ipeer Appointment Confirmation!',
     html: `
       <h2>Your appointment has been confirmed</h2>
       <p>Date: ${appointmentDetails.date}</p>
       <p>Time: ${appointmentDetails.time}</p>
       <p>Peer Counselor: ${appointmentDetails.peerCounselorName}</p>
       <p>Room Link: ${appointmentDetails.roomLink}</p>
+      <p>See you!</p>
     `
   };
 
