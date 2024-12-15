@@ -7,7 +7,7 @@ const APP_TIMEZONE = 'Asia/Manila';
 
 // Run every 15 minutes
 // palitan na lang if idedeploy na (wag 15mins)
-cron.schedule('*/15 * * * *', async () => {
+cron.schedule('* * * * *', async () => {
   try {
     console.log('Appointment Reminder Cron Job Started');
     
@@ -21,6 +21,7 @@ cron.schedule('*/15 * * * *', async () => {
     const appointmentsSnapshot = await db.collection('appointments')
       .where('date', '==', currentDate)
       .where('time', '==', targetTime)
+      .where('status', '==', 'accepted')
       .get();
 
     if (appointmentsSnapshot.empty) {

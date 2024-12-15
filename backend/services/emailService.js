@@ -84,12 +84,6 @@ const sendAppointmentRejection = async (clientEmail, counselorEmail, appointment
 };
 
 const sendAppointmentReminder = async (clientEmail, counselorEmail, appointmentDetails) => {
-  
-  if (appointmentDetails.status !== 'accepted') {
-    console.log('Appointment not confirmed. Skipping reminder email.');
-    return;
-  }
-
   // Email to client
   const clientMailOptions = {
     from: process.env.EMAIL_USER,
@@ -109,7 +103,7 @@ const sendAppointmentReminder = async (clientEmail, counselorEmail, appointmentD
     to: counselorEmail,
     subject: 'Appointment Reminder',
     html: `
-      <h2>Reminder: You have an appointment in 1 hour</h2>
+      <h2>Just a heads-up! You’ve got an appointment coming up in an hour. 😊</h2>
       <p>Time: ${appointmentDetails.time}</p>
       <p>Client: ${appointmentDetails.clientName}</p>
       <p>Room Link: ${appointmentDetails.roomLink}</p>
