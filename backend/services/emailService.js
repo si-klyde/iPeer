@@ -9,6 +9,12 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointmentDetails) => {
+  
+  if (appointmentDetails.status !== 'accepted') {
+    console.log('Appointment not confirmed. Skipping reminder email.');
+    return;
+  }
+  
   // Email to client
   const clientMailOptions = {
     from: process.env.EMAIL_USER,
@@ -44,8 +50,46 @@ const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointm
   ]);
 };
 
+const sendAppointmentRejection = async (clientEmail, counselorEmail, appointmentDetails) => {
+  // Email to client
+  const clientMailOptions = {
+    from: process.env.EMAIL_USER,
+    to: clientEmail,
+    subject: 'iPeer Appointment Status Update',
+    html: `
+      <h2>Your appointment request has been declined</h2>
+      <p>Date: ${appointmentDetails.date}</p>
+      <p>Time: ${appointmentDetails.time}</p>
+      <p>Please try booking another schedule.</p>
+    `
+  };
+
+  // Email to peer counselor (confirmation of rejection)
+  const counselorMailOptions = {
+    from: process.env.EMAIL_USER,
+    to: counselorEmail,
+    subject: 'Appointment Rejection Confirmation',
+    html: `
+      <h2>You have declined an appointment</h2>
+      <p>Date: ${appointmentDetails.date}</p>
+      <p>Time: ${appointmentDetails.time}</p>
+      <p>Client: ${appointmentDetails.clientName}</p>
+    `
+  };
+
+  await Promise.all([
+    transporter.sendMail(clientMailOptions),
+    transporter.sendMail(counselorMailOptions)
+  ]);
+};
 
 const sendAppointmentReminder = async (clientEmail, counselorEmail, appointmentDetails) => {
+  
+  if (appointmentDetails.status !== 'accepted') {
+    console.log('Appointment not confirmed. Skipping reminder email.');
+    return;
+  }
+
   // Email to client
   const clientMailOptions = {
     from: process.env.EMAIL_USER,
@@ -80,5 +124,6 @@ const sendAppointmentReminder = async (clientEmail, counselorEmail, appointmentD
 
 module.exports = {
   sendAppointmentConfirmation,
-  sendAppointmentReminder
+  sendAppointmentReminder,
+  sendAppointmentRejection
 };

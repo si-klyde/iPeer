@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = require('../models/appointment');
 const { db } = require('../firebaseAdmin');
-const { sendAppointmentConfirmation } = require('../services/emailService');
+const { sendAppointmentConfirmation, sendAppointmentRejection } = require('../services/emailService');
 
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
@@ -106,39 +106,63 @@ router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => 
 router.put('/appointments/:appointmentId/status', async (req, res) => {
   const { appointmentId } = req.params;
   const { status } = req.body;
-
   try {
     const appointmentRef = db.collection('appointments').doc(appointmentId);
     await appointmentRef.update({ status });
 
-    // Send immediate response
+    // Immediately send response to client
     res.status(200).send({ message: 'Appointment status updated successfully' });
 
-    // Handle email sending in background
-    if (status === 'accepted') {
-      const updatedAppointment = await appointmentRef.get();
-      const appointmentData = updatedAppointment.data();
+    // Perform email sending in the background
+    setImmediate(async () => {
+      try {
+        // Get appointment and user data
+        const updatedAppointment = await appointmentRef.get();
+        const appointmentData = updatedAppointment.data();
+        
+        const [clientDoc, counselorDoc] = await Promise.all([
+          db.collection('users').doc(appointmentData.clientId).get(),
+          db.collection('users').doc(appointmentData.peerCounselorId).get()
+        ]);
 
-      Promise.all([
-        db.collection('users').doc(appointmentData.clientId).get(),
-        db.collection('users').doc(appointmentData.peerCounselorId).get()
-      ]).then(([clientDoc, counselorDoc]) => {
-        sendAppointmentConfirmation(
-          clientDoc.data().email,
-          counselorDoc.data().email,
-          {
-            date: appointmentData.date,
-            time: appointmentData.time,
-            clientName: clientDoc.data().displayName,
-            peerCounselorName: counselorDoc.data().displayName,
-            roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
-          }
-        ).catch(error => console.error('Error sending email:', error));
-      }).catch(error => console.error('Error fetching user data:', error));
-    }
+        const clientData = clientDoc.data();
+        const counselorData = counselorDoc.data();
+
+        if (status === 'accepted') {
+          await sendAppointmentConfirmation(
+            clientData.email,
+            counselorData.email,
+            {
+              status: 'accepted',
+              date: appointmentData.date,
+              time: appointmentData.time,
+              clientName: clientData.displayName,
+              peerCounselorName: counselorData.displayName,
+              roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
+            }
+          );
+        } else if (status === 'declined') {
+          await sendAppointmentRejection(
+            clientData.email,
+            counselorData.email,
+            {
+              status: 'declined',
+              date: appointmentData.date,
+              time: appointmentData.time,
+              clientName: clientData.displayName,
+              peerCounselorName: counselorData.displayName
+            }
+          );
+        }
+      } catch (backgroundError) {
+        console.error('Background email process error:', backgroundError);
+        // Optionally log to an error tracking service
+      }
+    });
+
   } catch (error) {
     console.error('Error updating appointment status:', error);
-    res.status(500).send({ error: 'Error updating appointment status' });
+    res.status(500).send({ message: 'Error updating appointment status', error: error.message });
   }
 });
 
