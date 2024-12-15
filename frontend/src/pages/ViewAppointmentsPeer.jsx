@@ -50,27 +50,27 @@ const ViewAppointmentsPeer = () => {
   
 
   useEffect(() => {
-    const fetchClientDetails = async (userId) => {
-      if (!clients[userId]) {
+    const fetchClientDetails = async (clientId) => {
+      if (!clients[clientId]) {
         try {
-          const response = await axios.get(`http://localhost:5000/api/client/${userId}`);
+          const response = await axios.get(`http://localhost:5000/api/client/${clientId}`);
           setClients(prevState => ({
             ...prevState,
-            [userId]: response.data.displayName || 'Name not available'
+            [clientId]: response.data.displayName || 'Name not available'
           }));
         } catch (error) {
           console.error('Error fetching client details:', error);
           setClients(prevState => ({
             ...prevState,
-            [userId]: 'Client information unavailable'
+            [clientId]: 'Client information unavailable'
           }));
         }
       }
     };
 
     appointments.forEach(appointment => {
-      if (appointment.userId) {
-        fetchClientDetails(appointment.userId);
+      if (appointment.clientId) {
+        fetchClientDetails(appointment.clientId);
       }
     });
   }, [appointments, clients]);
