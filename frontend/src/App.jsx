@@ -25,6 +25,7 @@ import Information from './pages/Information.jsx';
 import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
+import EventCatalog from './pages/Events.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -46,7 +47,7 @@ const App = () => {
                         const userData = doc.data();
                         
                         // Prioritize custom photo URL
-                        const photoURL = userData.customPhotoURL || 
+                        const photoURL = userData.photoURL || 
                                          `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
                         
                         setUser({
@@ -92,7 +93,7 @@ const App = () => {
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-
+                    <Route path="/event" element={<EventCatalog />} />
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={

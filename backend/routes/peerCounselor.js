@@ -32,4 +32,27 @@ router.get('/peer-counselors/:id', async (req, res) => {
   }
 });
 
+router.put('/peer-counselor/status/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { status, isAvailable } = req.body;
+  
+  console.log('Updating status for user:', userId);
+  console.log('New status data:', { status, isAvailable });
+  
+  try {
+    const userRef = db.collection('users').doc(userId);
+    await userRef.update({
+      status,
+      isAvailable,
+      lastStatusUpdate: new Date()
+    });
+    
+    res.status(200).json({ message: 'Status updated successfully' });
+  } catch (error) {
+    console.error('Update error:', error);
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+
 module.exports = router;
