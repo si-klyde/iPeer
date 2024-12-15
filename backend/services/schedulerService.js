@@ -7,7 +7,7 @@ const APP_TIMEZONE = 'Asia/Manila';
 
 // Run every 15 minutes
 // palitan na lang if idedeploy na (wag 15mins)
-cron.schedule('* * * * *', async () => {
+cron.schedule('30 * * * *', async () => {
   try {
     console.log('Appointment Reminder Cron Job Started');
     
