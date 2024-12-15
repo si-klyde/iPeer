@@ -51,8 +51,8 @@ router.post('/create-appointment', async (req, res) => {
       {
         date: appointmentData.date,
         time: appointmentData.time,
-        clientName: clientDoc.data().name,
-        peerCounselorName: counselorDoc.data().name,
+        clientName: clientDoc.data().displayName,
+        peerCounselorName: counselorDoc.data().displayName,
         roomLink: `http://localhost:5173/counseling/${roomId}`
       }
     );

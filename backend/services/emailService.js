@@ -19,6 +19,7 @@ const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointm
       <p>Date: ${appointmentDetails.date}</p>
       <p>Time: ${appointmentDetails.time}</p>
       <p>Peer Counselor: ${appointmentDetails.peerCounselorName}</p>
+      <p>Room Link: ${appointmentDetails.roomLink}</p>
     `
   };
 
@@ -31,7 +32,8 @@ const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointm
       <h2>New appointment scheduled</h2>
       <p>Date: ${appointmentDetails.date}</p>
       <p>Time: ${appointmentDetails.time}</p>
-      <p>Client: ${appointmentDetails.clientName}</p>
+      <p>Client Name: ${appointmentDetails.clientName}</p>
+      <p>Room Link: ${appointmentDetails.roomLink}</p>
     `
   };
 
@@ -40,6 +42,7 @@ const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointm
     transporter.sendMail(counselorMailOptions)
   ]);
 };
+
 
 const sendAppointmentReminder = async (clientEmail, counselorEmail, appointmentDetails) => {
   // Email to client
