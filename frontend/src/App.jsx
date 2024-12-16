@@ -21,6 +21,7 @@ import UserProfile from './pages/UserProfile.jsx';
 import { auth, authStateChanged, firestore } from './firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import Footer from './components/Footer.jsx';
+import ViewEvent from './pages/viewevent.jsx';
 import Information from './pages/Information.jsx';  
 import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
@@ -93,6 +94,8 @@ const App = () => {
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
+                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    <Route path="/viewevent" element={<ViewEvent />} />                           
                     <Route path="/event" element={<EventCatalog />} />
 
                     {/* Client-Only Routes */}
