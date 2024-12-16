@@ -5,6 +5,8 @@ const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointment');
 const peerCounselorRoutes = require('./routes/peerCounselor');
 const clientRoutes = require('./routes/client');
+const notesRouter = require('./routes/notes');
+const eventRoutes = require('./routes/event');
 const cors = require('cors');
 
 require('./services/schedulerService');
@@ -23,6 +25,8 @@ app.use('/api', authRoutes);
 app.use('/api', appointmentRoutes);
 app.use('/api', peerCounselorRoutes);
 app.use('/api', clientRoutes);
+app.use('/api', notesRouter);
+app.use('/api', eventRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

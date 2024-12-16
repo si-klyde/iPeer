@@ -1,41 +1,70 @@
 const cron = require('node-cron');
 const { db } = require('../firebaseAdmin');
 const { sendAppointmentReminder } = require('./emailService');
+const moment = require('moment-timezone');
 
-// Run every hour at minute 0
-cron.schedule('0 * * * *', async () => {
+const APP_TIMEZONE = 'Asia/Manila';
+
+// Run every 15 minutes
+// palitan na lang if idedeploy na (wag 15mins)
+cron.schedule('30 * * * *', async () => {
   try {
-    const now = new Date();
-    const currentDate = now.toISOString().split('T')[0];
+    console.log('Appointment Reminder Cron Job Started');
     
-    // Get current hour + 1 to check upcoming appointments
-    const nextHour = (now.getHours() + 1).toString().padStart(2, '0') + ':00';
+    const now = moment().tz(APP_TIMEZONE);
+    const currentDate = now.format('YYYY-MM-DD');
+    const targetTime = now.clone().add(1, 'hour').format('HH:mm');
+
+    console.log(`Checking appointments for date: ${currentDate} and time: ${targetTime}`);
     
-    // Get all appointments for today with time matching next hour
+    // Single equality check instead of range query
     const appointmentsSnapshot = await db.collection('appointments')
       .where('date', '==', currentDate)
-      .where('time', '==', nextHour)
+      .where('time', '==', targetTime)
+      .where('status', '==', 'accepted')
       .get();
 
-    for (const doc of appointmentsSnapshot.docs) {
-      const appointment = doc.data();
-      
-      // Fetch client and counselor details
-      const clientDoc = await db.collection('users').doc(appointment.userId).get();
-      const counselorDoc = await db.collection('users').doc(appointment.peerCounselorId).get();
-      
-      await sendAppointmentReminder(
-        clientDoc.data().email,
-        counselorDoc.data().email,
-        {
-          time: appointment.time,
-          clientName: clientDoc.data().name,
-          peerCounselorName: counselorDoc.data().name,
-          roomLink: `https://yourapp.com/room/${appointment.roomId}`
-        }
-      );
+    if (appointmentsSnapshot.empty) {
+      console.log('No upcoming appointments found');
+      return;
     }
+
+    const reminderPromises = appointmentsSnapshot.docs.map(async (doc) => {
+      const appointment = { id: doc.id, ...doc.data() };
+      
+      try {
+        const clientDoc = await db.collection('users').doc(appointment.clientId).get();
+        const counselorDoc = await db.collection('users').doc(appointment.peerCounselorId).get();
+        
+        if (!clientDoc.exists || !counselorDoc.exists) {
+          console.error(`User documents missing for appointment ${appointment.id}`);
+          return;
+        }
+
+        const reminderDetails = {
+          time: appointment.time,
+          clientName: clientDoc.data().displayName,
+          peerCounselorName: counselorDoc.data().displayName,
+          roomLink: `http://localhost:5173/counseling/${appointment.roomId}`
+        };
+
+        await sendAppointmentReminder(
+          clientDoc.data().email,
+          counselorDoc.data().email,
+          reminderDetails
+        );
+
+        console.log(`Reminder sent for appointment ${appointment.id} at ${appointment.time}`);
+      } catch (userFetchError) {
+        console.error(`Error processing appointment ${appointment.id}:`, userFetchError);
+      }
+    });
+
+    await Promise.allSettled(reminderPromises);
+
   } catch (error) {
-    console.error('Error sending appointment reminders:', error);
+    console.error('Critical error in appointment reminder cron job:', error);
   }
 });
+
+module.exports = { schedulerService: cron };

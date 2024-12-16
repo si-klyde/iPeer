@@ -11,8 +11,10 @@ router.get('/client/:id', async (req, res) => {
       console.log(`Client with ID ${userId} not found.`);
       return res.status(404).send({ error: 'Client not found' });
     }
-    console.log(`Client data:`, clientDoc.data());
-    res.status(200).send(clientDoc.data());
+    const clientData = clientDoc.data();
+    console.log('Sending ALL client data:', clientData);
+    // Make sure to log the entire data object
+    res.status(200).send(clientData);
   } catch (error) {
     console.error('Error fetching client:', error);
     res.status(500).send({ error: 'Error fetching client' });

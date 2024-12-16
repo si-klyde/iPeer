@@ -16,6 +16,7 @@
     "express": "^4.19.2",
     "firebase-admin": "^12.4.0",
     "google-auth-library": "^9.14.1",
+    "moment-timezone": "^0.5.46",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16"
   },
