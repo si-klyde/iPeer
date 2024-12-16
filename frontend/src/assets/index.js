@@ -10,6 +10,9 @@ import additional2 from "./information/additional-2.png";
 import hotlines from "./information/hotlines.png"
 import loginImage from "./login/Login-image.png"
 import appointmentImage from "./appointment/appointment-image.png"
+import recentPic from "./recentpic.jpg";
+import ongoingPic from "./ongoingpic.jpg";
+import upcomingPic from "./upcomingpic.jpg";
 
 
 export {
@@ -25,4 +28,7 @@ export {
   hotlines,
   loginImage,
   appointmentImage,
+  recentPic,
+  ongoingPic,
+  upcomingPic
 };
