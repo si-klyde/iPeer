@@ -5,6 +5,7 @@ import { aboutImage, heroImage, sectionImage, mindImage } from "../assets";
 import Button from "./Button";
 import ProfileCard from "./Card";
 import TypingEffect from "./TypingEffect";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import ServicesCard from "./ServicesCard";
 
 const Hero = () => {
@@ -59,7 +60,13 @@ const Hero = () => {
         animate={isVisible.hero ? "visible" : "hidden"}
       >
         <div className="relative ml-15 flex items-center justify-end w-full h-screen md:h-screen">
-          <img src={heroImage} alt="Hero Image" className="w-2/3 md:w-1/3 md:h-96 lg:h-auto lg:w-2/3 h-auto sd:w-1/3" />
+            <DotLottieReact
+              className="-mt-36 w-2/3 md:w-1/3 md:h-96 lg:h-auto lg:w-2/3 h-auto sd:w-1/3"
+              src="https://lottie.host/ca56ebaa-b92d-4df5-91b0-2130a4536287/SRovhNttyQ.json"
+              autoplay
+              loop
+            />
+          {/* <img src={heroImage} alt="Hero Image" className="w-2/3 md:w-1/3 md:h-96 lg:h-auto lg:w-2/3 h-auto sd:w-1/3" /> */}
         </div>
     
         {/* Text on top of the background */}
@@ -92,7 +99,7 @@ const Hero = () => {
             <img
               src={aboutImage}
               alt="About Image"
-              className="ml-32 -mr-5 w-3/4 h-[400px] object-cover rounded-md"
+              className="ml-32 -mr-5 w-3/4 h-[430px] object-cover rounded-md"
             />
           </div>
 
@@ -103,7 +110,7 @@ const Hero = () => {
               Discover Your True Potential
             </p>
             <p className="text-md text-gray-700 w-3/4 pb-5">
-              Here at MindSpace Hub, we foster personal growth and mental wellness
+              Here at iPeer, we foster personal growth and mental wellness
               through peer counseling, supporting you every step of the way.
             </p>
             <Button className="w-64" href="#features">
@@ -151,8 +158,8 @@ const Hero = () => {
           <h1 className="bg-clip-text font-sans mb-5 text-4xl font-semibold flex justify-center p-6">
             Key Features
           </h1>
-          <p className="mx-auto font-sans text-md mb-24 flex justify-center w-1/2 text-center">
-            Our services ensure a personalized approach to enhance well-being, nurturing your mental health journey.
+          <p className="mx-auto font-sans text-md mb-12 flex justify-center w-1/2 text-center">
+              iPeer offers personalized peer support, mental health resources, and an accessible communication platform to help you manage well-being and stay connected.
           </p>
           <div className="flex flex-wrap justify-center py-10">
             <ProfileCard />
@@ -227,20 +234,20 @@ const Hero = () => {
         <img
           src={mindImage}
           alt="Mindfulness"
-          className="-mr-5 w-[800px] h-[400px] rounded-lg shadow-md"
+          className="-mr-5 p-12 rounded-lg"
         />
       </div>
 
       {/* Text Section */}
-      <div className="bg-transparent rounded-lg p-8 w-full md:w-1/2 mt-6 md:mt-0 md:ml-6">
-        <p className="font-mono text-md text-gray-600/100 mb-5">Our Schedule</p>
-        <h1 className="text-4xl font-bold text-gray-800 mb-4">
-          Creating Space for Mind Wellness
-        </h1>
-        <p className="text-gray-600 mb-6">
-          At iPeer, we foster a safe and nurturing environment for
-          healing, growth, and personal transformation.
-        </p>
+        <div className="bg-transparent rounded-lg p-8 w-full md:w-1/2 mt-6 md:mt-0 md:ml-6">
+          <p className="font-mono text-md text-gray-600/100 mb-5">Our Schedule</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Creating Space for Mind Wellness
+          </h1>
+          <p className="text-gray-600 mb-6">
+          At iPeer, we provide easy access to peer support appointments, 
+          allowing you to schedule sessions at your convenience to support your mental wellness.
+          </p>
 
         <div className="border-t border-gray-300 mt-4 pt-4">
           <h2 className="font-semibold text-lg text-gray-800 mb-5">iPeer Counseling and Appointment Schedule</h2>
@@ -282,7 +289,7 @@ const Hero = () => {
       <div className="bg-[#9CDBA6] shadow-xl -mt-20 h-72 w-5/6 flex items-center justify-center relative">
       {/* Background Circles */}
       <div className="absolute size-48 bg-[#4FD3C4] rounded-full top-1/4 left-1/4"></div>
-      <div className="absolute w-48 h-48 bg-[#488FB1] rounded-full bottom-1/4 right-1/4"></div>
+      <div className="absolute w-48 h-48 bg-[#fe8a4f] bg-opacity-65 rounded-full bottom-1/4 right-1/4"></div>
       
       {/* Content */}
       <div className="relative z-10 text-center m-10" >

@@ -23,6 +23,7 @@ import Information from './pages/Information.jsx';
 import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
+import Calendar from './pages/Calendar.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -120,6 +121,11 @@ const App = () => {
                     <Route path="/profile" element={
                         <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
                             <UserProfile />
+                        </ProtectedRoute>
+                    } />
+                     <Route path="/calendar" element={
+                        <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
+                            <Calendar />
                         </ProtectedRoute>
                     } />
 
