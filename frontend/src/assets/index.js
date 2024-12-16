@@ -1,7 +1,7 @@
 import heroImage from "./hero-image.png";
-import aboutImage from "./about-section.jpg";
-import sectionImage from "./third-section.jpg";
-import mindImage from "./mind-image.jpg";
+import aboutImage from "./about-section.png";
+import sectionImage from "./third-section.png";
+import mindImage from "./mind-image.png";
 import aboutThird from "./information/on-campus.png";
 import infoImage from "./information/info-image.png";
 import infoImage2 from "./information/info-image2.png"
@@ -9,6 +9,10 @@ import additional1 from "./information/additional-1.png";
 import additional2 from "./information/additional-2.png";
 import hotlines from "./information/hotlines.png"
 import loginImage from "./login/Login-image.png"
+import appointmentImage from "./appointment/appointment-image.png"
+import recentPic from "./recentpic.jpg";
+import ongoingPic from "./ongoingpic.jpg";
+import upcomingPic from "./upcomingpic.jpg";
 
 
 export {
@@ -23,4 +27,8 @@ export {
   additional2,
   hotlines,
   loginImage,
+  appointmentImage,
+  recentPic,
+  ongoingPic,
+  upcomingPic
 };

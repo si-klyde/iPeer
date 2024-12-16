@@ -14,8 +14,8 @@ const ProfileCard = () => {
         <label className="font-bold text-n-1 text-lg">
           Unique Approach
         </label>
-        <p className="text-center text-n-8/60 mt-2 leading-relaxed">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+        <p className="text-center text-n-8/80 mt-2 leading-relaxed">
+        iPeer offers peer support through video calls, messaging, and consultations.       
         </p>
       </div>
 
@@ -29,9 +29,9 @@ const ProfileCard = () => {
         <label className="font-bold text-n-1 text-lg">
           Support Network
         </label>
-        <p className="text-center text-n-8/60 mt-2 leading-relaxed">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-        </p>
+        <p className="text-center text-n-8/80 mt-2 leading-relaxed">
+        Access peer support, scheduling, and notifications for personalized care.    
+         </p>
       </div>
 
       {/* Empower */}
@@ -44,8 +44,8 @@ const ProfileCard = () => {
         <label className="font-bold text-n-1 text-lg">
           Holistic Care
         </label>
-        <p className="text-center text-n-8/60 mt-2 leading-relaxed">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+        <p className="text-center text-n-8/80 mt-2 leading-relaxed">
+        Stay informed with mental health resources, events, and emergency hotlines.
         </p>
       </div>
     </>
