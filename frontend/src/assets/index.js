@@ -9,6 +9,7 @@ import additional1 from "./information/additional-1.png";
 import additional2 from "./information/additional-2.png";
 import hotlines from "./information/hotlines.png"
 import loginImage from "./login/Login-image.png"
+import appointmentImage from "./appointment/appointment-image.png"
 
 
 export {
@@ -23,4 +24,5 @@ export {
   additional2,
   hotlines,
   loginImage,
+  appointmentImage,
 };

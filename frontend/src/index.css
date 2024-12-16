@@ -34,6 +34,14 @@
     }
 }
 
+.custom-input-date::-webkit-calendar-picker-indicator,
+.custom-input-time::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Change this to test if the picker visually updates */
+  opacity: 1;
+  cursor: pointer;
+}
+
+
 .rotate-45 {
     @apply rotate-[45deg];
 }
