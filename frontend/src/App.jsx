@@ -25,7 +25,6 @@ import Information from './pages/Information.jsx';
 import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
-import Calendar from './pages/Calendar.jsx';
 import EventCatalog from './pages/Events.jsx';
 
 const App = () => {
