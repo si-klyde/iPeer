@@ -27,7 +27,7 @@ const RegisterPeerCounselor = () => {
         { email, password, displayName }
       );
       console.log('Registration successful:', response.data);
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Registration error:', error);
       if (error.response && error.response.data && error.response.data.error) {
