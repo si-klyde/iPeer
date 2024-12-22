@@ -46,19 +46,19 @@ const EventCatalog = () => {
   
     const handleInputChange = (e) => {
       const { name, value } = e.target;
-      setNewEvent(prev => ({
-        ...prev,
+      setNewEvent(prevState => ({
+        ...prevState,
         [name]: value
       }));
-    };
+    };    
   
     const handleSubmit = async (e) => {
       e.preventDefault();
       try {
         if (isEditing) {
-          await axios.put(`http://localhost:5000/api/events/${editingId}`, newEvent);
+          await axios.put(`http://localhost:5000/api/${editingId}`, newEvent);
         } else {
-          await axios.post('http://localhost:5000/api/events', newEvent);
+          await axios.post('http://localhost:5000/api/add-events', newEvent);
         }
         setNewEvent({
           title: '',
@@ -95,7 +95,7 @@ const EventCatalog = () => {
   
     const handleDelete = async (eventId) => {
       try {
-        await axios.delete(`http://localhost:5000/api/events/${eventId}`);
+        await axios.delete(`http://localhost:5000/api/A${eventId}`);
         fetchEvents();
       } catch (error) {
         console.error('Error deleting event:', error);
