@@ -92,6 +92,33 @@ const Calendar = () => {
     return upcomingEvents.sort((a, b) => a.fullDate - b.fullDate);
   };
   
+  const EventList = ({ events, hoverColor }) => (
+    <ul className="space-y-2">
+      {events.length > 0 ? (
+        <>
+          {events.slice(0, 3).map((event, i) => (
+            <li
+              key={i}
+              className={`text-white hover:${hoverColor} cursor-pointer transition-colors`}
+              onClick={() => handleEventClick(event)}
+            >
+              {event.title}
+            </li>
+          ))}
+          {events.length > 3 && (
+            <li className="text-white text-right text-sm">
+              +{events.length - 3} more
+            </li>
+          )}
+        </>
+      ) : (
+        <li className="text-white text-center">
+          <p className="mb-2">No events found</p>
+          <p className="text-sm opacity-80">Check back later!</p>
+        </li>
+      )}
+    </ul>
+  );
 
   const handleViewEvent = () => {
     navigate('/viewevent');
@@ -271,80 +298,29 @@ const Calendar = () => {
             <h2 className="text-3xl font-semibold text-gray-800">Events</h2>
             
             {/* Recent Events Card */}
-            <div className="relative overflow-hidden rounded-2xl shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl shadow-xl h-[180px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${recentPic})` }} />
-              <div className="relative bg-gradient-to-r from-red-800/80 to-red-600/80 p-6">
+              <div className="relative bg-gradient-to-r from-red-800/80 to-red-600/80 p-6 h-[180px]">
                 <h3 className="text-xl font-semibold text-white mb-4">Recent Events</h3>
-                  <ul className="space-y-2">
-                    {getRecentEvents().length > 0 ? (
-                      getRecentEvents().map((event, i) => (
-                        <li
-                          key={i}
-                          className="text-white hover:text-red-200 cursor-pointer transition-colors"
-                          onClick={() => handleEventClick(event)}
-                        >
-                          {event.title}
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-white text-center">
-                        <p className="mb-2">No recent events found</p>
-                        <p className="text-sm opacity-80">Check back later for upcoming activities!</p>
-                      </li>
-                    )}
-                  </ul>
+                <EventList events={getRecentEvents()} hoverColor="text-red-200" />
               </div>
             </div>
 
             {/* Ongoing Events Card */}
-            <div className="relative overflow-hidden rounded-2xl shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl shadow-xl h-[180px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ongoingPic})` }} />
-              <div className="relative bg-gradient-to-r from-green-800/80 to-green-600/80 p-6">
+              <div className="relative bg-gradient-to-r from-green-800/80 to-green-600/80 p-6 h-[180px]">
                 <h3 className="text-xl font-semibold text-white mb-4">Ongoing Events</h3>
-                  <ul className="space-y-2">
-                    {getOngoingEvents().length > 0 ? (
-                      getOngoingEvents().map((event, i) => (
-                        <li
-                          key={i}
-                          className="text-white hover:text-green-200 cursor-pointer transition-colors"
-                          onClick={() => handleEventClick(event)}
-                        >
-                          {event.title}
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-white text-center">
-                        <p className="mb-2">No ongoing events today</p>
-                        <p className="text-sm opacity-80">Stay tuned for today's activities!</p>
-                      </li>
-                    )}
-                  </ul>
+                <EventList events={getOngoingEvents()} hoverColor="text-green-200" />
               </div>
             </div>
 
             {/* Upcoming Events Card */}
-            <div className="relative overflow-hidden rounded-2xl shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl shadow-xl h-[180px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${upcomingPic})` }} />
-              <div className="relative bg-gradient-to-r from-blue-800/80 to-blue-600/80 p-6">
+              <div className="relative bg-gradient-to-r from-blue-800/80 to-blue-600/80 p-6 h-[180px]">
                 <h3 className="text-xl font-semibold text-white mb-4">Upcoming Events</h3>
-                  <ul className="space-y-2">
-                    {getUpcomingEvents().length > 0 ? (
-                      getUpcomingEvents().map((event, i) => (
-                        <li
-                          key={i}
-                          className="text-white hover:text-blue-200 cursor-pointer transition-colors"
-                          onClick={() => handleEventClick(event)}
-                        >
-                          {event.title}
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-white text-center">
-                        <p className="mb-2">No upcoming events scheduled</p>
-                        <p className="text-sm opacity-80">Check back soon for new events!</p>
-                      </li>
-                    )}
-                  </ul>
+                <EventList events={getUpcomingEvents()} hoverColor="text-blue-200" />
               </div>
             </div>
           </div>
