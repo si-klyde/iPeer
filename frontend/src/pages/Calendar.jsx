@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Button from '../components/Button';
-import { additional1, recentPic, upcomingPic } from '../assets';
-import { ongoingPic } from '../assets';
+import { additional1, recentPic, upcomingPic, ongoingPic } from '../assets';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [eventDescription, setEventDescription] = useState(''); // For modal form input
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [calendarEvents, setCalendarEvents] = useState({});
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -33,7 +29,7 @@ const Calendar = () => {
           }
           eventsData[dayKey].push({
             ...event,
-            fullDate: eventDate // Store the combined date and time
+            fullDate: eventDate
           });
         });
         
@@ -50,7 +46,6 @@ const Calendar = () => {
     navigate('/viewevent');
   };
 
-
   // Get today's date for highlighting the current day
   const today = new Date();
   const isToday = (day) => (
@@ -66,17 +61,6 @@ const Calendar = () => {
   ];
   
   const years = Array.from({ length: 10 }, (_, i) => selectedDate.getFullYear() - 5 + i);
-
-  // Mock Event Data (added event per day as an example)      
-  const eventsPerDay = {
-    1: 'Event A',
-    3: 'Event B',
-    7: 'Event C',
-    12: 'Event D',
-    15: 'Event E',
-    20: 'Event F',
-    25: 'Event G'
-  };
 
   const events = {
     recent: ['Event 1', 'Event 2'],
@@ -97,41 +81,27 @@ const Calendar = () => {
   };
 
   const daysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
-
   // Weekday names
   const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
   // Get the first day of the current month (0 = Sunday, 1 = Monday, etc.)
   const firstDayOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getDay();
 
-  // Create the calendar days, including empty spaces for days before the 1st
+  // Create calendar days array
   const calendarDays = [];
   for (let i = 0; i < firstDayOfMonth; i++) {
-    calendarDays.push(null); // Placeholder for empty days
+    calendarDays.push(null);
   }
   for (let day = 1; day <= daysInMonth; day++) {
     calendarDays.push(day);
   }
 
-  // Handle day click to open modal and set "Lorem Ipsum" as description
+  // Handle day click to open modal
   const handleDayClick = (day) => {
     setSelectedDay(day);
-    const currentDateKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${day}`;
-    const eventsForDay = calendarEvents[currentDateKey] || [];
-  
-    setEventDescription(
-      eventsForDay.length > 0 
-        ? eventsForDay.map(event => `
-          Event: ${event.title}
-          Time: ${new Date(event.date).toLocaleTimeString()}
-          Description: ${event.description || 'No description available'}
-          `).join('\n\n')
-        : 'No events scheduled for this day'
-    );
     setIsModalOpen(true);
   };
 
-  // Handle event click to open event modal
+  // Handle event click
   const handleEventClick = (event) => {
     setSelectedEvent(event);
     setEventModalOpen(true);
@@ -141,7 +111,6 @@ const Calendar = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedDay(null);
-    setEventDescription('');
   };
 
   const handleCloseEventModal = () => {
@@ -153,18 +122,19 @@ const Calendar = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#E6F4EA] to-[#C1F2B0] p-8 relative">
       {/* Top wave */}
       <div className="absolute top-0 left-0 w-full z-0">
-        <svg
-          className="w-full h-auto transform rotate-180"
-          xmlns="http://www.w3.org/2000/svg"
+        <svg 
+          className="w-full h-auto transform rotate-180" 
+          xmlns="http://www.w3.org/2000/svg" 
           viewBox="0 0 1440 320"
         >
-          <path
-            fill="#C1F2B0"
-            fillOpacity="1"
+          <path 
+            fill="#C1F2B0" 
+            fillOpacity="1" 
             d="M0,64L48,90.7C96,117,192,171,288,192C384,213,480,203,576,170.7C672,139,768,85,864,69.3C960,53,1056,75,1152,90.7C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           ></path>
         </svg>
       </div>
+
       <div className="max-w-7xl mx-auto space-y-8 relative z-20">
         {/* Main Grid Container */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -307,8 +277,8 @@ const Calendar = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-2xl p-8 relative m-4">
-            <button
-              onClick={handleCloseModal}
+            <button 
+              onClick={handleCloseModal} 
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
             >
               ×
@@ -317,7 +287,6 @@ const Calendar = () => {
             <div className="bg-gray-50 rounded-lg p-4 h-[400px] overflow-y-auto">
               {calendarEvents[`${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDay}`]?.length > 0 ? (
                 calendarEvents[`${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDay}`].map((event, index) => {
-                  // Color schemes array
                   const colorSchemes = [
                     { bg: 'bg-red-50', border: 'border-red-200', title: 'text-red-600', hover: 'hover:bg-red-100' },
                     { bg: 'bg-blue-50', border: 'border-blue-200', title: 'text-blue-600', hover: 'hover:bg-blue-100' },
@@ -331,8 +300,8 @@ const Calendar = () => {
                   return (
                     <div 
                       key={index} 
-                      className={`mb-4 p-4 rounded-lg border-2 shadow-md transition-all
-                        ${colorScheme.bg} ${colorScheme.border} ${colorScheme.hover}`}
+                      className={`mb-4 p-4 rounded-lg border-2 shadow-md transition-all 
+                      ${colorScheme.bg} ${colorScheme.border} ${colorScheme.hover}`}
                     >
                       <h3 className={`text-xl font-semibold mb-2 ${colorScheme.title}`}>
                         {event.title}
@@ -340,7 +309,7 @@ const Calendar = () => {
                       <div className="space-y-2">
                         <p className="text-gray-600">
                           <span className="font-medium">Time:</span> {
-                            event.time || // Fallback to the time field if fullDate isn't available
+                            event.time || 
                             (event.fullDate ? event.fullDate.toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -363,33 +332,29 @@ const Calendar = () => {
         </div>
       )}
 
-
       {/* Event Details Modal */}
       {eventModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-4xl p-8 relative m-4">
-            <button
-              onClick={handleCloseEventModal}
+            <button 
+              onClick={handleCloseEventModal} 
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
             >
               ×
             </button>
-            
             <div className="space-y-6">
               <h2 className="text-3xl font-semibold text-center">{selectedEvent}</h2>
-              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="relative h-[300px] rounded-xl overflow-hidden">
-                  <img
-                    src={additional1}
-                    alt="Event"
-                    className="w-full h-full object-cover"
+                  <img 
+                    src={additional1} 
+                    alt="Event" 
+                    className="w-full h-full object-cover" 
                   />
                   <div className="absolute inset-0 bg-black/20 flex items-end p-6">
-                    <h3 className="text-white text-xl font-bold">Find a NAMIWalk</h3>
+                  <h3 className="text-white text-xl font-bold">Find a NAMIWalk</h3>
                   </div>
                 </div>
-                
                 <div className="space-y-4">
                   <h3 className="text-4xl font-bold">A GENEtle Reminder</h3>
                   <p className="text-gray-600">
@@ -408,6 +373,8 @@ const Calendar = () => {
           </div>
         </div>
       )}
+      
+      {/* Bottom wave */}
       <div className="absolute bottom-0 left-0 w-full z-0">
         <svg 
           className="w-full h-auto" 
