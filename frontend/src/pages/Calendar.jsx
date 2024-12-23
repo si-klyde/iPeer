@@ -23,13 +23,18 @@ const Calendar = () => {
         const eventsData = {};
         
         response.data.forEach(event => {
-          const eventDate = new Date(event.date);
+          const [year, month, day] = event.date.split('-');
+          const [hours, minutes] = event.time ? event.time.split(':') : ['00', '00'];
+          const eventDate = new Date(year, month - 1, day, hours, minutes);
           const dayKey = `${eventDate.getFullYear()}-${eventDate.getMonth()}-${eventDate.getDate()}`;
           
           if (!eventsData[dayKey]) {
             eventsData[dayKey] = [];
           }
-          eventsData[dayKey].push(event);
+          eventsData[dayKey].push({
+            ...event,
+            fullDate: eventDate // Store the combined date and time
+          });
         });
         
         setCalendarEvents(eventsData);
@@ -113,6 +118,7 @@ const Calendar = () => {
     setSelectedDay(day);
     const currentDateKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${day}`;
     const eventsForDay = calendarEvents[currentDateKey] || [];
+  
     setEventDescription(
       eventsForDay.length > 0 
         ? eventsForDay.map(event => `
@@ -333,7 +339,14 @@ const Calendar = () => {
                       </h3>
                       <div className="space-y-2">
                         <p className="text-gray-600">
-                          <span className="font-medium">Time:</span> {new Date(event.date).toLocaleTimeString()}
+                          <span className="font-medium">Time:</span> {
+                            event.time || // Fallback to the time field if fullDate isn't available
+                            (event.fullDate ? event.fullDate.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            }) : 'Time not specified')
+                          }
                         </p>
                         <p className="text-gray-700">
                           <span className="font-medium">Description:</span> {event.description || 'No description available'}
