@@ -42,6 +42,57 @@ const Calendar = () => {
     fetchEvents();
   }, []);  
 
+  const getRecentEvents = () => {
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    const recentEvents = [];
+    Object.entries(calendarEvents).forEach(([dateKey, events]) => {
+      events.forEach(event => {
+        if (event.fullDate >= twoWeeksAgo && event.fullDate < new Date()) {
+          recentEvents.push(event);
+        }
+      });
+    });
+    
+    return recentEvents.sort((a, b) => b.fullDate - a.fullDate);
+  };
+
+  const getOngoingEvents = () => {
+    const today = new Date();
+    const ongoingEvents = [];
+    
+    Object.entries(calendarEvents).forEach(([dateKey, events]) => {
+      events.forEach(event => {
+        if (event.fullDate.toDateString() === today.toDateString()) {
+          ongoingEvents.push(event);
+        }
+      });
+    });
+    
+    return ongoingEvents.sort((a, b) => a.fullDate - b.fullDate);
+  };
+  
+  const getUpcomingEvents = () => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1);
+    
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 14); 
+    
+    const upcomingEvents = [];
+    Object.entries(calendarEvents).forEach(([dateKey, events]) => {
+      events.forEach(event => {
+        if (event.fullDate > startDate && event.fullDate <= endDate) {
+          upcomingEvents.push(event);
+        }
+      });
+    });
+    
+    return upcomingEvents.sort((a, b) => a.fullDate - b.fullDate);
+  };
+  
+
   const handleViewEvent = () => {
     navigate('/viewevent');
   };
@@ -62,11 +113,11 @@ const Calendar = () => {
   
   const years = Array.from({ length: 10 }, (_, i) => selectedDate.getFullYear() - 5 + i);
 
-  const events = {
-    recent: ['Event 1', 'Event 2'],
-    ongoing: ['Event 3'],
-    upcoming: ['Event 4', 'Event 5']
-  };
+  // const events = {
+  //   recent: ['Event 1', 'Event 2'],
+  //   ongoing: ['Event 3'],
+  //   upcoming: ['Event 4', 'Event 5']
+  // };
 
   const handleMonthChange = (e) => {
     const newDate = new Date(selectedDate);
@@ -189,18 +240,24 @@ const Calendar = () => {
                     `}
                   >
                     <div className="text-right text-sm font-medium text-gray-700">{day}</div>
-                    {calendarEvents[currentDateKey]?.map((event, index) => (
-                      <div
-                        key={index}
-                        className="mt-1 text-xs p-1 bg-green-200 rounded truncate hover:bg-green-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("Event clicked");
-                        }}
-                      >
-                        {event.title}
+                    {calendarEvents[currentDateKey]?.length > 0 && (
+                      <div className="mt-1">
+                        {calendarEvents[currentDateKey].slice(0, 1).map((event, index) => (
+                          <div
+                            key={index}
+                            className="text-xs p-1 mb-1 bg-green-200 rounded truncate hover:bg-green-700 text-green-700 hover:text-white font-semibold transition-colors"
+                          >
+                            {event.title}
+                          </div>
+                        ))}
+                        {calendarEvents[currentDateKey].length > 1 && (
+                          <div className="text-xs text-green-700 font-medium text-right">
+                            +{calendarEvents[currentDateKey].length - 1} more
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    )}
+
                   </div>
                 ) : (
                   <div key={i} className="min-h-[80px]" />
@@ -218,17 +275,24 @@ const Calendar = () => {
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${recentPic})` }} />
               <div className="relative bg-gradient-to-r from-red-800/80 to-red-600/80 p-6">
                 <h3 className="text-xl font-semibold text-white mb-4">Recent Events</h3>
-                <ul className="space-y-2">
-                  {events.recent.map((event, i) => (
-                    <li
-                      key={i}
-                      className="text-white hover:text-red-200 cursor-pointer transition-colors"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {event}
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-2">
+                    {getRecentEvents().length > 0 ? (
+                      getRecentEvents().map((event, i) => (
+                        <li
+                          key={i}
+                          className="text-white hover:text-red-200 cursor-pointer transition-colors"
+                          onClick={() => handleEventClick(event)}
+                        >
+                          {event.title}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-white text-center">
+                        <p className="mb-2">No recent events found</p>
+                        <p className="text-sm opacity-80">Check back later for upcoming activities!</p>
+                      </li>
+                    )}
+                  </ul>
               </div>
             </div>
 
@@ -237,17 +301,24 @@ const Calendar = () => {
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ongoingPic})` }} />
               <div className="relative bg-gradient-to-r from-green-800/80 to-green-600/80 p-6">
                 <h3 className="text-xl font-semibold text-white mb-4">Ongoing Events</h3>
-                <ul className="space-y-2">
-                  {events.ongoing.map((event, i) => (
-                    <li
-                      key={i}
-                      className="text-white hover:text-green-200 cursor-pointer transition-colors"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {event}
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-2">
+                    {getOngoingEvents().length > 0 ? (
+                      getOngoingEvents().map((event, i) => (
+                        <li
+                          key={i}
+                          className="text-white hover:text-green-200 cursor-pointer transition-colors"
+                          onClick={() => handleEventClick(event)}
+                        >
+                          {event.title}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-white text-center">
+                        <p className="mb-2">No ongoing events today</p>
+                        <p className="text-sm opacity-80">Stay tuned for today's activities!</p>
+                      </li>
+                    )}
+                  </ul>
               </div>
             </div>
 
@@ -256,17 +327,24 @@ const Calendar = () => {
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${upcomingPic})` }} />
               <div className="relative bg-gradient-to-r from-blue-800/80 to-blue-600/80 p-6">
                 <h3 className="text-xl font-semibold text-white mb-4">Upcoming Events</h3>
-                <ul className="space-y-2">
-                  {events.upcoming.map((event, i) => (
-                    <li
-                      key={i}
-                      className="text-white hover:text-blue-200 cursor-pointer transition-colors"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {event}
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-2">
+                    {getUpcomingEvents().length > 0 ? (
+                      getUpcomingEvents().map((event, i) => (
+                        <li
+                          key={i}
+                          className="text-white hover:text-blue-200 cursor-pointer transition-colors"
+                          onClick={() => handleEventClick(event)}
+                        >
+                          {event.title}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-white text-center">
+                        <p className="mb-2">No upcoming events scheduled</p>
+                        <p className="text-sm opacity-80">Check back soon for new events!</p>
+                      </li>
+                    )}
+                  </ul>
               </div>
             </div>
           </div>
