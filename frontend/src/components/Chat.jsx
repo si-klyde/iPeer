@@ -7,7 +7,22 @@ const Chat = ({ roomId }) => {
     const chatBoxRef = useRef(null);
     const messageInputRef = useRef(null);
     const [messages, setMessages] = useState([]);
+    const [userData, setUserData] = useState(null);
     const currentUser = auth.currentUser;
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (currentUser) {
+                const userDocRef = doc(firestore, 'users', currentUser.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    setUserData(userDoc.data());
+                }
+            }
+        };
+        fetchUserData();
+    }, [currentUser]);
+
 
     useEffect(() => {
         let unsubscribe;
@@ -37,17 +52,27 @@ const Chat = ({ roomId }) => {
         }
         const messageText = messageInputRef.current.value.trim();
         if (messageText) {
-            const callDoc = doc(firestore, 'calls', roomId);
-            const newMessage = {
-                text: messageText,
-                sender: currentUser ? currentUser.fullName : 'Anonymous', // Use current user's display name
-                timestamp: new Date().toISOString()
-            };
-            const updatedMessages = [...messages, newMessage];
-            await updateDoc(callDoc, { messages: updatedMessages });
-            messageInputRef.current.value = '';
+            try {
+                const callDoc = doc(firestore, 'calls', roomId);
+                const newMessage = {
+                    text: messageText,
+                    sender: userData?.fullName || currentUser.displayName || 'Anonymous',
+                    timestamp: new Date().toISOString()
+                };
+
+                const docSnap = await getDoc(callDoc);
+                const currentMessages = docSnap.data()?.messages || [];
+                
+                const updatedMessages = [...currentMessages, newMessage];
+                await updateDoc(callDoc, { messages: updatedMessages });
+                messageInputRef.current.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
         }
     }
+
 
     function updateChatBox(messages) {
         if (chatBoxRef.current) {
@@ -62,9 +87,10 @@ const Chat = ({ roomId }) => {
         }
     }
 
+
     return (
         <div className="chat-container bg-white p-4 rounded-lg shadow-lg max-h-96 flex flex-col justify-between">
-            <div ref={chatBoxRef} id="chatBox" className="overflow-y-auto mb-4 h-64 p-2 border rounded-lg bg-gray-50"></div>
+            <div ref={chatBoxRef} id="chatBox" className="overflow-y-auto mb-4 h-64 p-2 border rounded-lg bg-gray-50 text-black"></div>
             <div className="chat-input flex">
                 <input
                     type="text"
