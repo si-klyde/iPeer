@@ -40,7 +40,7 @@ const Chat = ({ roomId }) => {
             const callDoc = doc(firestore, 'calls', roomId);
             const newMessage = {
                 text: messageText,
-                sender: currentUser ? currentUser.displayName : 'Anonymous', // Use current user's display name
+                sender: currentUser ? currentUser.fullName : 'Anonymous', // Use current user's display name
                 timestamp: new Date().toISOString()
             };
             const updatedMessages = [...messages, newMessage];

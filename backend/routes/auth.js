@@ -93,7 +93,7 @@ const verifyPassword = (password, salt, iterations, storedHash) => {
 };
 
 router.post('/register-peer-counselor', async (req, res) => {
-  const { email, password, displayName } = req.body;
+  const { email, password, fullName } = req.body;
 
   try {
     // Generate a salt
@@ -107,13 +107,13 @@ router.post('/register-peer-counselor', async (req, res) => {
     const userRecord = await auth.createUser({
       email,
       password: hash, // Use the hashed password
-      displayName,
+      fullName,
     });
 
     // Add user to Firestore with role 'peer-counselor'
     await createPeerCounselorDocument(
       userRecord.uid,
-      { email, displayName },
+      { email, fullName },
       { salt, iterations, password: hash }
     );
 
@@ -180,7 +180,7 @@ router.post('/login-peer-counselor', async (req, res) => {
       user: {
         uid: userDoc.id,
         email: userData.email,
-        displayName: userData.displayName,
+        fullName: userData.fullName,
         role: userData.role
       }
     });
@@ -228,7 +228,7 @@ router.post('/check-role', async (req, res) => {
       role: userData.role,
       uid: userDoc.id,
       email: userData.email,
-      displayName: userData.displayName,
+      fullName: userData.fullName,
       profile: userProfile,
       currentStatus: userData.currentStatus || null
     });

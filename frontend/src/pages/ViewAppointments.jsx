@@ -49,7 +49,7 @@ const ViewAppointments = () => {
         const response = await axios.get(`http://localhost:5000/api/peer-counselors/${peerCounselorId}`);
         setPeerCounselors(prevState => ({
           ...prevState,
-          [peerCounselorId]: response.data.displayName || 'Name not available'
+          [peerCounselorId]: response.data.fullName || 'Name not available'
         }));
       } catch (error) {
         if (error.response && error.response.status === 404) {

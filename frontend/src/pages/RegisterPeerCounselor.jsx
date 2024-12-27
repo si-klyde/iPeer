@@ -20,8 +20,8 @@ const RegisterPeerCounselor = () => {
       return;
     }
   
-    // Combine names into displayName
-    const displayName = `${firstName} ${middleInitial ? middleInitial + '.' : ''} ${lastName}`.trim();
+    // Combine names into fullName
+    const fullName = `${firstName} ${middleInitial ? middleInitial + '.' : ''} ${lastName}`.trim();
   
     setLoading(true);
     setErrorMessage('');
@@ -29,7 +29,7 @@ const RegisterPeerCounselor = () => {
     try {
       const response = await axios.post(
         'http://localhost:5000/api/register-peer-counselor',
-        { email, password, displayName }
+        { email, password, fullName }
       );
       console.log('Registration successful:', response.data);
       navigate('/');

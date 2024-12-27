@@ -112,7 +112,7 @@ const Header = ({ user }) => {
               {isDropdownOpen && (
                 <div className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5">
                   <div className="px-4 py-3 text-sm font-semibold bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-t-md">
-                    Hi, {user.displayName || 'User'} 👋
+                    Hi, {user.fullName || 'User'} 👋
                   </div>
                   <a
                     href="/profile"
