@@ -89,21 +89,43 @@ const Chat = ({ roomId }) => {
 
 
     return (
-        <div className="chat-container bg-white p-4 rounded-lg shadow-lg max-h-96 flex flex-col justify-between">
-            <div ref={chatBoxRef} id="chatBox" className="overflow-y-auto mb-4 h-64 p-2 border rounded-lg bg-gray-50 text-black"></div>
-            <div className="chat-input flex">
-                <input
-                    type="text"
-                    ref={messageInputRef}
-                    placeholder="Type a message..."
-                    className="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <button
-                    onClick={sendMessage}
-                    className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-                >
-                    Send
-                </button>
+        <div className="bg-white rounded-lg shadow-lg flex flex-col h-[400px]">
+            <div className="p-3 bg-green-600 text-white rounded-t-lg">
+                <h2 className="font-semibold">Session Chat</h2>
+            </div>
+            <div 
+                ref={chatBoxRef} 
+                className="flex-1 overflow-y-auto p-4 space-y-3"
+            >
+                {messages.map((msg, index) => (
+                    <div 
+                        key={index}
+                        className={`p-3 rounded-lg max-w-[80%] ${
+                            msg.sender === userData?.fullName 
+                                ? 'ml-auto bg-green-100 text-green-900'
+                                : 'bg-gray-100 text-gray-900'
+                        }`}
+                    >
+                        <div className="text-xs font-medium mb-1">{msg.sender}</div>
+                        <div>{msg.text}</div>
+                    </div>
+                ))}
+            </div>
+            <div className="p-3 border-t">
+                <div className="flex gap-2">
+                    <input
+                        ref={messageInputRef}
+                        type="text"
+                        placeholder="Type your message..."
+                        className="flex-1 px-4 py-2 rounded-full border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <button
+                        onClick={sendMessage}
+                        className="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
+                    >
+                        Send
+                    </button>
+                </div>
             </div>
         </div>
     );
