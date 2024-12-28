@@ -35,43 +35,47 @@ const App = () => {
 
     useEffect(() => {
         let unsubscribeAuth;
-        let unsubscribeSnapshot;
-
+        let unsubscribeUser;
+        let unsubscribeProfile;
+    
         const setupUserListener = (currentUser) => {
             if (currentUser) {
                 const userDocRef = doc(firestore, 'users', currentUser.uid);
+                const profileDocRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
                 
-                // Set up real-time listener for user document
-                unsubscribeSnapshot = onSnapshot(userDocRef, (doc) => {
-                    if (doc.exists()) {
-                        // Combine Firebase Auth user with Firestore user data
-                        const userData = doc.data();
+                unsubscribeUser = onSnapshot(userDocRef, (userDoc) => {
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
                         
-                        // Prioritize custom photo URL
-                        const photoURL = userData.photoURL || 
-                                         `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
-                        
-                        setUser({
-                            ...currentUser, 
-                            ...userData,
-                            photoURL: photoURL
+                        unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
+                            const profileData = profileDoc.exists() ? profileDoc.data() : {};
+                            
+                            const photoURL = currentUser.photoURL || 
+                                           profileData.photoURL || 
+                                           `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
+                            
+                            setUser(prevUser => ({
+                                ...prevUser,
+                                ...userData,
+                                ...profileData,
+                                photoURL: photoURL
+                            }));
                         });
+                    } else {
+                        setUser(null);
                     }
-                }, (error) => {
-                    console.error('Error listening to user document:', error);
                 });
             } else {
                 setUser(null);
             }
         };
-
-        // Initial auth state listener
+    
         unsubscribeAuth = authStateChanged(auth, setupUserListener);
     
-        // Cleanup function
         return () => {
             if (unsubscribeAuth) unsubscribeAuth();
-            if (unsubscribeSnapshot) unsubscribeSnapshot();
+            if (unsubscribeUser) unsubscribeUser();
+            if (unsubscribeProfile) unsubscribeProfile();
         };
     }, []);
 

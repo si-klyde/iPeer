@@ -78,48 +78,40 @@ const SessionNotes = ({ roomId, clientId }) => {
         <>
             <button
                 onClick={() => setIsModalOpen(true)}
-                className="mt-4 flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
             >
-                <ClipboardEdit className="w-4 h-4 mr-2" />
-                Open Notes
+                <ClipboardEdit className="w-5 h-5" />
+                Session Notes
             </button>
 
-            <div className={`fixed right-4 bottom-4 z-50 ${isModalOpen ? '' : 'hidden'}`}>
-                <div className="bg-white rounded-lg w-96 shadow-xl border border-gray-200">
-                    <div className="bg-gray-50 px-4 py-3 rounded-t-lg border-b border-gray-200 flex justify-between items-center cursor-move">
-                        <h2 className="text-lg font-semibold text-gray-700">Session Notes</h2>
-                        <div className="flex items-center space-x-3">
-                            {lastSaved && (
-                                <span className="text-xs text-gray-500">
-                                    {lastSaved.toLocaleTimeString()}
-                                </span>
-                            )}
-                            <button
-                                onClick={handleSaveNotes}
-                                disabled={isSaving}
-                                className="flex items-center px-2 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                            >
-                                <Save className="w-4 h-4 mr-1" />
-                                {isSaving ? 'Saving...' : 'Save'}
-                            </button>
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="text-gray-500 hover:text-gray-700"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-end justify-end p-4">
+                    <div className="bg-white rounded-lg w-96 shadow-xl">
+                        <div className="p-4 border-b flex justify-between items-center">
+                            <h2 className="font-semibold text-green-800">Session Notes</h2>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleSaveNotes}
+                                    disabled={isSaving}
+                                    className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                                >
+                                    {isSaving ? 'Saving...' : 'Save'}
+                                </button>
+                                <button onClick={() => setIsModalOpen(false)}>
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
+                        <textarea
+                            ref={textareaRef}
+                            value={notes}
+                            onChange={handleNotesChange}
+                            className="w-full h-96 p-4 focus:outline-none resize-none"
+                            placeholder="Take session notes here..."
+                        />
                     </div>
-                    <textarea
-                        ref={textareaRef}
-                        value={notes}
-                        onChange={handleNotesChange}
-                        className="w-full h-64 p-4 rounded-b-lg resize-none focus:outline-none"
-                        placeholder="Take session notes here..."
-                        autoFocus
-                    />
                 </div>
-            </div>
+            )}
         </>
     );
 };

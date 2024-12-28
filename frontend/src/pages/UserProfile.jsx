@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, firestore, storage } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { updateProfile } from 'firebase/auth';
 
 const UserProfile = () => {
   const [userProfile, setUserProfile] = useState(null);
@@ -25,15 +26,34 @@ const UserProfile = () => {
     if (!user) return;
 
     const userDocRef = doc(firestore, 'users', user.uid);
+    const profileDocRef = doc(firestore, 'users', user.uid, 'profile', 'details');
     
-    const unsubscribe = onSnapshot(userDocRef, (doc) => {
-      if (doc.exists()) {
-        const profileData = doc.data();
-        profileData.photoURL =
-          user.photoURL ||
-          profileData.photoURL ||
-          'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+';
-        setUserProfile(profileData);
+    // Set up real-time listener for both user and profile documents
+    const unsubscribe = onSnapshot(userDocRef, async (userDoc) => {
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Get profile details from subcollection
+        const profileDoc = await getDoc(profileDocRef);
+        const profileData = profileDoc.exists() ? profileDoc.data() : {};
+        
+        console.log('User Data:', userData);
+        console.log('Profile Data:', profileData);
+        console.log('Current User PhotoURL:', user.photoURL);
+        
+        // Combine user data with profile data
+        const combinedData = {
+          ...userData,
+          ...profileData,
+          // Prioritize photo URLs in order: Google photo, profile photo, default
+          photoURL: user.photoURL || 
+                  profileData.photoURL || 
+                  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'
+        };
+        
+        console.log('Combined Data PhotoURL:', combinedData.photoURL);
+        
+        setUserProfile(combinedData);
       }
     }, (error) => {
       console.error('Error fetching user profile:', error);
@@ -43,49 +63,64 @@ const UserProfile = () => {
     return () => unsubscribe();
   }, []);
 
+  // Update handleImageUpload to store in subcollection
+  const handleImageUpload = async (event) => {
+  try {
+    setError(null);
+    const file = event.target.files[0];
+    if (!file) return;
+
+    validateImage(file);
+    setUploading(true);
+    
+    const user = auth.currentUser;
+    if (!user) throw new Error('No user logged in');
+
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `profile_${Date.now()}.${fileExtension}`;
+    const storageRef = ref(storage, `profile-photos/${user.uid}/${fileName}`);
+    
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        'uploadedBy': user.uid,
+        'uploadedAt': new Date().toISOString()
+      }
+    };
+
+    const snapshot = await uploadBytes(storageRef, file, metadata);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Immediately update local state
+    setUserProfile(prevProfile => ({
+      ...prevProfile,
+      photoURL: downloadURL
+    }));
+
+    // Update photoURL in Firebase Authentication
+    await updateProfile(user, {
+      photoURL: downloadURL
+    });
+    
+    // Update photoURL in profile subcollection
+    const profileDocRef = doc(firestore, 'users', user.uid, 'profile', 'details');
+    await updateDoc(profileDocRef, {
+      photoURL: downloadURL,
+      lastUpdated: new Date().toISOString()
+    });
+
+  } catch (err) {
+    console.error('Error uploading image:', err);
+    setError(err.message || 'Failed to upload image');
+  } finally {
+    setUploading(false);
+  }
+};
+
   const validateImage = (file) => {
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) throw new Error('File size must be less than 5MB');
     if (!file.type.startsWith('image/')) throw new Error('File must be an image');
-  };
-
-  const handleImageUpload = async (event) => {
-    try {
-      setError(null);
-      const file = event.target.files[0];
-      if (!file) return;
-
-      validateImage(file);
-      setUploading(true);
-      const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
-
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `profile_${Date.now()}.${fileExtension}`;
-      const storageRef = ref(storage, `profile-photos/${user.uid}/${fileName}`);
-
-      const metadata = {
-        contentType: file.type,
-        customMetadata: {
-          uploadedBy: user.uid,
-          uploadedAt: new Date().toISOString(),
-        },
-      };
-
-      const snapshot = await uploadBytes(storageRef, file, metadata);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      const userDocRef = doc(firestore, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        photoURL: downloadURL,
-        lastUpdated: new Date().toISOString(),
-      });
-    } catch (err) {
-      console.error('Error uploading image:', err);
-      setError(err.message || 'Failed to upload image');
-    } finally {
-      setUploading(false);
-    }
   };
 
   if (!userProfile) {
@@ -151,7 +186,7 @@ const UserProfile = () => {
         </div>
         <div className="mb-4 space-y-3">
           <label className="block text-gray-700 text-md font-bold mb-2">Name</label>
-          <p className="text-gray-700">{userProfile.displayName}</p>
+          <p className="text-gray-700">{userProfile.fullName}</p>
         </div>
         <div className="mb-4 space-y-3">
           <label className="block text-gray-700 text-md font-bold mb-2">Email</label>

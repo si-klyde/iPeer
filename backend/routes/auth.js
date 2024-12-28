@@ -2,7 +2,7 @@ const express = require('express');
 const { auth, db } = require('../firebaseAdmin.js');
 const router = express.Router();
 const crypto = require('crypto');
-
+const {createClientDocument, createPeerCounselorDocument} = require('../models/userCreation');
 require('dotenv').config();
 
 router.post('/google-signin', async (req, res) => {
@@ -34,20 +34,7 @@ router.post('/google-signin', async (req, res) => {
       // Ensure the role is set correctly
       const userDoc = await db.collection('users').doc(userRecord.uid).get();
       if (!userDoc.exists) {
-        await db.collection('users').doc(userRecord.uid).set({
-          email: userRecord.email,
-          displayName: userRecord.displayName,
-          photoURL: userRecord.photoURL,
-          role: 'client',
-          createdAt: new Date(),
-        });
-      } else {
-        const userData = userDoc.data();
-        if (!userData.role) {
-          await db.collection('users').doc(userRecord.uid).update({
-            role: 'client',
-          });
-        }
+        await createClientDocument(userRecord.uid, userRecord);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -106,7 +93,7 @@ const verifyPassword = (password, salt, iterations, storedHash) => {
 };
 
 router.post('/register-peer-counselor', async (req, res) => {
-  const { email, password, displayName } = req.body;
+  const { email, password, fullName } = req.body;
 
   try {
     // Generate a salt
@@ -120,19 +107,15 @@ router.post('/register-peer-counselor', async (req, res) => {
     const userRecord = await auth.createUser({
       email,
       password: hash, // Use the hashed password
-      displayName,
+      fullName,
     });
 
     // Add user to Firestore with role 'peer-counselor'
-    await db.collection('users').doc(userRecord.uid).set({
-      email: userRecord.email,
-      displayName: userRecord.displayName,
-      role: 'peer-counselor',
-      createdAt: new Date(),
-      salt: salt, // Store the salt
-      iterations: iterations, // Store the number of iterations
-      password: hash, // Store the hashed password
-    });
+    await createPeerCounselorDocument(
+      userRecord.uid,
+      { email, fullName },
+      { salt, iterations, password: hash }
+    );
 
     res.status(201).send({ message: 'Peer counselor registered successfully' });
   } catch (error) {
@@ -142,46 +125,69 @@ router.post('/register-peer-counselor', async (req, res) => {
 });
 
 router.post('/login-peer-counselor', async (req, res) => {
-  const { email, password } = req.body;
-
-  // Validate input
-  if (!email || !password) {
-    return res.status(400).send({ error: 'Email and password are required.' });
-  }
-
   try {
-    // Fetch user from Firestore
-    const userSnapshot = await db.collection('users')
-      .where('email', '==', email)
-      .where('role', '==', 'peer-counselor')
-      .get();
-
-    if (userSnapshot.empty) {
-      return res.status(404).send({ error: 'User not found.' });
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).send({ error: 'Email and password are required' });
     }
 
-    const userData = userSnapshot.docs[0].data();
-    const { salt, iterations, password: storedHash } = userData;
+    // Find user by email
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('email', '==', email)
+                                 .where('role', '==', 'peer-counselor')
+                                 .get();
 
-    // Additional validation for required fields
-    if (!salt || !iterations || !storedHash) {
-      console.error('Missing required authentication fields:', { salt: !!salt, iterations: !!iterations, storedHash: !!storedHash });
-      return res.status(500).send({ error: 'Authentication configuration error.' });
+    if (snapshot.empty) {
+      return res.status(404).send({ error: 'User not found' });
     }
 
-    // Verify the password
-    const isPasswordValid = verifyPassword(password, salt, iterations, storedHash);
-    if (!isPasswordValid) {
-      return res.status(401).send({ error: 'Invalid password.' });
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+
+    // Get auth credentials
+    const authDoc = await db.collection('users')
+                           .doc(userDoc.id)
+                           .collection('auth')
+                           .doc('credentials')
+                           .get();
+
+    if (!authDoc.exists) {
+      return res.status(401).send({ error: 'Authentication failed' });
     }
 
-    // Generate a custom Firebase token
-    const customToken = await auth.createCustomToken(userSnapshot.docs[0].id);
-    res.status(200).send({ token: customToken, message: 'Login successful' });
+    const { salt, iterations, password: storedHash } = authDoc.data();
+    const isValid = verifyPassword(password, salt, iterations, storedHash);
+
+    if (!isValid) {
+      return res.status(401).send({ error: 'Invalid credentials' });
+    }
+
+    // Create custom token
+    const customToken = await auth.createCustomToken(userDoc.id);
+
+    // Update only essential status
+    await userDoc.ref.update({
+      currentStatus: {
+        status: 'online',
+        lastUpdated: new Date(),
+        isAvailable: true
+      }
+    });
+
+    res.status(200).send({
+      token: customToken,
+      user: {
+        uid: userDoc.id,
+        email: userData.email,
+        fullName: userData.fullName,
+        role: userData.role
+      }
+    });
 
   } catch (error) {
-    console.error('Error logging in peer counselor:', error.message);
-    res.status(500).send({ error: 'Internal Server Error.' });
+    console.error('Login error:', error);
+    res.status(500).send({ error: 'Login failed' });
   }
 });
 
@@ -189,31 +195,46 @@ router.post('/check-role', async (req, res) => {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log('Missing or invalid authorization header');
-    return res.status(401).send('No token provided');
+    return res.status(401).send({ error: 'No token provided' });
   }
 
   const token = authHeader.split('Bearer ')[1];
-  console.log('Received token(backend):', token);
 
   try {
     const decodedToken = await auth.verifyIdToken(token);
-    console.log('Decoded token UID:', decodedToken.uid);
-    
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
     
     if (!userDoc.exists) {
-      console.log('User document not found for UID:', decodedToken.uid);
-      return res.status(404).send('User not found');
+      return res.status(404).send({ error: 'User not found' });
     }
 
     const userData = userDoc.data();
-    console.log('User role from database:', userData.role);
-    
-    res.status(200).json({ role: userData.role });
+    let userProfile = {};
+
+    // Get role-specific profile data
+    if (userData.role === 'peer-counselor') {
+      const profileDoc = await userDoc.ref.collection('counselorProfile').doc('details').get();
+      if (profileDoc.exists) {
+        userProfile = profileDoc.data();
+      }
+    } else if (userData.role === 'client') {
+      const profileDoc = await userDoc.ref.collection('profile').doc('details').get();
+      if (profileDoc.exists) {
+        userProfile = profileDoc.data();
+      }
+    }
+
+    res.status(200).send({
+      role: userData.role,
+      uid: userDoc.id,
+      email: userData.email,
+      fullName: userData.fullName,
+      profile: userProfile,
+      currentStatus: userData.currentStatus || null
+    });
+
   } catch (error) {
-    console.error('Error checking role:', error);
-    res.status(401).send('Unauthorized');
+    res.status(401).send({ error: 'Invalid token' });
   }
 });
 

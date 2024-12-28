@@ -174,7 +174,7 @@ const BookAppointment = () => {
               <option value="">Select a Peer Counselor</option>
               {peerCounselors.map((counselor) => (
                 <option key={counselor.id} value={counselor.id}>
-                  {counselor.displayName}
+                  {counselor.fullName}
                 </option>
               ))}
             </select>

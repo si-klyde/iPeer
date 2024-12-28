@@ -56,7 +56,7 @@ const ViewAppointmentsPeer = () => {
           const response = await axios.get(`http://localhost:5000/api/client/${clientId}`);
           setClients(prevState => ({
             ...prevState,
-            [clientId]: response.data.displayName || 'Name not available'
+            [clientId]: response.data.fullName || 'Name not available'
           }));
         } catch (error) {
           console.error('Error fetching client details:', error);
