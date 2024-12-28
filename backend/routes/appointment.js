@@ -51,8 +51,8 @@ router.post('/create-appointment', async (req, res) => {
       {
         date: appointmentData.date,
         time: appointmentData.time,
-        clientName: clientDoc.data().displayName,
-        peerCounselorName: counselorDoc.data().displayName,
+        clientName: clientDoc.data().fullName,
+        peerCounselorName: counselorDoc.data().fullName,
         roomLink: `http://localhost:5173/counseling/${roomId}`
       }
     );
@@ -136,8 +136,8 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
               status: 'accepted',
               date: appointmentData.date,
               time: appointmentData.time,
-              clientName: clientData.displayName,
-              peerCounselorName: counselorData.displayName,
+              clientName: clientData.fullName,
+              peerCounselorName: counselorData.fullName,
               roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
             }
           );
@@ -149,8 +149,8 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
               status: 'declined',
               date: appointmentData.date,
               time: appointmentData.time,
-              clientName: clientData.displayName,
-              peerCounselorName: counselorData.displayName
+              clientName: clientData.fullName,
+              peerCounselorName: counselorData.fullName
             }
           );
         }

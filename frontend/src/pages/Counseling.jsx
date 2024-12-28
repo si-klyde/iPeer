@@ -106,18 +106,30 @@ const Counseling = () => {
 
 
     return (
-        <div className="m-3 text-color-7 min-h-screen flex flex-col items-center bg-color-5 tracking-wide">
-            <h1 className="text-3xl font-bold text-white mb-8">iPeer Counseling Room</h1>
-            
-            <div className="mt-5 w-full max-w-6xl flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
-                <div className="w-full lg:w-8/12 bg-white p-6 rounded-lg shadow-lg">
-                    <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
-                </div>
-                <div className="w-full lg:w-4/12 bg-white p-6 rounded-lg shadow-lg">
-                    <Chat roomId={roomId} />
-                    {userRole === 'peer-counselor' && (
-                        <SessionNotes roomId={roomId} clientId={clientId} />
-                    )}
+        <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
+            <div className="p-4 flex flex-col h-screen">
+                {/* Header */}
+                <header className="flex justify-between items-center mb-4 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
+                    <h1 className="text-2xl font-semibold text-green-800">iPeer Counseling Session</h1>
+                    <div className="text-sm text-green-600 font-medium">
+                        Room ID: {roomId}
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <div className="flex-1 flex gap-4">
+                    {/* Left Side - Video Call */}
+                    <div className="flex-1 flex flex-col">
+                        <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
+                    </div>
+
+                    {/* Right Side - Chat and Notes */}
+                    <div className="w-96 flex flex-col gap-4">
+                        <Chat roomId={roomId} />
+                        {userRole === 'peer-counselor' && (
+                            <SessionNotes roomId={roomId} clientId={clientId} />
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

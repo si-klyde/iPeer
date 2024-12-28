@@ -186,7 +186,7 @@ const UserProfile = () => {
         </div>
         <div className="mb-4 space-y-3">
           <label className="block text-gray-700 text-md font-bold mb-2">Name</label>
-          <p className="text-gray-700">{userProfile.displayName}</p>
+          <p className="text-gray-700">{userProfile.fullName}</p>
         </div>
         <div className="mb-4 space-y-3">
           <label className="block text-gray-700 text-md font-bold mb-2">Email</label>

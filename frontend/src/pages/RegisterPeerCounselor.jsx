@@ -5,32 +5,37 @@ import { useNavigate } from 'react-router-dom';
 const RegisterPeerCounselor = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [middleInitial, setMiddleInitial] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    if (!displayName || !email || !password) {
-      setErrorMessage('All fields are required.');
+  
+    if (!firstName || !lastName || !email || !password) {
+      setErrorMessage('Required fields must be filled.');
       return;
     }
-
+  
+    // Combine names into fullName
+    const fullName = `${firstName} ${middleInitial ? middleInitial + '.' : ''} ${lastName}`.trim();
+  
     setLoading(true);
     setErrorMessage('');
-
+  
     try {
       const response = await axios.post(
         'http://localhost:5000/api/register-peer-counselor',
-        { email, password, displayName }
+        { email, password, fullName }
       );
       console.log('Registration successful:', response.data);
       navigate('/');
     } catch (error) {
       console.error('Registration error:', error);
-      if (error.response && error.response.data && error.response.data.error) {
+      if (error.response?.data?.error) {
         setErrorMessage(error.response.data.error);
       } else {
         setErrorMessage('An unexpected error occurred. Please try again.');
@@ -54,24 +59,54 @@ const RegisterPeerCounselor = () => {
           <div className="text-red-600 text-center mb-4">{errorMessage}</div>
         )}
 
-        {/* Display Name Input */}
-        <div className="mb-6">
-          <label
-            htmlFor="displayName"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Display Name
-          </label>
-          <input
-            id="displayName"
-            type="text"
-            placeholder="Enter your display name"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            disabled={loading}
-          />
-        </div>
+        {/* Name Fields */}
+    <div className="grid grid-cols-2 gap-4 mb-6">
+      <div>
+        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+          First Name*
+        </label>
+        <input
+          id="firstName"
+          type="text"
+          placeholder="Enter first name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          required
+          disabled={loading}
+        />
+      </div>
+      <div>
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+          Last Name*
+        </label>
+        <input
+          id="lastName"
+          type="text"
+          placeholder="Enter last name"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          required
+          disabled={loading}
+        />
+      </div>
+    </div>
+    <div className="mb-6">
+      <label htmlFor="middleInitial" className="block text-sm font-medium text-gray-700 mb-1">
+        Middle Initial (optional)
+      </label>
+      <input
+        id="middleInitial"
+        type="text"
+        placeholder="Enter middle initial"
+        value={middleInitial}
+        onChange={(e) => setMiddleInitial(e.target.value.charAt(0).toUpperCase())}
+        maxLength={1}
+        className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        disabled={loading}
+      />
+    </div>
 
         {/* Email Input */}
         <div className="mb-6">
