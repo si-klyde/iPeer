@@ -120,7 +120,11 @@ const Counseling = () => {
                 <div className="flex-1 flex gap-4">
                     {/* Left Side - Video Call */}
                     <div className="flex-1 flex flex-col">
-                        <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
+                        <VideoCall 
+                            roomId={roomId} 
+                            setRoomId={setCurrentRoomId} 
+                            userRole={userRole}
+                        />
                     </div>
 
                     {/* Right Side - Chat and Notes */}
