@@ -49,7 +49,7 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
                 channel.onmessage = (event) => {
                     if (event.data === 'endMeeting') {
                         cleanup();
-                        alert('The counselor has ended the session');
+                        //alert('The counselor has ended the session');
                         navigate('/');
                     }
                 };
@@ -155,7 +155,6 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
             const unsubscribe = onSnapshot(callDoc, (snapshot) => {
                 if (!snapshot.exists() && userRole === 'client') {
                     cleanup();
-                    alert('The session has been ended by the counselor');
                     navigate('/');
                 }
             });
@@ -230,14 +229,15 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
 
     // Helper function to clean up media and connections
     const cleanup = () => {
+        // Stop all tracks in local stream
         if (localStream) {
             localStream.getTracks().forEach(track => {
                 track.stop();
-                track.enabled = false;
             });
             setLocalStream(null);
         }
     
+        // Clear video elements
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = null;
         }
@@ -245,11 +245,24 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
             remoteVideoRef.current.srcObject = null;
         }
     
+        // Close peer connection
         if (peerConnection) {
+            // Stop all tracks from peer connection senders
+            peerConnection.getSenders().forEach(sender => {
+                if (sender.track) {
+                    sender.track.stop();
+                }
+            });
             peerConnection.close();
             setPeerConnection(null);
         }
-
+    
+        // Clear data channel
+        if (dataChannel) {
+            dataChannel.close();
+            setDataChannel(null);
+        }
+    
         if (setRoomId) {
             setRoomId('');
         }
