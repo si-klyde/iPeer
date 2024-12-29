@@ -119,7 +119,7 @@ const WaitingRoom = () => {
                     />
                 <button 
                     onClick={joinRoom} 
-                    className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-blue-600 hover:scale-105"
+                    className="w-full bg-[#fe8a4f] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-[#fe8a4f]/70 hover:scale-105"
                 >
                     Join Room
                 </button>

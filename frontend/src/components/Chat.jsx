@@ -33,7 +33,6 @@ const Chat = ({ roomId }) => {
                 const data = snapshot.data();
                 if (data && data.messages) {
                     setMessages(data.messages);
-                    updateChatBox(data.messages);
                 }
             });
         } else {
@@ -74,24 +73,24 @@ const Chat = ({ roomId }) => {
     }
 
 
-    function updateChatBox(messages) {
-        if (chatBoxRef.current) {
-            chatBoxRef.current.innerHTML = '';
-            messages.forEach(msg => {
-                const msgElement = document.createElement('div');
-                msgElement.textContent = `${msg.sender}: ${msg.text}`;
-                msgElement.className = "p-2 rounded bg-gray-200 my-2";
-                chatBoxRef.current.appendChild(msgElement);
-            });
-            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-        }
-    }
+    // function updateChatBox(messages) {
+    //     if (chatBoxRef.current) {
+    //         chatBoxRef.current.innerHTML = '';
+    //         messages.forEach(msg => {
+    //             const msgElement = document.createElement('div');
+    //             msgElement.textContent = `${msg.sender}: ${msg.text}`;
+    //             msgElement.className = "p-2 rounded bg-gray-200 text-sm text-gray-400 my-2";
+    //             chatBoxRef.current.appendChild(msgElement);
+    //         });
+    //         chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    //     }
+    // }
 
 
     return (
-        <div className="bg-white rounded-lg shadow-lg flex flex-col h-[400px]">
+        <div className="bg-white rounded-lg flex flex-col shadow-lg h-[60vh]">
             <div className="p-3 bg-green-600 text-white rounded-t-lg">
-                <h2 className="font-semibold">Session Chat</h2>
+                <h2 className="text-center font-semibold">Session Chat</h2>
             </div>
             <div 
                 ref={chatBoxRef} 
@@ -117,7 +116,7 @@ const Chat = ({ roomId }) => {
                         ref={messageInputRef}
                         type="text"
                         placeholder="Type your message..."
-                        className="flex-1 px-4 py-2 rounded-full border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="flex-1 text-black px-4 py-2 rounded-full border bg-green-50 border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                     <button
                         onClick={sendMessage}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MusicalNoteIcon,
   HeartIcon,
@@ -110,12 +110,23 @@ const PlaylistCard = ({ playlist, onSelect }) => {
 export const MusicRoom = () => {
   const [currentPlaylist, setCurrentPlaylist] = useState(null);
 
+  useEffect(() => {
+    // Hide Footer
+    const footer = document.querySelector('footer');
+    if (footer) footer.style.display = 'none';
+
+    return () => {
+      // Restore Footer visibility when leaving the page
+      if (footer) footer.style.display = '';
+    };
+  }, []);
+
   return (
-    <div className="max-w-[1600px] mx-auto p-8">
+    <div className="max-w-[1600px] h-[90vh] bg-[#E6F4EA] mx-auto p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-12">
         <div>
-          <h1 className="text-4xl font-bold mb-2 text-gray-800">Music Room</h1>
+          <h1 className=" text-4xl font-bold mb-2 text-gray-800">Music Room</h1>
           <p className="text-gray-600">
             Select a category to start your musical journey
           </p>
