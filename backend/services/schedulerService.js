@@ -43,8 +43,8 @@ cron.schedule('30 * * * *', async () => {
 
         const reminderDetails = {
           time: appointment.time,
-          clientName: clientDoc.data().displayName,
-          peerCounselorName: counselorDoc.data().displayName,
+          clientName: clientDoc.data().fullName,
+          peerCounselorName: counselorDoc.data().fullName,
           roomLink: `http://localhost:5173/counseling/${appointment.roomId}`
         };
 

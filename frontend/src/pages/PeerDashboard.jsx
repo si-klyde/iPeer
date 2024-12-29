@@ -96,7 +96,7 @@ const PeerDashboard = () => {
           
           return {
             userId,
-            name: response.data.displayName || 'Name not available'
+            name: response.data.fullName || 'Name not available'
           };
         } catch (clientError) {
           console.error(`Error fetching client ${userId}:`, clientError);
