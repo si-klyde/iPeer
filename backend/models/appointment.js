@@ -37,8 +37,28 @@ const getAppointmentsPeer = async (peerCounselorId) => {
   );
   
 };
+
+const getUpcomingAppointments = async () => {
+  const now = new Date();
+  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+  
+  const appointmentsSnapshot = await db
+    .collection('appointments')
+    .where('status', '==', 'accepted')
+    .where('date', '==', now.toISOString().split('T')[0])
+    .get();
+    
+  return appointmentsSnapshot.docs
+    .map(doc => ({id: doc.id, ...doc.data()}))
+    .filter(apt => {
+      const aptTime = new Date(`${apt.date} ${apt.time}`);
+      return aptTime > now && aptTime <= oneHourFromNow;
+    });
+};
+
 module.exports = {
   createAppointment,
   getAppointmentsClient,
   getAppointmentsPeer,
+  getUpcomingAppointments,
 };

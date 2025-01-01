@@ -118,6 +118,32 @@ router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => 
   }
 });
 
+// Route to check if a user has an appointment on a specific date
+router.get('/check-reminders', async (req, res) => {
+  try {
+    const upcomingAppointments = await getUpcomingAppointments();
+    
+    for (const appointment of upcomingAppointments) {
+      await createReminderNotification(appointment);
+      await sendAppointmentReminder(
+        appointment.clientEmail,
+        appointment.counselorEmail,
+        {
+          time: appointment.time,
+          clientName: appointment.clientName,
+          peerCounselorName: appointment.peerCounselorName,
+          roomLink: `http://localhost:5173/counseling/${appointment.roomId}`
+        }
+      );
+    }
+    
+    res.status(200).json({ message: 'Reminders sent successfully' });
+  } catch (error) {
+    console.error('Error sending reminders:', error);
+    res.status(500).json({ error: 'Failed to send reminders' });
+  }
+});
+
 // Route to update appointment status
 router.put('/appointments/:appointmentId/status', async (req, res) => {
   const { appointmentId } = req.params;
