@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BellIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+import { BellIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 
@@ -7,6 +8,7 @@ const NotificationBell = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const fetchNotifications = async () => {
     try {
@@ -79,12 +81,25 @@ const NotificationBell = ({ user }) => {
             {notifications.map((notification) => (
               <div 
                 key={notification.id}
-                className="p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                className="p-4 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer border-l-4 border-blue-500"
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start space-x-3">
+                  {/* Icon based on notification type */}
+                  {notification.type === 'APPOINTMENT_REQUEST' && (
+                    <CalendarIcon className="h-6 w-6 text-blue-500 mt-1" />
+                  )}
+                  {notification.type === 'NEW_APPOINTMENT_REQUEST' && (
+                    <CalendarIcon className="h-6 w-6 text-blue-500 mt-1" />
+                  )}
+                  {notification.type === 'APPOINTMENT_ACCEPTED' && (
+                    <CheckCircleIcon className="h-6 w-6 text-green-500 mt-1" />
+                  )}
+                  {notification.type === 'APPOINTMENT_DECLINED' && (
+                    <XCircleIcon className="h-6 w-6 text-red-500 mt-1" />
+                  )}
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{notification.title}</p>
+                    <p className="font-bold text-gray-900">{notification.title}</p>
                     <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                     <p className="text-xs text-gray-400 mt-2">
                       {new Date(notification.createdAt._seconds * 1000).toLocaleString('en-US', {
@@ -101,9 +116,19 @@ const NotificationBell = ({ user }) => {
               </div>
             ))}
 
-            {/* Read Notifications */}
+            {/* No new notifications message */}
+            {notifications.length === 0 && (
+              <div className="py-12 px-4 bg-gray-50 border-y border-gray-100">
+                <div className="text-center">
+                  <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No new notifications</h3>
+                  <p className="mt-1 text-sm text-gray-500">You're all caught up! Check back later for updates.</p>
+                </div>
+              </div>
+            )}
+
             {readNotifications.length > 0 && (
-              <div className="p-4 bg-gray-50">
+              <div className="p-4 bg-gray-100">
                 <h4 className="text-sm font-medium text-gray-500 mb-2">Previously Read</h4>
               </div>
             )}
@@ -113,6 +138,18 @@ const NotificationBell = ({ user }) => {
                 className="p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
               >
                 <div className="flex items-start space-x-3">
+                  {notification.type === 'APPOINTMENT_REQUEST' && (
+                    <CalendarIcon className="h-6 w-6 text-gray-500 mt-1" />
+                  )}
+                  {notification.type === 'NEW_APPOINTMENT_REQUEST' && (
+                    <CalendarIcon className="h-6 w-6 text-blue-500 mt-1" />
+                  )}
+                  {notification.type === 'APPOINTMENT_ACCEPTED' && (
+                    <CheckCircleIcon className="h-6 w-6 text-gray-500 mt-1" />
+                  )}
+                  {notification.type === 'APPOINTMENT_DECLINED' && (
+                    <XCircleIcon className="h-6 w-6 text-gray-500 mt-1" />
+                  )}
                   <div className="flex-1">
                     <p className="font-medium text-gray-700">{notification.title}</p>
                     <p className="text-sm text-gray-500 mt-1">{notification.message}</p>
@@ -129,16 +166,14 @@ const NotificationBell = ({ user }) => {
                 </div>
               </div>
             ))}
-
-            {notifications.length === 0 && readNotifications.length === 0 && (
-              <div className="py-12 px-4">
-                <div className="text-center">
-                  <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
-                  <p className="mt-1 text-sm text-gray-500">You're all caught up! Check back later for updates.</p>
-                </div>
-              </div>
-            )}
+            <div className="p-4 border-t border-gray-100">
+              <button
+                onClick={() => navigate('/notifications')}
+                className="w-full text-center text-sm text-green-600 hover:text-green-700 font-medium"
+              >
+                View All Notifications
+              </button>
+            </div>
           </div>
         </div>
       )}
