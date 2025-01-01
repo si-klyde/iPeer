@@ -27,6 +27,7 @@ import PeerDashboard from './pages/PeerDashboard.jsx';
 import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
 import EventCatalog from './pages/Events.jsx';
+import Notifications from './pages/Notifications.jsx';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -169,6 +170,11 @@ const App = () => {
                     <Route path="/calendar" element={
                         <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
                             <Calendar />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/notifications" element={
+                        <ProtectedRoute allowedRoles={['client', 'peer-counselor']}>
+                            <Notifications user={user} />
                         </ProtectedRoute>
                     } />
 
