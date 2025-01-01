@@ -5,6 +5,7 @@ import { getAuth } from 'firebase/auth';
 
 const NotificationBell = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
+  const [readNotifications, setReadNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const fetchNotifications = async () => {
@@ -17,8 +18,12 @@ const NotificationBell = ({ user }) => {
           'Authorization': `Bearer ${token}`
         }
       });
-      console.log('Notification Data:', response.data); // This will show us the exact data structure
-      setNotifications(response.data);
+      
+      const unread = response.data.filter(n => !n.read);
+      const read = response.data.filter(n => n.read).slice(0, 5); // Get only 5 read notifications
+
+      setNotifications(unread);
+      setReadNotifications(read); 
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -44,7 +49,7 @@ const NotificationBell = ({ user }) => {
     if (user) {
       fetchNotifications();
       // Fetch notifications every minute
-      const interval = setInterval(fetchNotifications, 60000);
+      const interval = setInterval(fetchNotifications, 10000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -69,42 +74,72 @@ const NotificationBell = ({ user }) => {
             <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
           </div>
           
-          {notifications.length > 0 ? (
-            <div className="divide-y divide-gray-100 max-h-[60vh] overflow-y-auto">
-              {notifications.map((notification) => (
-                <div 
-                  key={notification.id}
-                  className="p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                  onClick={() => markAsRead(notification.id)}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{notification.title}</p>
-                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {new Date(notification.createdAt._seconds * 1000).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                        })}
+          <div className="divide-y divide-gray-100 max-h-[60vh] overflow-y-auto">
+            {/* Unread Notifications */}
+            {notifications.map((notification) => (
+              <div 
+                key={notification.id}
+                className="p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                onClick={() => markAsRead(notification.id)}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{notification.title}</p>
+                    <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {new Date(notification.createdAt._seconds * 1000).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
                     </p>
-                    </div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                </div>
+              </div>
+            ))}
+
+            {/* Read Notifications */}
+            {readNotifications.length > 0 && (
+              <div className="p-4 bg-gray-50">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Previously Read</h4>
+              </div>
+            )}
+            {readNotifications.map((notification) => (
+              <div 
+                key={notification.id}
+                className="p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-700">{notification.title}</p>
+                    <p className="text-sm text-gray-500 mt-1">{notification.message}</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {new Date(notification.createdAt._seconds * 1000).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 px-4">
-              <div className="text-center">
-                <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
-                <p className="mt-1 text-sm text-gray-500">You're all caught up! Check back later for updates.</p>
               </div>
-            </div>
-          )}
+            ))}
+
+            {notifications.length === 0 && readNotifications.length === 0 && (
+              <div className="py-12 px-4">
+                <div className="text-center">
+                  <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
+                  <p className="mt-1 text-sm text-gray-500">You're all caught up! Check back later for updates.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

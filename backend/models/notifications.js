@@ -15,7 +15,6 @@ const getNotifications = async (userId) => {
   const notificationsSnapshot = await db
     .collection('notifications')
     .where('userId', '==', userId)
-    .where('read', '==', false)
     .orderBy('createdAt', 'desc')
     .get();
     
