@@ -23,11 +23,5 @@ export const navigation = [
     id: "4",
     title: "Counseling",
     url: "/waitingroom",
-  },
-  {
-    id: "5",
-    title: "Sign in",
-    url: "/login",
-    onlyMobile: true,
-  },
+  }
 ];

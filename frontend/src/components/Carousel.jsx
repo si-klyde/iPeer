@@ -6,31 +6,31 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const therapists = [
   {
-    name: "Anna Joanna Marquez",
+    name: "PCO 1",
     position: "Guidance Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Junnevy Millora",
+    name: "PCO 2",
     position: "Guidance Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Antonette Tillo",
+    name: "PCO 3",
     position: "Guidance Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Therapist 4",
+    name: "PCO 4",
     position: "Guidance Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Therapist 5",
+    name: "PCO 5",
     position: "Guidance Counselor",
     department: "College of Science",
     email: "something@gmail.com",

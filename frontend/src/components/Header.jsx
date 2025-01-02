@@ -74,8 +74,8 @@ const Header = ({ user }) => {
         {/* Navigation Links */}
         <nav
           className={`${
-            openNavigation ? 'flex' : 'hidden'
-          } fixed top-[4rem] left-0 right-0 bottom-0 bg-n-8 lg:static lg:flex lg:mx-auto lg:bg-transparent`}
+            openNavigation ? 'flex'  : 'hidden'
+          } fixed top-[5rem] left-0 right-0 bottom-[10rem] bg-[#FFF9F9] lg:static lg:flex lg:mx-auto lg:bg-transparent`}
         >
           <div className="relative z-10 flex flex-col items-center justify-center m-auto lg:flex-row">
             {navigation.map((item) => (
@@ -83,15 +83,30 @@ const Header = ({ user }) => {
                 key={item.id}
                 href={item.url}
                 onClick={handleClick}
-                className={`block relative font-roboto text-2xl transition-colors hover:text-n-5 ${
+                className={`block relative font-roboto text-xl transition-colors hover:text-n-5 ${
                   item.onlyMobile ? 'lg:hidden' : ''
-                } px-6 py-4 lg:py-2 lg:text-sm lg:font-medium ${
+                } px-4 py-3 lg:py-2 lg:text-sm lg:font-medium ${
                   item.url === location.pathname ? 'text-n-5' : 'text-n-8'
-                } lg:leading-5 lg:hover:text-green-500 xl:px-8 drop-shadow-lg`}
+                } lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg`}
               >
                 {item.title}
               </a>
             ))}
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="block relative font-roboto text-xl transition-colors hover:text-n-5 px-4 py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <button
+                className="block relative font-roboto text-xl transition-colors hover:text-n-5 px-4 py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+                onClick={() => window.location.href = '/login'}
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </nav>
 
