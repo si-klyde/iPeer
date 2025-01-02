@@ -377,8 +377,8 @@ export const ArtRoom = () => {
                   key={tool.id}
                   className={`p-4 rounded-xl flex items-center transition-all duration-300
                     ${selectedTool === tool.id 
-                      ? 'bg-yellow-100 shadow-md' 
-                      : 'bg-yellow-50 hover:bg-yellow-100'}`}
+                      ? 'bg-orange-200 text-black shadow-md' 
+                      : 'bg-orange-100 hover:bg-yellow-100'}`}
                   onClick={() => setSelectedTool(tool.id)}
                 >
                   <tool.icon className="w-6 h-6 mr-2" />

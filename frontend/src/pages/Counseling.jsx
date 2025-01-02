@@ -15,13 +15,24 @@ const Counseling = () => {
     const location = useLocation();
     const isCreating = location.state?.isCreating;
     const [clientId, setClientId] = useState(null);
-
-
     const [isValidRoom, setIsValidRoom] = useState(false);
     const [currentRoomId, setCurrentRoomId] = useState(roomId);
-
     const [userRole, setUserRole] = useState(null);
-    
+
+    useEffect(() => {
+        // Hide Header and Footer
+        const appHeader = document.querySelector('header');
+        const appFooter = document.querySelector('footer');
+        if (appHeader) appHeader.style.display = 'none';
+        if (appFooter) appFooter.style.display = 'none';
+
+        return () => {
+            // Restore Header and Footer visibility when leaving the page
+            if (appHeader) appHeader.style.display = '';
+            if (appFooter) appFooter.style.display = '';
+        };
+    }, []);
+
     useEffect(() => {
         const checkUserRole = async () => {
             try {
@@ -40,10 +51,10 @@ const Counseling = () => {
                 }
             }
         };
-    
+
         checkUserRole();
     }, []);
-    
+
     useEffect(() => {
         const fetchRoomData = async () => {
             if (roomId) {
@@ -56,7 +67,7 @@ const Counseling = () => {
                         setClientId(roomData.clientId);
                         console.log('Setting clientId:', roomData.clientId);
                     } else {
-                        console.log('Room does not exist'); 
+                        console.log('Room does not exist');
                     }
                 } catch (error) {
                     console.error("Error fetching room data:", error);
@@ -65,7 +76,7 @@ const Counseling = () => {
                 console.log('No roomId provided');
             }
         };
-    
+
         fetchRoomData();
     }, [roomId]);
 
@@ -75,7 +86,7 @@ const Counseling = () => {
                 try {
                     const roomRef = doc(firestore, 'calls', roomId);
                     const roomSnapshot = await getDoc(roomRef);
-        
+
                     if (roomSnapshot.exists()) {
                         // Room exists and we're not creating it - this is fine
                         setIsValidRoom(true);
@@ -95,21 +106,19 @@ const Counseling = () => {
                 setIsValidRoom(false);
             }
         };
-    
+
         checkRoom();
     }, [roomId, navigate, location.state]);
-    
 
     if (!isValidRoom) {
         return <div className="min-h-screen flex items-center justify-center text-white">Checking room validity...</div>;
     }
 
-
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
             <div className="p-4 flex flex-col h-screen">
                 {/* Header */}
-                <header className="flex justify-between items-center mb-4 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
+                <header className="flex justify-between items-center mb-4 px-6 py-3 bg-[#FFF9F9] backdrop-blur-sm rounded-lg shadow-xl">
                     <h1 className="text-2xl font-semibold text-green-800">iPeer Counseling Session</h1>
                     <div className="text-sm text-green-600 font-medium">
                         Room ID: {roomId}
@@ -128,7 +137,7 @@ const Counseling = () => {
                     </div>
 
                     {/* Right Side - Chat and Notes */}
-                    <div className="w-96 flex flex-col gap-4">
+                    <div className="w-96 flex flex-col gap-4 bg-green-50">
                         <Chat roomId={roomId} />
                         {userRole === 'peer-counselor' && (
                             <SessionNotes roomId={roomId} clientId={clientId} />

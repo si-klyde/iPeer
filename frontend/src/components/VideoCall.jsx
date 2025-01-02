@@ -341,7 +341,7 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
                     } text-white`}
                     onClick={toggleVideo}
                 >
-                    {isVideoMuted ? 'Unmute Video' : 'Mute Video'}
+                    {isVideoMuted ? 'Start Video' : 'Stop Video'}
                 </button>
                 <button 
                     className="bg-red-500/80 text-white px-6 py-3 rounded-full hover:bg-red-600/80 transition-colors backdrop-blur-sm"
