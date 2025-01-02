@@ -38,7 +38,10 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
   await db.collection('users').doc(uid)
     .collection('auth')
     .doc('credentials')
-    .set(authData);
+    .set({
+      salt: authData.salt,
+      password: authData.password
+    });
 
     await db.collection('users').doc(uid)
         .collection('profile')

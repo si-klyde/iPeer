@@ -1,0 +1,7 @@
+const SECURITY_CONFIG = {
+    HASH_ITERATIONS: 10000,
+    HASH_ALGORITHM: 'sha256', 
+    SALT_BYTES: 32
+  };
+  
+  module.exports = SECURITY_CONFIG;
