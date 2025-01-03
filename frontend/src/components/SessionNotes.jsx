@@ -24,31 +24,51 @@ const SessionNotes = ({ roomId, clientId }) => {
     }, [notes, cursorPosition]);
 
     useEffect(() => {
+        console.log('SessionNotes mounted with:', {
+            roomId,
+            clientId,
+            hasNotes: !!notes
+        });
+        
         const fetchNotes = async () => {
-            if (clientId) {
-                try {
-                    const token = await auth.currentUser.getIdToken();
-                    const response = await axios.get(`http://localhost:5000/api/notes/client/${clientId}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
-                    setNotes(response.data.content);
-                } catch (error) {
-                    console.error('Error fetching notes:', error);
-                }
+            if (!clientId) {
+                console.log('No clientId available yet');
+                return;
+            }
+    
+            try {
+                const token = await auth.currentUser.getIdToken();
+                const response = await axios.get(
+                    `http://localhost:5000/api/notes/client/${clientId}`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+                setNotes(response.data.content || '');
+            } catch (error) {
+                console.error('Error fetching notes:', error);
             }
         };
+    
         fetchNotes();
     }, [clientId]);
 
     const handleSaveNotes = async () => {
-        if (!notes.trim() || !clientId) return;
+        if (!notes.trim() || !clientId) {
+            console.log('Cannot save: missing data', { hasNotes: !!notes.trim(), hasClientId: !!clientId });
+            return;
+        }
         
         setIsSaving(true);
         try {
             const token = await auth.currentUser.getIdToken();
-            await axios.post('http://localhost:5000/api/save-note', {
+            console.log('Saving notes:', { 
+                roomId, 
+                clientId,
+                notesLength: notes.length 
+            });
+    
+            const response = await axios.post('http://localhost:5000/api/save-note', {
                 roomId,
                 notes,
                 clientId
@@ -57,11 +77,17 @@ const SessionNotes = ({ roomId, clientId }) => {
                     Authorization: `Bearer ${token}`
                 }
             });
+            
+            console.log('Save response:', response.data);
             setLastSaved(new Date());
         } catch (error) {
-            console.error('Error saving notes:', error);
+            console.error('Error saving notes:', {
+                message: error.message,
+                response: error.response?.data
+            });
+        } finally {
+            setIsSaving(false);
         }
-        setIsSaving(false);
     };
 
     useEffect(() => {

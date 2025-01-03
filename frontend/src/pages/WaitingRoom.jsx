@@ -27,27 +27,44 @@ const WaitingRoom = () => {
 
     const createRoom = async () => {
         try {
-            const newRoomCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             const currentUser = auth.currentUser;
+            const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
+            const userRole = userDoc.data().role;
+            
+            if (userRole !== 'client') {
+                alert('Only clients can create new sessions');
+                return;
+            }
+    
+            const newRoomCode = Math.random().toString(36).substring(2, 15);
             const roomRef = doc(firestore, 'calls', newRoomCode);
             
-            const roomSnapshot = await getDoc(roomRef);
-            if (!roomSnapshot.exists()) {
-                const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
-                const userRole = userDoc.data().role;
-                
-                const roomData = userRole === 'peer-counselor' 
-                    ? { createdAt: new Date(), counselorId: currentUser.uid, status: 'waiting' }
-                    : { createdAt: new Date(), clientId: currentUser.uid, status: 'waiting' };
-                
-                await setDoc(roomRef, roomData);
-                navigate(`/counseling/${newRoomCode}`, { state: { isCreating: true } });
-            }
+            // Create room with initial data
+            const roomData = {
+                clientId: currentUser.uid,
+                status: 'waiting',
+                createdAt: new Date(),
+                clientName: userDoc.data().fullName || 'Anonymous Client'
+            };
+    
+            console.log('Creating room with data:', roomData);
+            await setDoc(roomRef, roomData);
+    
+            // Verify room creation
+            const verifyRoom = await getDoc(roomRef);
+            console.log('Verified room data:', verifyRoom.data());
+            
+            navigate(`/counseling/${newRoomCode}`, { 
+                state: { 
+                    isCreating: true,
+                    clientId: currentUser.uid 
+                }
+            });
         } catch (error) {
             console.error('Room creation error:', error);
-            alert('Failed to create room. Please try again.');
         }
     };
+    
 
     const joinRoom = async () => {
         if (roomCode) {

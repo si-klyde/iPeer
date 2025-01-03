@@ -82,7 +82,7 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
             const offerDescription = await pc.createOffer();
             await pc.setLocalDescription(offerDescription);
     
-            await setDoc(callDoc, {
+            await updateDoc(callDoc, {
                 offer: {
                     type: offerDescription.type,
                     sdp: offerDescription.sdp,

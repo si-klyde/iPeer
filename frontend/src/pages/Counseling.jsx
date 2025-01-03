@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import VideoCall from '../components/VideoCall';
 import Chat from '../components/Chat';
@@ -46,28 +46,40 @@ const Counseling = () => {
     
     useEffect(() => {
         const fetchRoomData = async () => {
-            if (roomId) {
-                try {
-                    const roomRef = doc(firestore, 'calls', roomId);
-                    const roomSnapshot = await getDoc(roomRef);
-                    if (roomSnapshot.exists()) {
-                        const roomData = roomSnapshot.data();
-                        console.log('Room data fetched:', roomData);
+            if (!roomId || !userRole) return;
+    
+            try {
+                console.log('Fetching room:', roomId, 'as role:', userRole);
+
+                const roomRef = doc(firestore, 'calls', roomId);
+                const unsubscribe = onSnapshot(roomRef, async (snapshot) => {
+                if (snapshot.exists()) {
+                    const roomData = snapshot.data();
+                    console.log('Room snapshot:', roomData);
+
+                    if (roomData.clientId) {
                         setClientId(roomData.clientId);
-                        console.log('Setting clientId:', roomData.clientId);
-                    } else {
-                        console.log('Room does not exist'); 
                     }
-                } catch (error) {
-                    console.error("Error fetching room data:", error);
+
+                    // If counselor and room waiting, join
+                    if (userRole === 'peer-counselor' && roomData.status === 'waiting') {
+                        await updateDoc(roomRef, {
+                            counselorId: auth.currentUser.uid,
+                            status: 'active',
+                            joinedAt: new Date()
+                        });
+                    }
                 }
-            } else {
-                console.log('No roomId provided');
+            });
+
+            return () => unsubscribe();
+            } catch (error) {
+                console.error('Error fetching room:', error);
             }
         };
     
         fetchRoomData();
-    }, [roomId]);
+    }, [roomId, userRole]);
 
     useEffect(() => {
         const checkRoom = async () => {
