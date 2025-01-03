@@ -95,21 +95,23 @@ const Chat = ({ roomId, isOpen, onClose }) => {
 
     return (
         <div 
-            className={`fixed right-0 top-0 h-full w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+            className={`fixed inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
                 isOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
         >
             <div className="flex flex-col h-full">
-                <div className="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white flex justify-between items-center shadow-md">
+                {/* Header */}
+                <div className="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Session Chat</h2>
                     <button 
                         onClick={onClose}
                         className="p-2 hover:bg-green-600/50 rounded-full transition-colors"
                     >
-                        <X size={20} />
+                        <X size={24} />
                     </button>
                 </div>
                 
+                {/* Messages */}
                 <div 
                     ref={chatBoxRef} 
                     className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
@@ -128,25 +130,30 @@ const Chat = ({ roomId, isOpen, onClose }) => {
                                     ? 'bg-green-600 text-white rounded-tr-none'
                                     : 'bg-white text-gray-800 rounded-tl-none'
                             }`}>
-                                <div className="text-xs font-medium mb-1 opacity-90">{msg.sender}</div>
-                                <div className="text-sm">{msg.text}</div>
+                                <div className="text-xs md:text-sm font-medium mb-1 opacity-90">
+                                    {msg.sender}
+                                </div>
+                                <div className="text-sm md:text-base">
+                                    {msg.text}
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
     
-                <div className="p-4 border-t bg-white shadow-inner">
+                {/* Input Area */}
+                <div className="p-3 md:p-4 border-t bg-white shadow-inner">
                     <div className="flex gap-2">
                         <input
                             ref={messageInputRef}
                             type="text"
                             placeholder="Type your message..."
-                            className="flex-1 px-4 py-2 rounded-full border-2 border-green-100 focus:outline-none focus:border-green-500 transition-colors text-sm"
+                            className="flex-1 px-4 py-3 rounded-full border-2 border-green-100 focus:outline-none focus:border-green-500 transition-colors text-base"
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                         />
                         <button
                             onClick={sendMessage}
-                            className="px-5 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-sm"
+                            className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-sm text-base font-medium"
                         >
                             Send
                         </button>

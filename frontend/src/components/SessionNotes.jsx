@@ -102,41 +102,52 @@ const SessionNotes = ({ roomId, clientId, isOpen, onClose }) => {
 
     return (
         <div 
-            className={`fixed right-0 top-0 h-full w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+            className={`fixed inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
                 isOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
         >
             <div className="flex flex-col h-full">
+                {/* Header */}
                 <div className="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white flex justify-between items-center shadow-md">
                     <h2 className="text-lg font-semibold">Session Notes</h2>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handleSaveNotes}
                             disabled={isSaving}
-                            className="px-4 py-1.5 bg-green-500 text-white rounded-full text-sm hover:bg-green-400 disabled:opacity-50 transition-colors shadow-sm"
+                            className="px-4 py-2 bg-green-500 text-white rounded-full text-sm md:text-base hover:bg-green-400 disabled:opacity-50 transition-colors shadow-sm flex items-center gap-2"
                         >
-                            {isSaving ? 'Saving...' : 'Save'}
+                            {isSaving ? (
+                                <>Saving...</>
+                            ) : (
+                                <>
+                                    <Save size={16} />
+                                    Save
+                                </>
+                            )}
                         </button>
                         <button 
                             onClick={onClose}
                             className="p-2 hover:bg-green-600/50 rounded-full transition-colors"
                         >
-                            <X size={20} />
+                            <X size={20} className="text-white" />
                         </button>
                     </div>
                 </div>
     
+                {/* Notes Area */}
                 <textarea
                     ref={textareaRef}
                     value={notes}
                     onChange={handleNotesChange}
-                    className="flex-1 p-6 bg-gray-50 focus:outline-none resize-none text-sm leading-relaxed"
+                    className="flex-1 p-4 md:p-6 bg-gray-50 focus:outline-none resize-none text-base md:text-sm leading-relaxed"
                     placeholder="Take session notes here..."
                 />
     
+                {/* Last Saved Indicator */}
                 {lastSaved && (
-                    <div className="px-4 py-2 text-xs text-gray-500 bg-white border-t">
-                        Last saved: {new Date(lastSaved).toLocaleTimeString()}
+                    <div className="px-4 py-2 text-xs text-gray-500 bg-white border-t flex items-center justify-between">
+                        <span>Last saved: {new Date(lastSaved).toLocaleTimeString()}</span>
+                        <span className="text-green-600">Auto-saving enabled</span>
                     </div>
                 )}
             </div>

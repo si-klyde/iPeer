@@ -19,7 +19,20 @@ const Counseling = () => {
     const [currentRoomId, setCurrentRoomId] = useState(roomId);
     const [userRole, setUserRole] = useState(null);
     const [showChat, setShowChat] = useState(false);
-    const [showNotes, setShowNotes] = useState(false); 
+    const [showNotes, setShowNotes] = useState(false);
+    
+    useEffect(() => {
+        // Hide Header and Footer
+        const appHeader = document.querySelector('header');
+        const appFooter = document.querySelector('footer');
+        if (appHeader) appHeader.style.display = 'none';
+        if (appFooter) appFooter.style.display = 'none';
+        return () => {
+            // Restore Header and Footer visibility when leaving the page
+            if (appHeader) appHeader.style.display = '';
+            if (appFooter) appFooter.style.display = '';
+        };
+    }, []);
     
     useEffect(() => {
         const checkUserRole = async () => {
@@ -118,16 +131,16 @@ const Counseling = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
-            <div className="p-4 flex flex-col h-screen">
-                {/* Header */}
-                <header className="flex justify-between items-center mb-4 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm z-10">
-                    <h1 className="text-2xl font-semibold text-green-800">iPeer Counseling Session</h1>
-                    <div className="text-sm text-green-600 font-medium">
-                        Room ID: {roomId}
+            <div className="p-2 md:p-4 flex flex-col h-screen">
+                {/* Responsive header */}
+                <header className="flex flex-col md:flex-row justify-between items-center mb-2 md:mb-4 px-3 md:px-6 py-2 md:py-3 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
+                    <h1 className="text-xl md:text-2xl font-semibold text-green-800">iPeer Session</h1>
+                    <div className="text-sm text-green-600">
+                        Room: {roomId}
                     </div>
                 </header>
-
-                {/* Main Content */}
+    
+                {/* Main content */}
                 <div className="flex-1">
                     <VideoCall 
                         roomId={roomId} 

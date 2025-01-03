@@ -303,8 +303,8 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
 
     return (
-        <div className="relative w-full h-[calc(100vh-8rem)] bg-gray-900">
-            {/* Remote Video - Full Screen */}
+        <div className="relative w-full h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)] bg-gray-900">
+            {/* Remote Video */}
             <div className="absolute inset-0 w-full h-full bg-black">
                 <video 
                     className="w-full h-full object-cover"
@@ -313,9 +313,9 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     playsInline
                 />
             </div>
-    
-            {/* Local Video - Floating */}
-            <div className="absolute top-4 right-4 w-[280px] aspect-video bg-black rounded-lg overflow-hidden shadow-2xl hover:scale-105 transition-transform cursor-move">
+
+            {/* Local Video */}
+            <div className="absolute top-2 right-2 md:top-4 md:right-4 w-[120px] md:w-[280px] aspect-video bg-black rounded-lg overflow-hidden shadow-2xl hover:scale-105 transition-transform">
                 <video 
                     className="w-full h-full object-cover transform scale-x-[-1]"
                     ref={localVideoRef} 
@@ -324,58 +324,59 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     muted
                 />
             </div>
-    
-            {/* Controls - Floating Bottom Bar */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-4 p-6 bg-gradient-to-t from-black/70 to-transparent">
+
+            {/* Controls */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center flex-wrap gap-2 md:gap-4 p-3 md:p-6 bg-gradient-to-t from-black/70 to-transparent">
                 <button 
-                    className={`p-4 rounded-full transition-colors backdrop-blur-sm ${
+                    className={`p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm ${
                         isAudioMuted ? 'bg-red-500/80' : 'bg-gray-800/80'
                     } text-white hover:bg-opacity-100`}
                     onClick={toggleAudio}
                 >
-                    {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
+                    {isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
                 </button>
 
                 <button 
-                    className={`p-4 rounded-full transition-colors backdrop-blur-sm ${
+                    className={`p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm ${
                         isVideoMuted ? 'bg-red-500/80' : 'bg-gray-800/80'
                     } text-white hover:bg-opacity-100`}
                     onClick={toggleVideo}
                 >
-                    {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
+                    {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
                 </button>
 
-                <button
-                    className="p-4 bg-gray-800/80 text-white rounded-full hover:bg-gray-700/80 backdrop-blur-sm"
+                <button 
+                    className="p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm bg-gray-800/80 text-white hover:bg-opacity-100"
                     onClick={() => setShowChat(!showChat)}
                 >
-                    <MessageCircle size={24} />
+                    <MessageCircle size={20} />
                 </button>
 
                 {userRole === 'peer-counselor' && (
-                    <button
-                        className="p-4 bg-gray-800/80 text-white rounded-full hover:bg-gray-700/80 backdrop-blur-sm"
+                    <button 
+                        className="p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm bg-gray-800/80 text-white hover:bg-opacity-100"
                         onClick={() => setShowNotes(!showNotes)}
                     >
-                        <ClipboardEdit size={24} />
+                        <ClipboardEdit size={20} />
                     </button>
                 )}
 
                 <button 
-                    className="p-4 bg-red-500/80 text-white rounded-full hover:bg-red-600/80 backdrop-blur-sm"
+                    className="p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm bg-red-500/80 text-white hover:bg-red-600/80"
                     onClick={endCall}
                 >
-                    <PhoneOff size={24} />
+                    <PhoneOff size={20} />
                 </button>
             </div>
 
-            {/* Chat and Notes Components */}
+            {/* Chat Component */}
             <Chat 
                 roomId={roomId} 
                 isOpen={showChat} 
                 onClose={() => setShowChat(false)} 
             />
 
+            {/* Notes Component */}
             {userRole === 'peer-counselor' && (
                 <SessionNotes 
                     roomId={roomId} 
