@@ -4,6 +4,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const {createClientDocument, createPeerCounselorDocument} = require('../models/userCreation');
 const SECURITY_CONFIG = require('../config/security.config.js');
+const { decrypt } = require('../utils/encryption.utils');
 require('dotenv').config();
 
 router.post('/google-signin', async (req, res) => {
@@ -134,15 +135,20 @@ router.post('/login-peer-counselor', async (req, res) => {
 
     // Find user by email
     const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('email', '==', email)
-                                 .where('role', '==', 'peer-counselor')
+    const snapshot = await usersRef.where('role', '==', 'peer-counselor')
                                  .get();
 
-    if (snapshot.empty) {
+    // Find matching email after decryption
+    const userDoc = snapshot.docs.find(doc => {
+      const data = doc.data();
+      const decryptedEmail =decrypt(data.email);
+      return decryptedEmail === email;
+    });
+
+    if (!userDoc) {
       return res.status(404).send({ error: 'User not found' });
     }
 
-    const userDoc = snapshot.docs[0];
     const userData = userDoc.data();
 
     // Get auth credentials
@@ -174,13 +180,13 @@ router.post('/login-peer-counselor', async (req, res) => {
         isAvailable: true
       }
     });
-
+    
     res.status(200).send({
       token: customToken,
       user: {
         uid: userDoc.id,
-        email: userData.email,
-        fullName: userData.fullName,
+        email: decrypt(userData.email),
+        fullName: decrypt(userData.fullName),
         role: userData.role
       }
     });
@@ -227,8 +233,8 @@ router.post('/check-role', async (req, res) => {
     res.status(200).send({
       role: userData.role,
       uid: userDoc.id,
-      email: userData.email,
-      fullName: userData.fullName,
+      email: decrypt(userData.email),
+      fullName: decrypt(userData.fullName),
       profile: userProfile,
       currentStatus: userData.currentStatus || null
     });

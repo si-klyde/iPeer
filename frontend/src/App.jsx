@@ -19,7 +19,7 @@ import ViewAppointmentsPeer from './pages/ViewAppointmentsPeer.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import { auth, authStateChanged, firestore } from './firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import Footer from './components/Footer.jsx';
 import ViewEvent from './pages/viewevent.jsx';
 import Information from './pages/Information.jsx';  
@@ -28,6 +28,7 @@ import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
 import EventCatalog from './pages/Events.jsx';
 import Notifications from './pages/Notifications.jsx';
+import axios from 'axios';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -38,41 +39,86 @@ const App = () => {
         let unsubscribeAuth;
         let unsubscribeUser;
         let unsubscribeProfile;
-    
-        const setupUserListener = (currentUser) => {
+
+        const setupUserListener = async (currentUser) => {
             if (currentUser) {
-                const userDocRef = doc(firestore, 'users', currentUser.uid);
-                const profileDocRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
-                
-                unsubscribeUser = onSnapshot(userDocRef, (userDoc) => {
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        
-                        unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
-                            const profileData = profileDoc.exists() ? profileDoc.data() : {};
-                            
-                            const photoURL = currentUser.photoURL || 
-                                           profileData.photoURL || 
-                                           `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
-                            
-                            setUser(prevUser => ({
-                                ...prevUser,
-                                ...userData,
-                                ...profileData,
-                                photoURL: photoURL
-                            }));
-                        });
-                    } else {
-                        setUser(null);
-                    }
-                });
+                try {
+                    // Get user role
+                    const userDocRef = doc(firestore, 'users', currentUser.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    const userRole = userDoc.data()?.role;
+
+                    console.log('User Role:', userRole);
+
+                    // Get decrypted data from backend
+                    const endpoint = userRole === 'peer-counselor'
+                        ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
+                        : `http://localhost:5000/api/client/${currentUser.uid}`;
+
+                        console.log('Fetching from endpoint:', endpoint);
+
+                    const response = await axios.get(endpoint, {
+                        headers: {
+                            Authorization: `Bearer ${await currentUser.getIdToken()}`
+                        }
+                    });
+                    const decryptedData = response.data;
+
+                    console.log('Decrypted Data from Backend:', {
+                        ...response.data,
+                        email: '***masked***',
+                        fullName: '***masked***'
+                    });
+                    
+                    // Set up profile listener
+                    const profileDocRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
+                    unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
+                        const profileData = profileDoc.exists() ? profileDoc.data() : {};
+                        const photoURL = currentUser.photoURL || 
+                            profileData.photoURL || 
+                            `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
+
+                        setUser(prevUser => ({
+                            ...prevUser,
+                            ...decryptedData,
+                            ...profileData,
+                            photoURL: photoURL
+                        }));
+                    });
+
+                    // Listen for role changes
+                    unsubscribeUser = onSnapshot(userDocRef, async (doc) => {
+                        if (doc.exists()) {
+                            const newRole = doc.data()?.role;
+                            if (newRole !== decryptedData.role) {
+                                const newEndpoint = newRole === 'peer-counselor'
+                                    ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
+                                    : `http://localhost:5000/api/client/${currentUser.uid}`;
+
+                                const newResponse = await axios.get(newEndpoint, {
+                                    headers: {
+                                        Authorization: `Bearer ${await currentUser.getIdToken()}`
+                                    }
+                                });
+                                setUser(prevUser => ({
+                                    ...prevUser,
+                                    ...newResponse.data
+                                }));
+                            }
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Error setting up user data:', error);
+                    setUser(null);
+                }
             } else {
                 setUser(null);
             }
         };
-    
+
         unsubscribeAuth = authStateChanged(auth, setupUserListener);
-    
+
         return () => {
             if (unsubscribeAuth) unsubscribeAuth();
             if (unsubscribeUser) unsubscribeUser();

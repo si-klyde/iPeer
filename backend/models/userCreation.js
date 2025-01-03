@@ -1,10 +1,15 @@
 const { db } = require('../firebaseAdmin');
+const { encrypt } = require('../utils/encryption.utils');
 
 const createClientDocument = async (uid, userRecord) => {
+  // Encrypt email and full name
+  const encryptedEmail = encrypt(userRecord.email);
+  const encryptedName = encrypt(userRecord.displayName);
+
   await db.collection('users').doc(uid).set({
     uid: uid,
-    email: userRecord.email,
-    fullName: userRecord.displayName,
+    email: encryptedEmail,
+    fullName: encryptedName,
     role: 'client',
     createdAt: new Date(),
     isActive: true
@@ -20,10 +25,14 @@ const createClientDocument = async (uid, userRecord) => {
 };
 
 const createPeerCounselorDocument = async (uid, userData, authData) => {
+  // Encrypt email and full name
+  const encryptedEmail = encrypt(userData.email);
+  const encryptedFullName = encrypt(userData.fullName);
+
   await db.collection('users').doc(uid).set({
     uid: uid,
-    email: userData.email,
-    fullName: userData.fullName,
+    email: encryptedEmail, 
+    fullName: encryptedFullName,
     role: 'peer-counselor',
     createdAt: new Date(),
     lastLogin: new Date(),
