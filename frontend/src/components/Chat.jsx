@@ -94,66 +94,61 @@ const Chat = ({ roomId, isOpen, onClose }) => {
     }
 
     return (
-        <div 
-            className={`fixed inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
-                isOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
-        >
+        <div className={`fixed inset-0 md:inset-auto md:right-0 md:top-0 h-full w-full md:w-[380px] 
+            bg-white transform transition-all duration-300 ease-in-out z-50 border-l
+            ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">Session Chat</h2>
+                <div className="px-4 py-3 bg-white border-b flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-800">Chat</h2>
                     <button 
                         onClick={onClose}
-                        className="p-2 hover:bg-green-600/50 rounded-full transition-colors"
+                        className="p-2 text-gray-500 hover:text-gray-700 rounded-full 
+                            hover:bg-gray-100 transition-all"
                     >
-                        <X size={24} />
+                        <X size={20} />
                     </button>
                 </div>
-                
+    
                 {/* Messages */}
-                <div 
-                    ref={chatBoxRef} 
-                    className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+                <div ref={chatBoxRef} 
+                    className="flex-1 overflow-y-auto px-4 py-3 space-y-4 bg-gray-50"
                 >
                     {messages.map((msg, index) => (
-                        <div 
-                            key={index}
-                            className={`flex flex-col ${
-                                msg.sender === userData?.fullName 
-                                    ? 'items-end' 
-                                    : 'items-start'
-                            }`}
+                        <div key={index} 
+                            className={`flex ${msg.sender === userData?.fullName ? 'justify-end' : 'justify-start'}`}
                         >
-                            <div className={`p-3 rounded-2xl max-w-[85%] shadow-sm ${
-                                msg.sender === userData?.fullName 
-                                    ? 'bg-green-600 text-white rounded-tr-none'
-                                    : 'bg-white text-gray-800 rounded-tl-none'
-                            }`}>
-                                <div className="text-xs md:text-sm font-medium mb-1 opacity-90">
+                            <div className={`max-w-[80%] space-y-1`}>
+                                <span className="text-xs text-gray-500 px-1">
                                     {msg.sender}
-                                </div>
-                                <div className="text-sm md:text-base">
-                                    {msg.text}
+                                </span>
+                                <div className={`p-3 rounded-2xl ${
+                                    msg.sender === userData?.fullName 
+                                        ? 'bg-green-600 text-white ml-auto rounded-tr-none'
+                                        : 'bg-white text-gray-800 rounded-tl-none shadow-sm'
+                                }`}>
+                                    <p className="text-sm">{msg.text}</p>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
     
-                {/* Input Area */}
-                <div className="p-3 md:p-4 border-t bg-white shadow-inner">
-                    <div className="flex gap-2">
+                {/* Input */}
+                <div className="p-3 bg-white border-t">
+                    <div className="flex items-center gap-2">
                         <input
                             ref={messageInputRef}
                             type="text"
-                            placeholder="Type your message..."
-                            className="flex-1 px-4 py-3 rounded-full border-2 border-green-100 focus:outline-none focus:border-green-500 transition-colors text-base"
+                            placeholder="Type a message..."
+                            className="flex-1 px-4 h-10 bg-gray-50 rounded-full text-sm 
+                                border focus:outline-none focus:border-green-500 transition-all"
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                         />
                         <button
                             onClick={sendMessage}
-                            className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-sm text-base font-medium"
+                            className="h-10 px-5 bg-green-600 text-white text-sm font-medium 
+                                rounded-full hover:bg-green-700 transition-colors"
                         >
                             Send
                         </button>
