@@ -48,8 +48,6 @@ const App = () => {
                     const userDoc = await getDoc(userDocRef);
                     const userRole = userDoc.data()?.role;
 
-                    console.log('User Role:', userRole);
-
                     // Get decrypted data from backend
                     const endpoint = userRole === 'peer-counselor'
                         ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
@@ -63,12 +61,6 @@ const App = () => {
                         }
                     });
                     const decryptedData = response.data;
-
-                    console.log('Decrypted Data from Backend:', {
-                        ...response.data,
-                        email: '***masked***',
-                        fullName: '***masked***'
-                    });
                     
                     // Set up profile listener
                     const profileDocRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
