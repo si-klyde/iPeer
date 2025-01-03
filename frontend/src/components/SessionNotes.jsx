@@ -3,7 +3,7 @@ import { Save, X, ClipboardEdit } from 'lucide-react';
 import { auth } from '../firebase';
 import axios from 'axios';
 
-const SessionNotes = ({ roomId, clientId }) => {
+const SessionNotes = ({ roomId, clientId, isOpen, onClose }) => {
     const [notes, setNotes] = useState('');
     const textareaRef = useRef(null);
     const [cursorPosition, setCursorPosition] = useState(null);
@@ -101,44 +101,46 @@ const SessionNotes = ({ roomId, clientId }) => {
     }, [notes]);
 
     return (
-        <>
-            <button
-                onClick={() => setIsModalOpen(true)}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-            >
-                <ClipboardEdit className="w-5 h-5" />
-                Session Notes
-            </button>
-
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-end justify-end p-4">
-                    <div className="bg-white rounded-lg w-96 shadow-xl">
-                        <div className="p-4 border-b flex justify-between items-center">
-                            <h2 className="font-semibold text-green-800">Session Notes</h2>
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={handleSaveNotes}
-                                    disabled={isSaving}
-                                    className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                                >
-                                    {isSaving ? 'Saving...' : 'Save'}
-                                </button>
-                                <button onClick={() => setIsModalOpen(false)}>
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        <textarea
-                            ref={textareaRef}
-                            value={notes}
-                            onChange={handleNotesChange}
-                            className="w-full h-96 p-4 focus:outline-none resize-none"
-                            placeholder="Take session notes here..."
-                        />
+        <div 
+            className={`fixed right-0 top-0 h-full w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
+                isOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+        >
+            <div className="flex flex-col h-full">
+                <div className="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white flex justify-between items-center shadow-md">
+                    <h2 className="text-lg font-semibold">Session Notes</h2>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleSaveNotes}
+                            disabled={isSaving}
+                            className="px-4 py-1.5 bg-green-500 text-white rounded-full text-sm hover:bg-green-400 disabled:opacity-50 transition-colors shadow-sm"
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </button>
+                        <button 
+                            onClick={onClose}
+                            className="p-2 hover:bg-green-600/50 rounded-full transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
                 </div>
-            )}
-        </>
+    
+                <textarea
+                    ref={textareaRef}
+                    value={notes}
+                    onChange={handleNotesChange}
+                    className="flex-1 p-6 bg-gray-50 focus:outline-none resize-none text-sm leading-relaxed"
+                    placeholder="Take session notes here..."
+                />
+    
+                {lastSaved && (
+                    <div className="px-4 py-2 text-xs text-gray-500 bg-white border-t">
+                        Last saved: {new Date(lastSaved).toLocaleTimeString()}
+                    </div>
+                )}
+            </div>
+        </div>
     );
 };
 

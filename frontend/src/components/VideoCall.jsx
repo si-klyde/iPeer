@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { firestore } from '../firebase';
 import { collection, doc, setDoc, getDoc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { MessageCircle, ClipboardEdit, Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
+import Chat from './Chat';
+import SessionNotes from './SessionNotes';
 
 const servers = {
     iceServers: [
@@ -9,7 +12,7 @@ const servers = {
     ]
 };
 
-const VideoCall = ({ roomId, setRoomId, userRole }) => {
+const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const [localStream, setLocalStream] = useState(null);
@@ -18,7 +21,8 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
     const [isVideoMuted, setIsVideoMuted] = useState(false);
     const [isAudioMuted, setIsAudioMuted] = useState(false);
     const [dataChannel, setDataChannel] = useState(null);
-    
+    const [showChat, setShowChat] = useState(false);
+    const [showNotes, setShowNotes] = useState(false);
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -323,33 +327,63 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
     
             {/* Controls - Floating Bottom Bar */}
             <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-4 p-6 bg-gradient-to-t from-black/70 to-transparent">
-            <button 
-                    className={`px-6 py-3 rounded-full transition-colors backdrop-blur-sm ${
-                        isAudioMuted 
-                            ? 'bg-red-500/80 hover:bg-red-600/80' 
-                            : 'bg-gray-800/80 hover:bg-gray-700/80'
-                    } text-white`}
+                <button 
+                    className={`p-4 rounded-full transition-colors backdrop-blur-sm ${
+                        isAudioMuted ? 'bg-red-500/80' : 'bg-gray-800/80'
+                    } text-white hover:bg-opacity-100`}
                     onClick={toggleAudio}
                 >
-                    {isAudioMuted ? 'Unmute Audio' : 'Mute Audio'}
+                    {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
                 </button>
+
                 <button 
-                    className={`px-6 py-3 rounded-full transition-colors backdrop-blur-sm ${
-                        isVideoMuted 
-                            ? 'bg-red-500/80 hover:bg-red-600/80' 
-                            : 'bg-gray-800/80 hover:bg-gray-700/80'
-                    } text-white`}
+                    className={`p-4 rounded-full transition-colors backdrop-blur-sm ${
+                        isVideoMuted ? 'bg-red-500/80' : 'bg-gray-800/80'
+                    } text-white hover:bg-opacity-100`}
                     onClick={toggleVideo}
                 >
-                    {isVideoMuted ? 'Unmute Video' : 'Mute Video'}
+                    {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
                 </button>
+
+                <button
+                    className="p-4 bg-gray-800/80 text-white rounded-full hover:bg-gray-700/80 backdrop-blur-sm"
+                    onClick={() => setShowChat(!showChat)}
+                >
+                    <MessageCircle size={24} />
+                </button>
+
+                {userRole === 'peer-counselor' && (
+                    <button
+                        className="p-4 bg-gray-800/80 text-white rounded-full hover:bg-gray-700/80 backdrop-blur-sm"
+                        onClick={() => setShowNotes(!showNotes)}
+                    >
+                        <ClipboardEdit size={24} />
+                    </button>
+                )}
+
                 <button 
-                    className="bg-red-500/80 text-white px-6 py-3 rounded-full hover:bg-red-600/80 transition-colors backdrop-blur-sm"
+                    className="p-4 bg-red-500/80 text-white rounded-full hover:bg-red-600/80 backdrop-blur-sm"
                     onClick={endCall}
                 >
-                    {userRole === 'peer-counselor' ? 'End Session' : 'Leave Session'}
+                    <PhoneOff size={24} />
                 </button>
             </div>
+
+            {/* Chat and Notes Components */}
+            <Chat 
+                roomId={roomId} 
+                isOpen={showChat} 
+                onClose={() => setShowChat(false)} 
+            />
+
+            {userRole === 'peer-counselor' && (
+                <SessionNotes 
+                    roomId={roomId} 
+                    clientId={clientId}
+                    isOpen={showNotes}
+                    onClose={() => setShowNotes(false)} 
+                />
+            )}
         </div>
     );
 };
