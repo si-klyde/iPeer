@@ -142,7 +142,8 @@ const Chat = ({ roomId, isOpen, onClose }) => {
                             type="text"
                             placeholder="Type a message..."
                             className="flex-1 px-4 h-10 bg-gray-50 rounded-full text-sm 
-                                border focus:outline-none focus:border-green-500 transition-all"
+                                border focus:outline-none focus:border-green-500 
+                                text-gray-800 placeholder-gray-400 transition-all"
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                         />
                         <button

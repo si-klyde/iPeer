@@ -23,6 +23,8 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const [dataChannel, setDataChannel] = useState(null);
     const [showChat, setShowChat] = useState(false);
     const [showNotes, setShowNotes] = useState(false);
+    const [unreadMessages, setUnreadMessages] = useState(0);
+    const lastMessageCountRef = useRef(0);
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -183,6 +185,28 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
             return () => unsubscribe();
         }
     }, [roomId, navigate]);
+
+    useEffect(() => {
+        if (!roomId) return;
+
+        const messageRef = doc(firestore, 'calls', roomId);
+        const unsubscribe = onSnapshot(messageRef, (snapshot) => {
+            const data = snapshot.data();
+            if (data?.messages?.length > lastMessageCountRef.current && !showChat) {
+                setUnreadMessages(prev => prev + 1);
+            }
+            lastMessageCountRef.current = data?.messages?.length || 0;
+        });
+
+        return () => unsubscribe();
+    }, [roomId, showChat]);
+
+    // Reset counter when opening chat
+    useEffect(() => {
+        if (showChat) {
+            setUnreadMessages(0);
+        }
+    }, [showChat]);
 
     function toggleVideo() {
         if (localStream && peerConnection) {
@@ -350,6 +374,9 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     onClick={() => setShowChat(!showChat)}
                 >
                     <MessageCircle size={20} />
+                    {unreadMessages > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+                    )}
                 </button>
 
                 {userRole === 'peer-counselor' && (
