@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { firestore } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { auth } from '../firebase';
+import axios from 'axios';
 
 const Chat = ({ roomId }) => {
     const chatBoxRef = useRef(null);
@@ -13,16 +14,35 @@ const Chat = ({ roomId }) => {
     useEffect(() => {
         const fetchUserData = async () => {
             if (currentUser) {
-                const userDocRef = doc(firestore, 'users', currentUser.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    setUserData(userDoc.data());
+                try {
+                    // First get user role
+                    const userDocRef = doc(firestore, 'users', currentUser.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    const userRole = userDoc.data().role;
+    
+                    // Use role to determine endpoint
+                    const token = await currentUser.getIdToken();
+                    const endpoint = userRole === 'peer-counselor' 
+                        ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
+                        : `http://localhost:5000/api/client/${currentUser.uid}`;
+                    
+                    const response = await axios.get(endpoint, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setUserData(response.data);
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
                 }
             }
         };
         fetchUserData();
     }, [currentUser]);
 
+    useEffect(() => {
+        if (chatBoxRef.current) {
+            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     useEffect(() => {
         let unsubscribe;
@@ -33,7 +53,6 @@ const Chat = ({ roomId }) => {
                 const data = snapshot.data();
                 if (data && data.messages) {
                     setMessages(data.messages);
-                    updateChatBox(data.messages);
                 }
             });
         } else {
@@ -72,21 +91,6 @@ const Chat = ({ roomId }) => {
             }
         }
     }
-
-
-    function updateChatBox(messages) {
-        if (chatBoxRef.current) {
-            chatBoxRef.current.innerHTML = '';
-            messages.forEach(msg => {
-                const msgElement = document.createElement('div');
-                msgElement.textContent = `${msg.sender}: ${msg.text}`;
-                msgElement.className = "p-2 rounded bg-gray-200 my-2";
-                chatBoxRef.current.appendChild(msgElement);
-            });
-            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-        }
-    }
-
 
     return (
         <div className="bg-white rounded-lg shadow-lg flex flex-col h-[400px]">
