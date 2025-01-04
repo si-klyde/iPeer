@@ -25,6 +25,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const [showNotes, setShowNotes] = useState(false);
     const [unreadMessages, setUnreadMessages] = useState(0);
     const lastMessageCountRef = useRef(0);
+    const [localVideoAspectRatio, setLocalVideoAspectRatio] = useState(16/9);
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -133,6 +134,11 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
         return pc;
     }, [localStream, navigate, userRole]);
+
+    const handleLocalVideoMetadata = (e) => {
+        const video = e.target;
+        setLocalVideoAspectRatio(video.videoWidth / video.videoHeight);
+    };
 
     useEffect(() => {
         const init = async () => {
@@ -329,23 +335,33 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     return (
         <div className="relative w-full h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)] bg-gray-900">
             {/* Remote Video */}
-            <div className="absolute inset-0 w-full h-full bg-black">
+            <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
                 <video 
-                    className="w-full h-full object-cover"
+                    className="w-auto h-full max-w-full"
                     ref={remoteVideoRef} 
                     autoPlay 
                     playsInline
+                    style={{ objectFit: 'contain' }}
                 />
             </div>
 
             {/* Local Video */}
-            <div className="absolute top-2 right-2 md:top-4 md:right-4 w-[120px] md:w-[280px] aspect-video bg-black rounded-lg overflow-hidden shadow-2xl hover:scale-105 transition-transform">
+            <div 
+                className="absolute top-2 right-2 md:top-4 md:right-4 w-[280px] h-[160px] bg-black rounded-lg overflow-hidden shadow-2xl"
+                style={{
+                    aspectRatio: localVideoAspectRatio > 1 ? '16/9' : '9/16',
+                    width: localVideoAspectRatio > 1 ? '280px' : '160px',
+                    height: localVideoAspectRatio > 1 ? '160px' : '280px'
+                }}
+            >
                 <video 
-                    className="w-full h-full object-cover transform scale-x-[-1]"
+                    className="w-full h-full transform scale-x-[-1]"
                     ref={localVideoRef} 
                     autoPlay 
                     playsInline 
                     muted
+                    onLoadedMetadata={handleLocalVideoMetadata}
+                    style={{ objectFit: 'contain' }}
                 />
             </div>
 
