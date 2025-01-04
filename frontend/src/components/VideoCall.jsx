@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { firestore } from '../firebase';
 import { collection, doc, setDoc, getDoc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { MessageCircle, ClipboardEdit, Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
+import Chat from './Chat';
+import SessionNotes from './SessionNotes';
 
 const servers = {
     iceServers: [
@@ -9,7 +12,7 @@ const servers = {
     ]
 };
 
-const VideoCall = ({ roomId, setRoomId, userRole }) => {
+const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const [localStream, setLocalStream] = useState(null);
@@ -18,7 +21,11 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
     const [isVideoMuted, setIsVideoMuted] = useState(false);
     const [isAudioMuted, setIsAudioMuted] = useState(false);
     const [dataChannel, setDataChannel] = useState(null);
-    
+    const [showChat, setShowChat] = useState(false);
+    const [showNotes, setShowNotes] = useState(false);
+    const [unreadMessages, setUnreadMessages] = useState(0);
+    const lastMessageCountRef = useRef(0);
+    const [localVideoAspectRatio, setLocalVideoAspectRatio] = useState(16/9);
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -82,7 +89,7 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
             const offerDescription = await pc.createOffer();
             await pc.setLocalDescription(offerDescription);
     
-            await setDoc(callDoc, {
+            await updateDoc(callDoc, {
                 offer: {
                     type: offerDescription.type,
                     sdp: offerDescription.sdp,
@@ -127,6 +134,11 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
     
         return pc;
     }, [localStream, navigate, userRole]);
+
+    const handleLocalVideoMetadata = (e) => {
+        const video = e.target;
+        setLocalVideoAspectRatio(video.videoWidth / video.videoHeight);
+    };
 
     useEffect(() => {
         const init = async () => {
@@ -179,6 +191,28 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
             return () => unsubscribe();
         }
     }, [roomId, navigate]);
+
+    useEffect(() => {
+        if (!roomId) return;
+
+        const messageRef = doc(firestore, 'calls', roomId);
+        const unsubscribe = onSnapshot(messageRef, (snapshot) => {
+            const data = snapshot.data();
+            if (data?.messages?.length > lastMessageCountRef.current && !showChat) {
+                setUnreadMessages(prev => prev + 1);
+            }
+            lastMessageCountRef.current = data?.messages?.length || 0;
+        });
+
+        return () => unsubscribe();
+    }, [roomId, showChat]);
+
+    // Reset counter when opening chat
+    useEffect(() => {
+        if (showChat) {
+            setUnreadMessages(0);
+        }
+    }, [showChat]);
 
     function toggleVideo() {
         if (localStream && peerConnection) {
@@ -299,57 +333,101 @@ const VideoCall = ({ roomId, setRoomId, userRole }) => {
     
 
     return (
-        <div className="relative w-full h-[calc(100vh-8rem)] bg-gray-900">
-            {/* Remote Video - Full Screen */}
-            <div className="absolute inset-0 w-full h-full bg-black">
+        <div className="relative w-full h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)] bg-gray-900">
+            {/* Remote Video */}
+            <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
                 <video 
-                    className="w-full h-full object-cover"
+                    className="w-auto h-full max-w-full"
                     ref={remoteVideoRef} 
                     autoPlay 
                     playsInline
+                    style={{ objectFit: 'contain' }}
                 />
             </div>
-    
-            {/* Local Video - Floating */}
-            <div className="absolute top-4 right-4 w-[280px] aspect-video bg-black rounded-lg overflow-hidden shadow-2xl hover:scale-105 transition-transform cursor-move">
+
+            {/* Local Video */}
+            <div 
+                className="absolute top-2 right-2 md:top-4 md:right-4 w-[280px] h-[160px] bg-black rounded-lg overflow-hidden shadow-2xl"
+                style={{
+                    aspectRatio: localVideoAspectRatio > 1 ? '16/9' : '9/16',
+                    width: localVideoAspectRatio > 1 ? '280px' : '160px',
+                    height: localVideoAspectRatio > 1 ? '160px' : '280px'
+                }}
+            >
                 <video 
-                    className="w-full h-full object-cover transform scale-x-[-1]"
+                    className="w-full h-full transform scale-x-[-1]"
                     ref={localVideoRef} 
                     autoPlay 
                     playsInline 
                     muted
+                    onLoadedMetadata={handleLocalVideoMetadata}
+                    style={{ objectFit: 'contain' }}
                 />
             </div>
-    
-            {/* Controls - Floating Bottom Bar */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-4 p-6 bg-gradient-to-t from-black/70 to-transparent">
-            <button 
-                    className={`px-6 py-3 rounded-full transition-colors backdrop-blur-sm ${
-                        isAudioMuted 
-                            ? 'bg-red-500/80 hover:bg-red-600/80' 
-                            : 'bg-gray-800/80 hover:bg-gray-700/80'
-                    } text-white`}
+
+            {/* Controls */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center flex-wrap gap-2 md:gap-4 p-3 md:p-6 bg-gradient-to-t from-black/70 to-transparent">
+                <button 
+                    className={`p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm ${
+                        isAudioMuted ? 'bg-red-500/80' : 'bg-gray-800/80'
+                    } text-white hover:bg-opacity-100`}
                     onClick={toggleAudio}
                 >
-                    {isAudioMuted ? 'Unmute Audio' : 'Mute Audio'}
+                    {isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
                 </button>
+
                 <button 
-                    className={`px-6 py-3 rounded-full transition-colors backdrop-blur-sm ${
-                        isVideoMuted 
-                            ? 'bg-red-500/80 hover:bg-red-600/80' 
-                            : 'bg-gray-800/80 hover:bg-gray-700/80'
-                    } text-white`}
+                    className={`p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm ${
+                        isVideoMuted ? 'bg-red-500/80' : 'bg-gray-800/80'
+                    } text-white hover:bg-opacity-100`}
                     onClick={toggleVideo}
                 >
-                    {isVideoMuted ? 'Start Video' : 'Stop Video'}
+                    {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
                 </button>
+
                 <button 
-                    className="bg-red-500/80 text-white px-6 py-3 rounded-full hover:bg-red-600/80 transition-colors backdrop-blur-sm"
+                    className="p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm bg-gray-800/80 text-white hover:bg-opacity-100"
+                    onClick={() => setShowChat(!showChat)}
+                >
+                    <MessageCircle size={20} />
+                    {unreadMessages > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+                    )}
+                </button>
+
+                {userRole === 'peer-counselor' && (
+                    <button 
+                        className="p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm bg-gray-800/80 text-white hover:bg-opacity-100"
+                        onClick={() => setShowNotes(!showNotes)}
+                    >
+                        <ClipboardEdit size={20} />
+                    </button>
+                )}
+
+                <button 
+                    className="p-3 md:p-4 rounded-full transition-colors backdrop-blur-sm bg-red-500/80 text-white hover:bg-red-600/80"
                     onClick={endCall}
                 >
-                    {userRole === 'peer-counselor' ? 'End Session' : 'Leave Session'}
+                    <PhoneOff size={20} />
                 </button>
             </div>
+
+            {/* Chat Component */}
+            <Chat 
+                roomId={roomId} 
+                isOpen={showChat} 
+                onClose={() => setShowChat(false)} 
+            />
+
+            {/* Notes Component */}
+            {userRole === 'peer-counselor' && (
+                <SessionNotes 
+                    roomId={roomId} 
+                    clientId={clientId}
+                    isOpen={showNotes}
+                    onClose={() => setShowNotes(false)} 
+                />
+            )}
         </div>
     );
 };

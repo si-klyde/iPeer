@@ -8,6 +8,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import logo from '../assets/ipeer-icon.png';
 import ProfileDropdown from './ProfileDropdown';
+import NotificationBell from './NotificationBell';
 
 const Header = ({ user }) => {
   const location = useLocation();
@@ -98,29 +99,31 @@ const Header = ({ user }) => {
         {/* Buttons */}
         <div className="flex items-center space-x-4">
           {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex rounded-full bg-white hover:bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <img
-                  className="h-8 w-8 rounded-full object-cover"
-                  src={user.photoURL}
-                  alt="Profile"
+            <div className="flex items-center space-x-4">
+              <NotificationBell user={user} />
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex rounded-full bg-white hover:bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <img
+                    className="h-8 w-8 rounded-full object-cover"
+                    src={user.photoURL}
+                    alt="Profile"
+                  />
+                </button>
+                <ProfileDropdown 
+                  user={user}
+                  isOpen={isDropdownOpen}
+                  onSignOut={handleSignOut}
                 />
-              </button>
-              <ProfileDropdown 
-                user={user}
-                isOpen={isDropdownOpen}
-                onSignOut={handleSignOut}
-              />
+              </div>
             </div>
           ) : (
             <Button className="hidden lg:flex lg:text-xs text-n-8" href="/login">
               Sign In
             </Button>
           )}
-
           <Button className="lg:hidden px-3" onClick={toggleNavigation}>
             <MenuSvg openNavigation={openNavigation} />
           </Button>

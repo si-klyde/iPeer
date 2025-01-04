@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { firestore } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { X } from 'lucide-react';
 import { auth } from '../firebase';
+import axios from 'axios';
 
-const Chat = ({ roomId }) => {
+const Chat = ({ roomId, isOpen, onClose }) => {
     const chatBoxRef = useRef(null);
     const messageInputRef = useRef(null);
     const [messages, setMessages] = useState([]);
@@ -13,16 +15,35 @@ const Chat = ({ roomId }) => {
     useEffect(() => {
         const fetchUserData = async () => {
             if (currentUser) {
-                const userDocRef = doc(firestore, 'users', currentUser.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    setUserData(userDoc.data());
+                try {
+                    // First get user role
+                    const userDocRef = doc(firestore, 'users', currentUser.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    const userRole = userDoc.data().role;
+    
+                    // Use role to determine endpoint
+                    const token = await currentUser.getIdToken();
+                    const endpoint = userRole === 'peer-counselor' 
+                        ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
+                        : `http://localhost:5000/api/client/${currentUser.uid}`;
+                    
+                    const response = await axios.get(endpoint, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setUserData(response.data);
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
                 }
             }
         };
         fetchUserData();
     }, [currentUser]);
 
+    useEffect(() => {
+        if (chatBoxRef.current) {
+            chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     useEffect(() => {
         let unsubscribe;
@@ -72,58 +93,67 @@ const Chat = ({ roomId }) => {
         }
     }
 
-
-    // function updateChatBox(messages) {
-    //     if (chatBoxRef.current) {
-    //         chatBoxRef.current.innerHTML = '';
-    //         messages.forEach(msg => {
-    //             const msgElement = document.createElement('div');
-    //             msgElement.textContent = `${msg.sender}: ${msg.text}`;
-    //             msgElement.className = "p-2 rounded bg-gray-200 text-sm text-gray-400 my-2";
-    //             chatBoxRef.current.appendChild(msgElement);
-    //         });
-    //         chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    //     }
-    // }
-
-
     return (
-        <div className="bg-white rounded-lg flex flex-col shadow-lg h-[60vh]">
-            <div className="p-3 bg-green-600 text-white rounded-t-lg">
-                <h2 className="text-center font-semibold">Session Chat</h2>
-            </div>
-            <div 
-                ref={chatBoxRef} 
-                className="flex-1 overflow-y-auto p-4 space-y-3"
-            >
-                {messages.map((msg, index) => (
-                    <div 
-                        key={index}
-                        className={`p-3 rounded-lg max-w-[80%] ${
-                            msg.sender === userData?.fullName 
-                                ? 'ml-auto bg-green-100 text-green-900'
-                                : 'bg-gray-100 text-gray-900'
-                        }`}
+        <div className={`fixed inset-0 md:inset-auto md:right-0 md:top-0 h-full w-full md:w-[380px] 
+            bg-white transform transition-all duration-300 ease-in-out z-50 border-l
+            ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="px-4 py-3 bg-white border-b flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-800">Chat</h2>
+                    <button 
+                        onClick={onClose}
+                        className="p-2 text-gray-500 hover:text-gray-700 rounded-full 
+                            hover:bg-gray-100 transition-all"
                     >
-                        <div className="text-xs font-medium mb-1">{msg.sender}</div>
-                        <div>{msg.text}</div>
-                    </div>
-                ))}
-            </div>
-            <div className="p-3 border-t">
-                <div className="flex gap-2">
-                    <input
-                        ref={messageInputRef}
-                        type="text"
-                        placeholder="Type your message..."
-                        className="flex-1 text-black px-4 py-2 rounded-full border bg-green-50 border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                    <button
-                        onClick={sendMessage}
-                        className="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors"
-                    >
-                        Send
+                        <X size={20} />
                     </button>
+                </div>
+    
+                {/* Messages */}
+                <div ref={chatBoxRef} 
+                    className="flex-1 overflow-y-auto px-4 py-3 space-y-4 bg-gray-50"
+                >
+                    {messages.map((msg, index) => (
+                        <div key={index} 
+                            className={`flex ${msg.sender === userData?.fullName ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`max-w-[80%] space-y-1`}>
+                                <span className="text-xs text-gray-500 px-1">
+                                    {msg.sender}
+                                </span>
+                                <div className={`p-3 rounded-2xl ${
+                                    msg.sender === userData?.fullName 
+                                        ? 'bg-green-600 text-white ml-auto rounded-tr-none'
+                                        : 'bg-white text-gray-800 rounded-tl-none shadow-sm'
+                                }`}>
+                                    <p className="text-sm">{msg.text}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+    
+                {/* Input */}
+                <div className="p-3 bg-white border-t">
+                    <div className="flex items-center gap-2">
+                        <input
+                            ref={messageInputRef}
+                            type="text"
+                            placeholder="Type a message..."
+                            className="flex-1 px-4 h-10 bg-gray-50 rounded-full text-sm 
+                                border focus:outline-none focus:border-green-500 
+                                text-gray-800 placeholder-gray-400 transition-all"
+                            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        />
+                        <button
+                            onClick={sendMessage}
+                            className="h-10 px-5 bg-green-600 text-white text-sm font-medium 
+                                rounded-full hover:bg-green-700 transition-colors"
+                        >
+                            Send
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
