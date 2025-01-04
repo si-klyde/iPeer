@@ -20,7 +20,7 @@ const Counseling = () => {
     const [userRole, setUserRole] = useState(null);
     const [showChat, setShowChat] = useState(false);
     const [showNotes, setShowNotes] = useState(false);
-    
+
     useEffect(() => {
         // Hide Header and Footer
         const appHeader = document.querySelector('header');
@@ -33,7 +33,7 @@ const Counseling = () => {
             if (appFooter) appFooter.style.display = '';
         };
     }, []);
-    
+  
     useEffect(() => {
         const checkUserRole = async () => {
             try {
@@ -52,10 +52,10 @@ const Counseling = () => {
                 }
             }
         };
-    
+
         checkUserRole();
     }, []);
-    
+
     useEffect(() => {
         const fetchRoomData = async () => {
             if (!roomId || !userRole) return;
@@ -89,7 +89,7 @@ const Counseling = () => {
                 console.error('Error fetching room:', error);
             }
         };
-    
+
         fetchRoomData();
     }, [roomId, userRole]);
 
@@ -99,7 +99,7 @@ const Counseling = () => {
                 try {
                     const roomRef = doc(firestore, 'calls', roomId);
                     const roomSnapshot = await getDoc(roomRef);
-        
+
                     if (roomSnapshot.exists()) {
                         // Room exists and we're not creating it - this is fine
                         setIsValidRoom(true);
@@ -119,16 +119,16 @@ const Counseling = () => {
                 setIsValidRoom(false);
             }
         };
-    
+
         checkRoom();
     }, [roomId, navigate, location.state]);
-    
 
+  
     if (!isValidRoom) {
         return <div className="min-h-screen flex items-center justify-center text-white">Checking room validity...</div>;
     }
 
-
+  
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
             <div className="p-2 md:p-4 flex flex-col h-screen">
