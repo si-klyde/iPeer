@@ -60,53 +60,53 @@ const RegisterPeerCounselor = () => {
         )}
 
         {/* Name Fields */}
-    <div className="grid grid-cols-2 gap-4 mb-6">
-      <div>
-        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-          First Name*
-        </label>
-        <input
-          id="firstName"
-          type="text"
-          placeholder="Enter first name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          required
-          disabled={loading}
-        />
-      </div>
-      <div>
-        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-          Last Name*
-        </label>
-        <input
-          id="lastName"
-          type="text"
-          placeholder="Enter last name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-          required
-          disabled={loading}
-        />
-      </div>
-    </div>
-    <div className="mb-6">
-      <label htmlFor="middleInitial" className="block text-sm font-medium text-gray-700 mb-1">
-        Middle Initial (optional)
-      </label>
-      <input
-        id="middleInitial"
-        type="text"
-        placeholder="Enter middle initial"
-        value={middleInitial}
-        onChange={(e) => setMiddleInitial(e.target.value.charAt(0).toUpperCase())}
-        maxLength={1}
-        className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        disabled={loading}
-      />
-    </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+              First Name*
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              placeholder="Enter first name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              required
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+              Last Name*
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              placeholder="Enter last name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              required
+              disabled={loading}
+            />
+          </div>
+        </div>
+        <div className="mb-6">
+          <label htmlFor="middleInitial" className="block text-sm font-medium text-gray-700 mb-1">
+            Middle Initial (optional)
+          </label>
+          <input
+            id="middleInitial"
+            type="text"
+            placeholder="Enter middle initial"
+            value={middleInitial}
+            onChange={(e) => setMiddleInitial(e.target.value.charAt(0).toUpperCase())}
+            maxLength={1}
+            className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            disabled={loading}
+          />
+        </div>
 
         {/* Email Input */}
         <div className="mb-6">

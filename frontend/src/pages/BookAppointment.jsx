@@ -111,8 +111,8 @@ const BookAppointment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
-      <div className="max-w-screen-xl h-[80vh] bg-white shadow-lg sm:rounded-lg flex justify-center flex-1 animate-fade-up relative">
+        <div className="h-auto bg-gray-100 flex justify-center items-center p-4 sm:p-6">
+      <div className="max-w-screen-xl h-auto sm:h-[80vh] bg-white shadow-lg sm:rounded-lg flex flex-col sm:flex-row justify-center flex-1 animate-fade-up relative">
         
         {/* Back Arrow Button */}
         <button
@@ -123,7 +123,7 @@ const BookAppointment = () => {
         </button>
 
         {/* Left Section */}
-        <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12 text-center">
+        <div className="w-full sm:w-1/2 lg:w-1/2 xl:w-5/12 p-6 sm:p-12 text-center">
           <a
             href="/home"
             className="text-2xl font-semibold flex items-center justify-center"
@@ -198,8 +198,8 @@ const BookAppointment = () => {
         </div>
 
         {/* Right Section (Illustration) */}
-        <div className="hidden lg:flex flex-1 bg-green-50 items-center justify-center">
-          <div className="lg:w-5/6 flex justify-end mr-10">
+        <div className="hidden sm:flex flex-1 bg-green-50 items-center justify-center">
+          <div className="w-full lg:w-5/6 flex justify-end mr-10">
             <img
               src={appointmentImage}
               alt="Appointment Illustration"

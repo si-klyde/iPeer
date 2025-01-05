@@ -64,7 +64,7 @@ const OffCampus = () => {
             </ul>
             <div className="flex flex-col space-y-4">
             <Button
-              className="bg-green-500 w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
+              className="bg-green-500 w-full md:w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
               onClick={() => window.open(
                 "https://www.facebook.com/profile.php?id=100088474968422",
                 "_blank",
@@ -90,7 +90,7 @@ const OffCampus = () => {
                 loading="lazy"
               ></iframe>
             </div>
-            <div className=" flex flex-row space-y-0 space-x-10">
+            <div className="flex flex-col md:flex-row space-y-10 md:space-y-0 md:space-x-10">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Contact Details</h3>
                 <p className="text-md text-gray-700">4Capt. F. Aquende St. (Washington Drive), Old Albay District</p>
@@ -135,7 +135,7 @@ const OffCampus = () => {
                 loading="lazy"
               ></iframe>
             </div>
-            <div className=" flex flex-row space-y-0 space-x-10">
+            <div className="flex flex-col md:flex-row space-y-10 md:space-y-0 md:space-x-10">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Contact Details</h3>
                 <p className="text-md text-gray-700">Shorehomes, Purok 2</p>
@@ -168,7 +168,7 @@ const OffCampus = () => {
             </ul>
             <div className="flex flex-col space-y-4">
             <Button
-              className="bg-green-500 w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
+              className="bg-green-500 w-full md:w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
               onClick={() => window.open(
                 "https://www.facebook.com/dlmrpsychometriclegazpi",
                 "_blank",
@@ -209,7 +209,7 @@ const OffCampus = () => {
             </ul>
             <div className="flex flex-col space-y-4">
             <Button
-              className="bg-green-500 w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
+              className="bg-green-500 w-full md:w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
               onClick={() => window.open(
                 "https://www.rangapsychosocialservices.com/?fbclid=IwZXh0bgNhZW0CMTAAAR1zFeCWpKdlyC7sAoyrGSIvBdAQMnoJ7RphsEWRmZkm5-tSy5FosRBDPQo_aem_-SLQN0s1ZL483k0OVGdlRw",
                 "_blank",
@@ -235,7 +235,7 @@ const OffCampus = () => {
                 loading="lazy"
               ></iframe>
             </div>
-            <div className=" flex flex-row space-y-0 space-x-10">
+            <div className="flex flex-col md:flex-row space-y-10 md:space-y-0 md:space-x-10">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Contact Details</h3>
                 <p className="text-md text-gray-700">3/F Unit A, SMC Building Blk. 3, Lot 4, Landco Business Park, F. Imperial St</p>
@@ -280,7 +280,7 @@ const OffCampus = () => {
                 loading="lazy"
               ></iframe>
             </div>
-            <div className=" flex flex-row space-y-0 space-x-10">
+            <div className="flex flex-col md:flex-row space-y-10 md:space-y-0 md:space-x-10">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Contact Details</h3>
                 <p className="text-md text-gray-700">Unit 212, 2nd Floor, Bicol Access Health Centrum Hospital (Pedro Olivan Medical Arts Building) </p>
@@ -311,7 +311,7 @@ const OffCampus = () => {
             </ul>
             <div className="flex flex-col space-y-4">
             <Button
-              className="bg-green-500 w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
+              className="bg-green-500 w-full md:w-1/3 text-white px-4 py-2 rounded-full transition-transform transform hover:scale-105 duration-100 text-center"
               onClick={() => window.open(
                 "https://mapcarta.com/N8041730390",
                 "_blank",

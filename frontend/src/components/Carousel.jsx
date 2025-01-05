@@ -6,32 +6,32 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const therapists = [
   {
-    name: "Anna Joanna Marquez",
-    position: "Guidance Counselor",
+    name: "PCO 1",
+    position: "Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Junnevy Millora",
-    position: "Guidance Counselor",
+    name: "PCO 2",
+    position: "Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Antonette Tillo",
-    position: "Guidance Counselor",
+    name: "PCO 3",
+    position: "Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Therapist 4",
-    position: "Guidance Counselor",
+    name: "PCO 4",
+    position: "Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
   {
-    name: "Therapist 5",
-    position: "Guidance Counselor",
+    name: "PCO 5",
+    position: "Counselor",
     department: "College of Science",
     email: "something@gmail.com",
   },
@@ -88,26 +88,26 @@ const Carousel = () => {
   };
 
   return (
-    <div className="flex flex-col items-center bg-[#FFF9F9] py-10">
+    <div className="flex flex-col items-center bg-[#FFF9F9] py-10 px-4 sm:px-6 lg:px-8">
       {/* Header Section */}
-      <h2 className="text-4xl font-bold text-gray-800 mb-4">
+      <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 text-center">
         On-Campus Mental Health Support Staff
       </h2>
-      <h3 className="text-md text-gray-600 mt-4">
-        Meet the professionals available to support mental health and wellness.
+      <h3 className="text-sm sm:text-md lg:text-lg text-gray-600 mt-4 text-center">
+        Meet the counselors available to support mental health and wellness.
       </h3>
 
       {/* Carousel Container */}
-      <div className="w-[85%]">
+      <div className="w-full sm:w-[85%]">
         <Slider {...settings}>
           {therapists.map((therapist, index) => (
-            <div key={index} className="px-8 py-10">
+            <div key={index} className="px-4 sm:px-8 py-10">
               {/* Card */}
               <div className="flex flex-col h-64 mt-5 items-center bg-[#FFF9F9] rounded-lg shadow-lg drop-shadow-md border border-gray-200">
                 {/* Green Top Bar */}
                 <div className="w-full h-2 bg-green-600 rounded-t-lg"></div>
-                <div className="p-10 space-y-4 text-center">
-                  <p className="font-semibold text-lg text-gray-800 mb-2">
+                <div className="p-6 sm:p-10 space-y-4 text-center">
+                  <p className="font-semibold text-md sm:text-lg text-gray-800 mb-2">
                     {therapist.name}
                   </p>
                   <p className="text-gray-600">{therapist.position}</p>
@@ -125,31 +125,31 @@ const Carousel = () => {
       {/* Footer Section */}
       <button
         onClick={toggleModal}
-        className="mt-20 text-lg text-green-700 hover:underline font-medium"
+        className="mt-10 sm:mt-20 text-md sm:text-lg text-green-700 hover:underline font-medium"
       >
         See full list →
       </button>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg w-3/4 max-w-3xl p-6 relative shadow-xl">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg w-full sm:w-3/4 max-w-3xl p-4 sm:p-6 relative shadow-xl">
             {/* Close Button */}
             <button
               onClick={toggleModal}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
             >
               ✕
             </button>
             {/* Modal Content */}
-            <h2 className="text-2xl text-black font-bold text-center mb-6">
+            <h2 className="text-lg sm:text-xl text-black font-bold text-center mb-4 sm:mb-6">
               Support Staff Lists
             </h2>
-            <ul className="space-y-4">
+            <ul className="space-y-2 sm:space-y-4">
               {therapists.map((therapist, index) => (
                 <li
                   key={index}
-                  className="flex justify-between bg-gray-100 p-4 rounded-lg shadow-sm"
+                  className="flex flex-col sm:flex-row justify-between bg-gray-100 p-2 sm:p-4 rounded-lg shadow-sm"
                 >
                   <div>
                     <p className="font-semibold text-gray-800">
@@ -160,7 +160,7 @@ const Carousel = () => {
                       {therapist.department}
                     </p>
                   </div>
-                  <p className="text-gray-500">{therapist.email}</p>
+                  <p className="text-gray-500 mt-2 sm:mt-0">{therapist.email}</p>
                 </li>
               ))}
             </ul>

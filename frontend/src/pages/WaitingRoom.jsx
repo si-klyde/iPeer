@@ -94,16 +94,16 @@ const WaitingRoom = () => {
     };
 
     const renderDefaultView = () => (
-        <div className="flex flex-col items-center space-y-4 w-full max-w-md">
+        <div className="h-auto flex flex-col items-center space-y-4 w-full max-w-md sm:max-w-sm md:max-w-lg">
             <button 
                 onClick={() => navigate('/book-appointment')} 
-                className="w-full bg-[#fe8a4f] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-[#fe8a4f]/80 hover:scale-105"
+                className="w-full bg-[#fe8a4f] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-[#fe8a4f]/80 hover:scale-105 sm:text-base md:text-xl"
             >
                 Book an Appointment
             </button>
             <button 
                 onClick={() => setSelectedOption('instant')} 
-                className="w-full bg-[#408f40] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-green-400 hover:scale-105"
+                className="w-full bg-[#408f40] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-green-400 hover:scale-105 sm:text-base md:text-xl"
             >
                 Start Instant Meeting
             </button>
@@ -111,18 +111,18 @@ const WaitingRoom = () => {
     );
 
     const renderInstantMeetingView = () => (
-        <div className="flex flex-col items-center space-y-4 w-full max-w-md relative">
+        <div className="flex flex-col items-center space-y-4 w-full max-w-md sm:max-w-sm md:max-w-lg relative">
              <button 
                 onClick={goBack} 
-                className="mr- bg-transparent text-black text-xl font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition duration-200"
+                className="mr- bg-transparent text-black text-xl font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition duration-200 sm:text-lg md:text-2xl"
             >
                 &#8592; {/* Left Arrow character */}
             </button>
-            <h1 className="text-2xl text-center font-bold text-black mb-2">iPeer Counseling Waiting Room</h1>
+            <h1 className="text-2xl text-center font-bold text-black mb-2 sm:text-xl md:text-3xl">iPeer Counseling Waiting Room</h1>
            
             <button 
                 onClick={createRoom} 
-                className="w-full bg-green-500 text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-green-600 hover:scale-105"
+                className="w-full bg-green-500 text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-green-600 hover:scale-105 sm:text-base md:text-xl"
             >
                 Create New Room
             </button>
@@ -132,11 +132,11 @@ const WaitingRoom = () => {
                     value={roomCode} 
                     onChange={(e) => setRoomCode(e.target.value)}
                     placeholder="Enter room code"
-                    className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm md:text-lg"
                     />
                 <button 
                     onClick={joinRoom} 
-                    className="w-full bg-[#fe8a4f] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-[#fe8a4f]/70 hover:scale-105"
+                    className="w-full bg-[#fe8a4f] text-white py-3 px-6 rounded-lg text-lg font-semibold transition hover:bg-[#fe8a4f]/70 hover:scale-105 sm:text-base md:text-xl"
                 >
                     Join Room
                 </button>
@@ -145,7 +145,7 @@ const WaitingRoom = () => {
     );
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#E6F4EA] p-4">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#E6F4EA] p-4 sm:p-2 md:p-6">
             {selectedOption === '' && renderDefaultView()}
             {selectedOption === 'instant' && renderInstantMeetingView()}
         </div>
