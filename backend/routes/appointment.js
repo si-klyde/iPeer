@@ -3,6 +3,8 @@ const router = express.Router();
 const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = require('../models/appointment');
 const { db } = require('../firebaseAdmin');
 const { sendAppointmentConfirmation, sendAppointmentRejection } = require('../services/emailService');
+const { createNotification } = require('../models/notifications');
+const { decrypt } = require('../utils/encryption.utils');
 
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
@@ -45,14 +47,35 @@ router.post('/create-appointment', async (req, res) => {
     const clientDoc = await db.collection('users').doc(appointmentData.clientId).get();
     const counselorDoc = await db.collection('users').doc(appointmentData.peerCounselorId).get();
     
+    const clientData = clientDoc.data();
+    const counselorData = counselorDoc.data();
+    
+    const decryptedCounselorName = decrypt(counselorData.fullName);
+    const decryptedClientName = decrypt(clientData.fullName);
+
+    // Create notifications for both parties
+    await createNotification(appointmentData.clientId, {
+      type: 'APPOINTMENT_REQUEST',
+      title: 'Appointment Request Sent',
+      message: `Your appointment request with ${decryptedCounselorName} for ${appointmentData.date} at ${appointmentData.time} is pending confirmation.`,
+      appointmentId
+    });
+
+    await createNotification(appointmentData.peerCounselorId, {
+      type: 'NEW_APPOINTMENT_REQUEST',
+      title: 'New Appointment Request',
+      message: `${decryptedClientName} requested an appointment for ${appointmentData.date} at ${appointmentData.time}.`,
+      appointmentId
+    });
+    
     await sendAppointmentConfirmation(
-      clientDoc.data().email,
-      counselorDoc.data().email,
+      decrypt(clientData.email),
+      decrypt(counselorData.email),
       {
         date: appointmentData.date,
         time: appointmentData.time,
-        clientName: clientDoc.data().fullName,
-        peerCounselorName: counselorDoc.data().fullName,
+        clientName: decryptedClientName,
+        peerCounselorName: decryptedCounselorName,
         roomLink: `http://localhost:5173/counseling/${roomId}`
       }
     );
@@ -102,6 +125,32 @@ router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => 
   }
 });
 
+// Route to check if a user has an appointment on a specific date
+router.get('/check-reminders', async (req, res) => {
+  try {
+    const upcomingAppointments = await getUpcomingAppointments();
+    
+    for (const appointment of upcomingAppointments) {
+      await createReminderNotification(appointment);
+      await sendAppointmentReminder(
+        decrypt(appointment.clientEmail),
+        decrypt(appointment.counselorEmail),
+        {
+          time: appointment.time,
+          clientName: decrypt(appointment.clientName),
+          peerCounselorName: decrypt(appointment.peerCounselorName),
+          roomLink: `http://localhost:5173/counseling/${appointment.roomId}`
+        }
+      );
+    }
+    
+    res.status(200).json({ message: 'Reminders sent successfully' });
+  } catch (error) {
+    console.error('Error sending reminders:', error);
+    res.status(500).json({ error: 'Failed to send reminders' });
+  }
+});
+
 // Route to update appointment status
 router.put('/appointments/:appointmentId/status', async (req, res) => {
   const { appointmentId } = req.params;
@@ -128,29 +177,51 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
         const clientData = clientDoc.data();
         const counselorData = counselorDoc.data();
 
+        const decryptedCounselorName = decrypt(counselorData.fullName);
+        const decryptedClientName = decrypt(clientData.fullName);
+
         if (status === 'accepted') {
+          // Create notification for client if it is accepted
+          await createNotification(appointmentData.clientId, {
+            type: 'APPOINTMENT_ACCEPTED',
+            title: 'Appointment Confirmed',
+            message: `Your appointment with ${decryptedCounselorName} on ${appointmentData.date} at ${appointmentData.time} has been confirmed.`,
+            appointmentId,
+            roomId: appointmentData.roomId
+          });
+
+          // Send Confirmation email
           await sendAppointmentConfirmation(
-            clientData.email,
-            counselorData.email,
+            decrypt(clientData.email),
+            decrypt(counselorData.email),
             {
               status: 'accepted',
               date: appointmentData.date,
               time: appointmentData.time,
-              clientName: clientData.fullName,
-              peerCounselorName: counselorData.fullName,
+              clientName: decryptedClientName,
+              peerCounselorName: decryptedCounselorName,
               roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
             }
           );
         } else if (status === 'declined') {
+          // Create notification for client if it is declined 
+          await createNotification(appointmentData.clientId, {
+            type: 'APPOINTMENT_DECLINED',
+            title: 'Appointment Declined',
+            message: `Your appointment request with ${decryptedCounselorName} for ${appointmentData.date} at ${appointmentData.time} was declined.`,
+            appointmentId
+          });
+
+          // Send rejection email
           await sendAppointmentRejection(
-            clientData.email,
-            counselorData.email,
+            decrypt(clientData.email),
+            decrypt(counselorData.email),
             {
               status: 'declined',
               date: appointmentData.date,
               time: appointmentData.time,
-              clientName: clientData.fullName,
-              peerCounselorName: counselorData.fullName
+              clientName: decryptedClientName,
+              peerCounselorName: decryptedCounselorName
             }
           );
         }

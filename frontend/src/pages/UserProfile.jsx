@@ -3,11 +3,13 @@ import { auth, firestore, storage } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
+import axios from 'axios';
 
 const UserProfile = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Hide Header and Footer
@@ -25,43 +27,48 @@ const UserProfile = () => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const userDocRef = doc(firestore, 'users', user.uid);
-    const profileDocRef = doc(firestore, 'users', user.uid, 'profile', 'details');
-    
-    // Set up real-time listener for both user and profile documents
-    const unsubscribe = onSnapshot(userDocRef, async (userDoc) => {
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        
-        // Get profile details from subcollection
-        const profileDoc = await getDoc(profileDocRef);
-        const profileData = profileDoc.exists() ? profileDoc.data() : {};
-        
-        console.log('User Data:', userData);
-        console.log('Profile Data:', profileData);
-        console.log('Current User PhotoURL:', user.photoURL);
-        
-        // Combine user data with profile data
-        const combinedData = {
-          ...userData,
-          ...profileData,
-          // Prioritize photo URLs in order: Google photo, profile photo, default
-          photoURL: user.photoURL || 
-                  profileData.photoURL || 
-                  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'
-        };
-        
-        console.log('Combined Data PhotoURL:', combinedData.photoURL);
-        
-        setUserProfile(combinedData);
-      }
-    }, (error) => {
-      console.error('Error fetching user profile:', error);
-      setError('Failed to load profile');
-    });
+    let unsubscribeProfile;
 
-    return () => unsubscribe();
+    const setupProfileListener = async () => {
+      try {
+        setLoading(true);
+        // Get initial decrypted data from backend
+        const idToken = await user.getIdToken();
+        const endpoint = `http://localhost:5000/api/${user.role === 'peer-counselor' ? 'peer-counselors' : 'client'}/${user.uid}`;
+        const response = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+        const decryptedData = response.data;
+
+        // Set up real-time listener for profile updates (photo)
+        const profileDocRef = doc(firestore, 'users', user.uid, 'profile', 'details');
+        unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
+          const profileData = profileDoc.exists() ? profileDoc.data() : {};
+          
+          setUserProfile(prevProfile => ({
+            ...prevProfile,
+            ...decryptedData,
+            ...profileData,
+            photoURL: user.photoURL || profileData.photoURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'
+
+          }));
+          setLoading(false);
+        });
+
+      } catch (err) {
+        console.error('Error setting up profile:', err);
+        setError('Failed to load profile');
+        setLoading(false);
+      }
+    };
+
+    setupProfileListener();
+
+    return () => {
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
+
 
   // Update handleImageUpload to store in subcollection
   const handleImageUpload = async (event) => {
