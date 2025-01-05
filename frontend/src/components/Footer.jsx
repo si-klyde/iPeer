@@ -80,12 +80,6 @@ const Footer = () => {
       <div className="border-t border-gray-400 mt-6 pt-6 text-center text-sm text-gray-200">
         <p>&copy;2024 iPeer.com All rights reserved</p>
         <div className="flex justify-center space-x-6 mt-2">
-          <a href="#" className="hover:underline">
-            Terms of Use
-          </a>
-          <a href="#" className="hover:underline">
-            Privacy Policy
-          </a>
         </div>
       </div>
     </footer>

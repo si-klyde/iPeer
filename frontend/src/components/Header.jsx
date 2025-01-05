@@ -22,7 +22,7 @@ const Header = ({ user }) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsShrunk(window.scrollY > 50);
+      setIsShrunk(window.scroll  > 50);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -65,18 +65,18 @@ const Header = ({ user }) => {
         isShrunk ? 'bg-[#FFF9F9] shadow-md h-14' : 'bg-[#FFF9F9] shadow-md h-20'
       }`}
     >
-      <div className="flex items-center justify-between px-5 lg:px-7.5 xl:px-10 h-full">
+      <div className="flex items-center justify-between px-4 sm:px-5 md:px-7.5 lg:px-10 h-full">
         {/* Logo and Title */}
-        <a href="/" className="text-2xl font-semibold flex items-center space-x-3">
-          <img src={logo} alt="" className="w-15 inline-block" />
+        <a href="/" className="text-xl sm:text-2xl font-semibold flex items-center space-x-2 sm:space-x-3">
+          <img src={logo} alt="" className="w-12 sm:w-15 inline-block" />
           <span className="text-[#0e0e0e] font-code">iPeer</span>
         </a>
 
         {/* Navigation Links */}
         <nav
           className={`${
-            openNavigation ? 'flex'  : 'hidden'
-          } fixed top-[5rem] left-0 right-0 bottom-[10rem] bg-[#FFF9F9] lg:static lg:flex lg:mx-auto lg:bg-transparent`}
+            openNavigation ? 'flex' : 'hidden'
+          } fixed top-[4rem] sm:top-[5rem] left-0 right-0 bottom-[8rem] sm:bottom-[10rem] bg-[#FFF9F9] lg:static lg:flex lg:mx-auto lg:bg-transparent`}
         >
           <div className="relative z-10 flex flex-col items-center justify-center m-auto lg:flex-row">
             {navigation.map((item) => (
@@ -84,9 +84,9 @@ const Header = ({ user }) => {
                 key={item.id}
                 href={item.url}
                 onClick={handleClick}
-                className={`block relative font-roboto text-xl transition-colors hover:text-n-5 ${
+                className={`block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 ${
                   item.onlyMobile ? 'lg:hidden' : ''
-                } px-4 py-3 lg:py-2 lg:text-sm lg:font-medium ${
+                } px-3 sm:px-4 py-2 sm:py-3 lg:py-2 lg:text-sm lg:font-medium ${
                   item.url === location.pathname ? 'text-n-5' : 'text-n-8'
                 } lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg`}
               >
@@ -96,13 +96,13 @@ const Header = ({ user }) => {
             {user ? (
               <button
                 onClick={handleSignOut}
-                className="block relative font-roboto text-xl transition-colors hover:text-n-5 px-4 py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+                className="block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 px-3 sm:px-4 py-2 sm:py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
               >
                 Sign Out
               </button>
             ) : (
               <button
-                className="block relative font-roboto text-xl transition-colors hover:text-n-5 px-4 py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+                className="block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 px-3 sm:px-4 py-2 sm:py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
                 onClick={() => window.location.href = '/login'}
               >
                 Sign In
@@ -112,9 +112,9 @@ const Header = ({ user }) => {
         </nav>
 
         {/* Buttons */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {user ? (
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <NotificationBell user={user} />
               <div className="relative">
                 <button
@@ -139,7 +139,7 @@ const Header = ({ user }) => {
               Sign In
             </Button>
           )}
-          <Button className="lg:hidden px-3" onClick={toggleNavigation}>
+          <Button className="lg:hidden px-2 sm:px-3" onClick={toggleNavigation}>
             <MenuSvg openNavigation={openNavigation} />
           </Button>
         </div>

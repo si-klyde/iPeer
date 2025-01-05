@@ -295,9 +295,12 @@ const Hero = () => {
         <h1 className="text-white text-3xl font-bold mb-4">
           Reach Out to Us for <br /> Personalized Support
         </h1>
-        <button className="bg-[#50B498] text-white py-2 px-4 rounded-lg hover:bg-[#468585] shadow-md">
+        <a
+          className="bg-[#50B498] text-white py-2 px-4 rounded-lg hover:bg-[#468585] shadow-md"
+          href="/book-appointment"
+        >
           Appoint Today
-        </button>
+        </a>
       </div>
     </div>
       </motion.section>
