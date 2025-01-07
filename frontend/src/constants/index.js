@@ -23,5 +23,10 @@ export const navigation = [
     id: "4",
     title: "Counseling",
     url: "/waitingroom",
-  }
+  },
+  {
+   id: "5",
+    title: "Dashboard",
+    url: "/peer-dashboard",
+  },
 ];

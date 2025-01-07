@@ -11,22 +11,32 @@ import {
 } from '@heroicons/react/24/outline';
 import { ChessGame, WordPuzzle, MemoryGame, SudokuGame } from './Rooms/GameRoom.jsx';
 import { MusicRoom } from './Rooms/MusicRoom.jsx';
+import ArtRoom from './Rooms/ArtRoom.jsx';
 
 // Color Picker Component
 const ColorPicker = ({ selectedColor, onColorChange }) => {
   const colors = [
-    '#000000', '#FF0000', '#00FF00', '#0000FF', 
-    '#FFFF00', '#FF00FF', '#00FFFF', '#FFFFFF'
+    // Primary Colors
+    '#FF0000', '#0000FF', '#FFFF00',
+    // Secondary Colors
+    '#00FF00', '#FF00FF', '#00FFFF',
+    // Earth Tones
+    '#8B4513', '#A0522D', '#6B4423',
+    // Grayscale
+    '#000000', '#808080', '#FFFFFF',
+    // Additional Colors
+    '#FFA500', '#800080', '#008000',
+    '#FF69B4', '#4B0082', '#FFD700'
   ];
 
   return (
-    <div className="flex space-x-2 mb-4">
+    <div className="flex flex-wrap justify-center gap-2 w-full max-w-md mx-auto">
       {colors.map(color => (
         <button
           key={color}
-          className={`w-8 h-8 rounded-full border-2 ${
-            selectedColor === color ? 'border-gray-600' : 'border-gray-300'
-          }`}
+          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 ${
+            selectedColor === color ? 'border-[#508D4E]' : 'border-gray-300'
+          } hover:scale-110 transition-transform shadow-sm`}
           style={{ backgroundColor: color }}
           onClick={() => onColorChange(color)}
         />
@@ -144,56 +154,96 @@ const Canvas = ({ selectedTool, onSave }) => {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="bg-white rounded-xl shadow-xl p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="space-x-4 flex items-center">
-            <ColorPicker selectedColor={color} onColorChange={setColor} />
-            <div className="flex items-center space-x-2">
-              <label className="text-sm text-gray-600">Brush Size:</label>
-              <input
-                type="range"
-                min="1"
-                max="50"
-                value={brushSize}
-                onChange={(e) => setBrushSize(e.target.value)}
-                className="w-32"
-              />
+    <div className="w-full max-w-5xl mx-auto">
+      <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 space-y-6">
+        {/* Tools Section */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Left Side - Tools */}
+          <div className="flex flex-wrap justify-center gap-3 w-full sm:w-auto">
+            {/* Brush and Eraser Tools */}
+            <button
+              onClick={() => setSelectedTool('brush')}
+              className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                selectedTool === 'brush'
+                  ? 'bg-[#508D4E] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <PaintBrushIcon className="w-5 h-5" />
+              <span>Brush</span>
+            </button>
+            <button
+              onClick={() => setSelectedTool('eraser')}
+              className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                selectedTool === 'eraser'
+                  ? 'bg-[#508D4E] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <SwatchIcon className="w-5 h-5" />
+              <span>Eraser</span>
+            </button>
+
+            {/* Action Icons */}
+            <div className="flex space-x-2">
+              <button
+                onClick={undo}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                disabled={currentStep <= 0}
+                title="Undo"
+              >
+                <ArrowUturnDownIcon className="w-5 h-5 text-gray-600" />
+              </button>
+              <button
+                onClick={clearCanvas}
+                className="p-2 rounded-lg hover:bg-gray-100"
+                title="Clear Canvas"
+              >
+                <TrashIcon className="w-5 h-5 text-gray-600" />
+              </button>
+              <button
+                onClick={handleSave}
+                className="p-2 rounded-lg hover:bg-gray-100"
+                title="Save Artwork"
+              >
+                <Square2StackIcon className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
           </div>
-          <div className="space-x-2">
-            <button
-              onClick={undo}
-              className="p-2 rounded-lg hover:bg-gray-100"
-              disabled={currentStep <= 0}
-            >
-              <ArrowUturnDownIcon className="w-6 h-6 text-gray-600" />
-            </button>
-            <button
-              onClick={clearCanvas}
-              className="p-2 rounded-lg hover:bg-gray-100"
-            >
-              <TrashIcon className="w-6 h-6 text-gray-600" />
-            </button>
-            <button
-              onClick={() => onSave?.(canvasRef.current.toDataURL('image/png'))}
-              className="p-2 rounded-lg hover:bg-gray-100"
-            >
-              <Square2StackIcon className="w-6 h-6 text-gray-600" />
-            </button>
+
+          {/* Right Side - Brush Size */}
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <label className="text-sm text-gray-600 whitespace-nowrap">Brush Size:</label>
+            <input
+              type="range"
+              min="1"
+              max="50"
+              value={brushSize}
+              onChange={(e) => setBrushSize(e.target.value)}
+              className="w-32 sm:w-40"
+            />
           </div>
         </div>
+
+        {/* Color Picker */}
+        <div className="py-2">
+          <ColorPicker selectedColor={color} onColorChange={setColor} />
+        </div>
         
-        <div className="relative w-full" style={{ paddingBottom: '75%' }}>
+        {/* Canvas Container */}
+        <div className="relative w-full" style={{ paddingBottom: '90%' }}>
           <canvas
             ref={canvasRef}
-            width={800}
-            height={600}
-            className="absolute top-0 left-0 w-full h-full border border-gray-300 rounded-lg cursor-crosshair"
+            width={1200}
+            height={1000}
+            className="absolute top-0 left-0 w-full h-full border border-gray-300 rounded-lg cursor-crosshair touch-none"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseOut={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
           />
         </div>
       </div>
@@ -239,20 +289,20 @@ export const GameRoom = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 p-8">
+    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-blue-900 mb-8">Game Room</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 mb-6 sm:mb-8">Game Room</h1>
         
         {!selectedGame ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {games.map((game) => (
               <div 
                 key={game.id}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-blue-100"
+                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-blue-100"
                 onClick={() => setSelectedGame(game)}
               >
-                <h3 className="text-2xl font-semibold mb-3 text-blue-800">{game.name}</h3>
-                <p className="text-blue-600">
+                <h3 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3 text-blue-800">{game.name}</h3>
+                <p className="text-blue-600 text-sm sm:text-base">
                   {game.minPlayers === game.maxPlayers 
                     ? `${game.minPlayers} player${game.minPlayers > 1 ? 's' : ''}`
                     : `${game.minPlayers}-${game.maxPlayers} players`}
@@ -264,19 +314,19 @@ export const GameRoom = () => {
           <div className="relative">
             <button
               onClick={() => setSelectedGame(null)}
-              className="absolute right-4 top-4 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
+              className="absolute right-2 sm:right-4 top-2 sm:top-4 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
             >
-              <XCircle className="w-6 h-6 text-blue-600 hover:text-blue-800" />
+              <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 hover:text-blue-800" />
             </button>
             
-            <div className="bg-white rounded-xl shadow-xl p-8 border border-blue-100">
-              <h2 className="text-3xl font-bold text-blue-800 mb-6">{selectedGame.name}</h2>
+            <div className="bg-white rounded-xl shadow-xl p-4 sm:p-8 border border-blue-100">
+              <h2 className="text-2xl sm:text-3xl font-bold text-blue-800 mb-4 sm:mb-6">{selectedGame.name}</h2>
               
               <div className="w-full flex justify-center">
                 {selectedGame.component && <selectedGame.component />}
               </div>
               
-              <div className="mt-6 text-sm text-blue-600 text-center font-medium">
+              <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-blue-600 text-center font-medium">
                 {selectedGame.minPlayers === selectedGame.maxPlayers 
                   ? `${selectedGame.minPlayers} player${selectedGame.minPlayers > 1 ? 's' : ''} required`
                   : `${selectedGame.minPlayers}-${selectedGame.maxPlayers} players allowed`}
@@ -285,31 +335,31 @@ export const GameRoom = () => {
           </div>
         )}
         
-        <div className="mt-12 bg-white rounded-xl shadow-xl p-8 border border-blue-100">
-          <h3 className="text-2xl font-semibold mb-6 text-blue-800">Gaming Tips</h3>
-          <div className="grid md:grid-cols-2 gap-8">
+        <div className="mt-8 sm:mt-12 bg-white rounded-xl shadow-xl p-4 sm:p-8 border border-blue-100">
+          <h3 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-blue-800">Gaming Tips</h3>
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
             <div>
-              <h4 className="text-xl font-medium text-blue-700 mb-4">For the Best Experience</h4>
-              <ul className="space-y-3 text-blue-600">
+              <h4 className="text-lg sm:text-xl font-medium text-blue-700 mb-3 sm:mb-4">For the Best Experience</h4>
+              <ul className="space-y-2 sm:space-y-3 text-blue-600 text-sm sm:text-base">
                 <li className="flex items-center">
-                  <span className="mr-3 text-blue-400">•</span>
+                  <span className="mr-2 sm:mr-3 text-blue-400">•</span>
                   Take regular breaks between games
                 </li>
                 <li className="flex items-center">
-                  <span className="mr-3 text-blue-400">•</span>
+                  <span className="mr-2 sm:mr-3 text-blue-400">•</span>
                   Try different games to exercise various skills
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="text-xl font-medium text-blue-700 mb-4">Game Benefits</h4>
-              <ul className="space-y-3 text-blue-600">
+              <h4 className="text-lg sm:text-xl font-medium text-blue-700 mb-3 sm:mb-4">Game Benefits</h4>
+              <ul className="space-y-2 sm:space-y-3 text-blue-600 text-sm sm:text-base">
                 <li className="flex items-center">
-                  <span className="mr-3 text-blue-400">•</span>
+                  <span className="mr-2 sm:mr-3 text-blue-400">•</span>
                   Enhances cognitive function
                 </li>
                 <li className="flex items-center">
-                  <span className="mr-3 text-blue-400">•</span>
+                  <span className="mr-2 sm:mr-3 text-blue-400">•</span>
                   Provides stress relief through engaging activities
                 </li>
               </ul>
@@ -321,93 +371,8 @@ export const GameRoom = () => {
   );
 };
 
-// Art Room Component
-export const ArtRoom = () => {
-  const [artworks, setArtworks] = useState([]);
-  const [selectedTool, setSelectedTool] = useState('brush');
-  const [canvasMode, setCanvasMode] = useState('create');
-
-  const tools = [
-    { id: 'brush', name: 'Brush', icon: PaintBrushIcon },
-    { id: 'eraser', name: 'Eraser', icon: SwatchIcon },
-  ];
-
-  const handleSaveArtwork = (imageUrl) => {
-    const newArtwork = {
-      id: Date.now(),
-      title: `Artwork ${artworks.length + 1}`,
-      artist: 'Anonymous',
-      imageUrl,
-      createdAt: new Date().toISOString(),
-    };
-    setArtworks([newArtwork, ...artworks]);
-    setCanvasMode('gallery');
-  };
-
-  const handleDeleteArtwork = (id) => {
-    setArtworks(artworks.filter(artwork => artwork.id !== id));
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-100 to-yellow-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-yellow-900">Art Room</h1>
-          <div className="space-x-4">
-            {['create', 'gallery'].map(mode => (
-              <button
-                key={mode}
-                className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 
-                  ${canvasMode === mode 
-                    ? 'bg-yellow-500 text-white shadow-lg' 
-                    : 'bg-white text-yellow-700 hover:bg-yellow-100'}`}
-                onClick={() => setCanvasMode(mode)}
-              >
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {canvasMode === 'create' ? (
-          <div className="space-y-6">
-            <div className="flex space-x-4">
-              {tools.map((tool) => (
-                <button
-                  key={tool.id}
-                  className={`p-4 rounded-xl flex items-center transition-all duration-300
-                    ${selectedTool === tool.id 
-                      ? 'bg-orange-200 text-black shadow-md' 
-                      : 'bg-orange-100 hover:bg-yellow-100'}`}
-                  onClick={() => setSelectedTool(tool.id)}
-                >
-                  <tool.icon className="w-6 h-6 mr-2" />
-                  <span className="text-yellow-800 font-medium">{tool.name}</span>
-                </button>
-              ))}
-            </div>
-            <Canvas selectedTool={selectedTool} onSave={handleSaveArtwork} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {artworks.map((artwork) => (
-              <ArtworkCard
-                key={artwork.id}
-                artwork={artwork}
-                onDelete={handleDeleteArtwork}
-              />
-            ))}
-            {artworks.length === 0 && (
-              <div className="col-span-full text-center py-12 text-gray-500">
-                No artworks yet. Start creating!
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+// Export the imported ArtRoom
+export { ArtRoom };
 
 // Export MusicRoom
 export { MusicRoom };

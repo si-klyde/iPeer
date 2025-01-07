@@ -81,7 +81,7 @@ const PlaylistCard = ({ playlist, onSelect }) => {
   return (
     <button 
       onClick={() => onSelect(playlist)}
-      className={`group relative w-full aspect-square rounded-2xl overflow-hidden 
+      className={`group relative w-full aspect-square rounded-2xl 
         hover:scale-[1.02] transition-all duration-300 ease-out shadow-lg`}
     >
       {/* Background Gradient */}
@@ -110,19 +110,19 @@ const PlaylistCard = ({ playlist, onSelect }) => {
 export const MusicRoom = () => {
   const [currentPlaylist, setCurrentPlaylist] = useState(null);
 
-  useEffect(() => {
-    // Hide Footer
-    const footer = document.querySelector('footer');
-    if (footer) footer.style.display = 'none';
+  // useEffect(() => {
+  //   // Hide Footer
+  //   const footer = document.querySelector('footer');
+  //   if (footer) footer.style.display = 'none';
 
-    return () => {
-      // Restore Footer visibility when leaving the page
-      if (footer) footer.style.display = '';
-    };
-  }, []);
+  //   return () => {
+  //     // Restore Footer visibility when leaving the page
+  //     if (footer) footer.style.display = '';
+  //   };
+  // }, []);
 
   return (
-    <div className="max-w-[1600px] h-[90vh] bg-[#E6F4EA] mx-auto p-8">
+    <div className="max-w-[1600px] h-auto bg-[#E6F4EA] mx-auto p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-12">
         <div>

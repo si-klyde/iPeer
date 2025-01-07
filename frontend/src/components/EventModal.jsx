@@ -1,4 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions while maintaining aspect ratio
+        const maxDimension = 1200;
+        if (width > height && width > maxDimension) {
+          height = (height * maxDimension) / width;
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width = (width * maxDimension) / height;
+          height = maxDimension;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compress image to JPEG with 0.7 quality
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/jpeg', 0.7);
+      };
+    };
+  });
+};
 
 const EventModal = ({ 
   isOpen, 
@@ -8,26 +44,92 @@ const EventModal = ({
   handleInputChange, 
   handleSubmit 
 }) => {
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (10MB = 10 * 1024 * 1024 bytes)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        alert('Image size must be less than 10MB');
+        e.target.value = ''; // Reset the input
+        return;
+      }
+
+      try {
+        // Compress the image
+        const compressedBlob = await compressImage(file);
+        
+        // Check if compressed size is still too large
+        if (compressedBlob.size > maxSize) {
+          alert('Image is too large even after compression. Please try a smaller image.');
+          e.target.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewImage(reader.result);
+          handleInputChange({
+            target: {
+              name: 'imageUrl',
+              value: reader.result
+            }
+          });
+        };
+        reader.readAsDataURL(compressedBlob);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        alert('Error processing image. Please try again.');
+        e.target.value = '';
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
             {isEditing ? 'Edit Event' : 'Create New Event'}
           </h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <div className="mb-4">
+            <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
+              {(previewImage || newEvent.imageUrl) ? (
+                <img
+                  src={previewImage || newEvent.imageUrl}
+                  alt="Event preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                  <span>Upload Event Image</span>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </div>
+            <p className="mt-2 text-sm text-gray-500">Maximum image size: 10MB</p>
+          </div>
+
           <div>
             <input
               type="text"
@@ -35,7 +137,7 @@ const EventModal = ({
               value={newEvent.title}
               onChange={handleInputChange}
               placeholder="Event Title"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             />
           </div>
@@ -45,18 +147,18 @@ const EventModal = ({
               value={newEvent.description}
               onChange={handleInputChange}
               placeholder="Event Description"
-              rows="4"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              rows="3"
+              className="custom-input-time mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <input
               type="date"
               name="date"
               value={newEvent.date}
               onChange={handleInputChange}
-              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             />
             <input
@@ -64,7 +166,7 @@ const EventModal = ({
               name="time"
               value={newEvent.time}
               onChange={handleInputChange}
-              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="custom-input-time mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             />
           </div>
@@ -75,25 +177,25 @@ const EventModal = ({
               value={newEvent.location}
               onChange={handleInputChange}
               placeholder="Location"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <input
               type="number"
               name="maxParticipants"
               value={newEvent.maxParticipants}
               onChange={handleInputChange}
               placeholder="Max Participants"
-              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             />
             <select
               name="category"
               value={newEvent.category}
               onChange={handleInputChange}
-              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               required
             >
               <option value="">Select Category</option>
@@ -105,9 +207,7 @@ const EventModal = ({
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold 
-                     transform transition-all duration-200 hover:bg-blue-700 hover:scale-105 
-                     active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transform transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             {isEditing ? 'Update Event' : 'Create Event'}
           </button>

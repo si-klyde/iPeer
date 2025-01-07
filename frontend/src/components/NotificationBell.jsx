@@ -71,7 +71,7 @@ const NotificationBell = ({ user }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-full sm:w-96 bg-white rounded-lg shadow-xl border border-gray-100 z-50 sm:max-w-sm md:max-w-md">
+        <div className="absolute right-0 mt-3 w-60 md-w-96 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-100 z-50 sm:max-w-sm md:max-w-md">
           <div className="p-4 border-b border-gray-100">
             <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
           </div>

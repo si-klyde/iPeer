@@ -14,13 +14,17 @@ const ProfileDropdown = ({ user, isOpen, onSignOut }) => {
           Your Profile
         </a>
         <div className="border-t border-gray-100 my-1"></div>
-        <a
-          href="/appointments/client"
-          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-        >
-          Appointments
-        </a>
-        <div className="border-t border-gray-100 my-1"></div>
+        {user.role !== 'peer-counselor' && (
+          <>
+            <a
+              href="/appointments/client"
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              Appointments
+            </a>
+            <div className="border-t border-gray-100 my-1"></div>
+          </>
+        )}
         <div className="px-4 py-2">
           <button
             onClick={onSignOut}

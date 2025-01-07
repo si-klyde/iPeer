@@ -144,22 +144,22 @@ const Hero = () => {
         {/* Key Features Section */}
         <motion.section
           id="features"
-          className="relative w-full h-[100vh] flex flex-col items-center justify-center px-5 md:px-10 bg-[#E6F4EA]"
+          className="relative w-full min-h-screen py-16 flex flex-col items-center justify-start px-4 md:px-10 bg-[#E6F4EA]"
           variants={fadeUpVariants}
           initial="hidden"
           animate={isVisible.features ? "visible" : "hidden"}
         >
-          <div className="z-10 text-black">
-            <p className="flex justify-center font-mono text-sm md:text-md md:mr-2 text-gray-500">
+          <div className="z-10 text-black w-full max-w-7xl mx-auto">
+            <p className="text-center font-mono text-sm md:text-md text-gray-500">
               Tailored Guidance
             </p>
-            <h1 className="bg-clip-text font-sans mb-5 text-3xl md:text-4xl font-semibold flex justify-center p-4 md:p-6">
+            <h1 className="bg-clip-text font-sans mb-5 text-2xl md:text-4xl font-semibold text-center p-4">
               Key Features
             </h1>
-            <p className="mx-auto font-sans text-sm md:text-md mb-8 md:mb-12 flex justify-center w-3/4 md:w-1/2 text-center">
+            <p className="mx-auto font-sans text-sm md:text-md mb-8 md:mb-12 text-center max-w-2xl">
               iPeer offers personalized peer support, mental health resources, and an accessible communication platform to help you manage well-being and stay connected.
             </p>
-            <div className="flex flex-wrap justify-center py-6 md:py-20">
+            <div className="w-full">
               <ProfileCard />
             </div>
           </div>

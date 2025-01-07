@@ -10,6 +10,9 @@ const Calendar = () => {
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [calendarEvents, setCalendarEvents] = useState({});
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categoryEvents, setCategoryEvents] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,7 +95,7 @@ const Calendar = () => {
     return upcomingEvents.sort((a, b) => a.fullDate - b.fullDate);
   };
   
-  const EventList = ({ events, hoverColor }) => (
+  const EventList = ({ events, hoverColor, category }) => (
     <ul className="space-y-2">
       {events.length > 0 ? (
         <>
@@ -106,7 +109,10 @@ const Calendar = () => {
             </li>
           ))}
           {events.length > 3 && (
-            <li className="text-white text-right text-sm">
+            <li 
+              className="text-white text-right text-sm cursor-pointer hover:underline"
+              onClick={() => handleCategoryClick(category, events)}
+            >
               +{events.length - 3} more
             </li>
           )}
@@ -181,8 +187,9 @@ const Calendar = () => {
 
   // Handle event click
   const handleEventClick = (event) => {
-    setSelectedEvent(event);
-    setEventModalOpen(true);
+    setSelectedCategory('Event Details');
+    setCategoryEvents([event]);
+    setCategoryModalOpen(true);
   };
 
   // Close modals
@@ -194,6 +201,12 @@ const Calendar = () => {
   const handleCloseEventModal = () => {
     setEventModalOpen(false);
     setSelectedEvent('');
+  };
+
+  const handleCategoryClick = (category, events) => {
+    setSelectedCategory(category);
+    setCategoryEvents(events);
+    setCategoryModalOpen(true);
   };
 
   return (
@@ -300,27 +313,36 @@ const Calendar = () => {
             {/* Recent Events Card */}
             <div className="relative overflow-hidden rounded-2xl shadow-xl h-[180px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${recentPic})` }} />
-              <div className="relative bg-gradient-to-r from-red-800/80 to-red-600/80 p-6 h-[180px]">
+              <div 
+                className="relative bg-gradient-to-r from-red-800/80 to-red-600/80 p-6 h-[180px] cursor-pointer"
+                onClick={() => handleCategoryClick('Recent Events', getRecentEvents())}
+              >
                 <h3 className="text-xl font-semibold text-white mb-4">Recent Events</h3>
-                <EventList events={getRecentEvents()} hoverColor="text-red-200" />
+                <EventList events={getRecentEvents()} hoverColor="text-red-200" category="Recent Events" />
               </div>
             </div>
 
             {/* Ongoing Events Card */}
             <div className="relative overflow-hidden rounded-2xl shadow-xl h-[180px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ongoingPic})` }} />
-              <div className="relative bg-gradient-to-r from-green-800/80 to-green-600/80 p-6 h-[180px]">
+              <div 
+                className="relative bg-gradient-to-r from-green-800/80 to-green-600/80 p-6 h-[180px] cursor-pointer"
+                onClick={() => handleCategoryClick('Ongoing Events', getOngoingEvents())}
+              >
                 <h3 className="text-xl font-semibold text-white mb-4">Ongoing Events</h3>
-                <EventList events={getOngoingEvents()} hoverColor="text-green-200" />
+                <EventList events={getOngoingEvents()} hoverColor="text-green-200" category="Ongoing Events" />
               </div>
             </div>
 
             {/* Upcoming Events Card */}
             <div className="relative overflow-hidden rounded-2xl shadow-xl h-[180px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${upcomingPic})` }} />
-              <div className="relative bg-gradient-to-r from-blue-800/80 to-blue-600/80 p-6 h-[180px]">
+              <div 
+                className="relative bg-gradient-to-r from-blue-800/80 to-blue-600/80 p-6 h-[180px] cursor-pointer"
+                onClick={() => handleCategoryClick('Upcoming Events', getUpcomingEvents())}
+              >
                 <h3 className="text-xl font-semibold text-white mb-4">Upcoming Events</h3>
-                <EventList events={getUpcomingEvents()} hoverColor="text-blue-200" />
+                <EventList events={getUpcomingEvents()} hoverColor="text-blue-200" category="Upcoming Events" />
               </div>
             </div>
           </div>
@@ -354,9 +376,19 @@ const Calendar = () => {
                   return (
                     <div 
                       key={index} 
-                      className={`mb-4 p-4 rounded-lg border-2 shadow-md transition-all 
+                      className={`mb-4 p-4 rounded-lg border-2 shadow-md transition-all cursor-pointer
                       ${colorScheme.bg} ${colorScheme.border} ${colorScheme.hover}`}
+                      onClick={() => handleEventClick(event)}
                     >
+                      {event.imageUrl && (
+                        <div className="h-32 mb-3 overflow-hidden rounded-lg">
+                          <img
+                            src={event.imageUrl}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       <h3 className={`text-xl font-semibold mb-2 ${colorScheme.title}`}>
                         {event.title}
                       </h3>
@@ -386,48 +418,69 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Event Details Modal */}
-      {eventModalOpen && (
+      {/* Category Events Modal */}
+      {categoryModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl w-full max-w-4xl p-8 relative m-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl p-8 relative m-4 max-h-[90vh] overflow-y-auto">
             <button 
-              onClick={handleCloseEventModal} 
+              onClick={() => setCategoryModalOpen(false)} 
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
             >
               ×
             </button>
-            <div className="space-y-6">
-              <h2 className="text-3xl font-semibold text-center">{selectedEvent}</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="relative h-[300px] rounded-xl overflow-hidden">
-                  <img 
-                    src={additional1} 
-                    alt="Event" 
-                    className="w-full h-full object-cover" 
-                  />
-                  <div className="absolute inset-0 bg-black/20 flex items-end p-6">
-                  <h3 className="text-white text-xl font-bold">Find a NAMIWalk</h3>
+            <h2 className="text-3xl text-black font-semibold mb-6">{selectedCategory}</h2>
+            {categoryEvents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categoryEvents.map((event, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="h-48 bg-gray-200 relative">
+                      {event.imageUrl ? (
+                        <img
+                          src={event.imageUrl}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                          No Image Available
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4 space-y-3">
+                      <h3 className="text-xl font-semibold text-gray-800">{event.title}</h3>
+                      
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Date:</span> {new Date(event.date).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Time:</span> {
+                            event.time || 
+                            (event.fullDate ? event.fullDate.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            }) : 'Time not specified')
+                          }
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Description:</span> {event.description || 'No description available'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-4xl font-bold">A GENEtle Reminder</h3>
-                  <p className="text-gray-600">
-                    Stay tuned for our uplifting weekly activities this month—safe spaces to grow, share,
-                    and find comfort in community. Healing is a journey, and every step is worth celebrating! 👣
-                  </p>
-                  <button
-                    onClick={handleViewEvent}
-                    className="bg-green-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
-                  >
-                    View Event
-                  </button>
-                </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-xl text-gray-600">No events found</p>
+              </div>
+            )}
           </div>
         </div>
       )}
-      
+
       {/* Bottom wave */}
       <div className="absolute bottom-0 left-0 w-full z-0">
         <svg 
