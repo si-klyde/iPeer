@@ -214,25 +214,118 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         }
     }, [showChat]);
 
-    function toggleVideo() {
+    async function toggleVideo() {
         if (localStream && peerConnection) {
             const videoTrack = localStream.getVideoTracks()[0];
             if (videoTrack) {
-                // Toggle the enabled state of the track
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoMuted(!videoTrack.enabled);
-                
-                // Get all video senders in the peer connection
-                const videoSenders = peerConnection
-                    .getSenders()
-                    .filter(sender => sender.track?.kind === 'video');
+                if (!isVideoMuted) {
+                    // Turning video off - same for all browsers
+                    localStream.getVideoTracks().forEach(track => {
+                        track.stop();
+                        track.enabled = false;
+                    });
                     
-                // Update the enabled state for all video senders
-                videoSenders.forEach(sender => {
-                    if (sender.track) {
-                        sender.track.enabled = videoTrack.enabled;
+                    const videoSenders = peerConnection
+                        .getSenders()
+                        .filter(sender => sender.track?.kind === 'video');
+                    videoSenders.forEach(sender => {
+                        if (sender.track) {
+                            sender.track.stop();
+                            sender.track.enabled = false;
+                        }
+                    });
+    
+                    setIsVideoMuted(true);
+                } else {
+                    // Turning video on
+                    try {
+                        // Log initial senders
+                        console.log('Initial video senders:', peerConnection.getSenders()
+                            .filter(sender => sender.track?.kind === 'video'));
+    
+                        // Stop and remove existing tracks
+                        localStream.getVideoTracks().forEach(track => {
+                            track.stop();
+                            localStream.removeTrack(track);
+                        });
+    
+                        const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        const newVideoTrack = newStream.getVideoTracks()[0];
+    
+                        if (navigator.userAgent.toLowerCase().includes('firefox')) {
+                            try {
+                                // Log initial state
+                                const tracks = peerConnection.getSenders();
+                                console.log('Initial tracks:', tracks.map(t => ({
+                                    kind: t?.track?.kind,
+                                    state: t?.track?.readyState
+                                })));
+                        
+                                // Find existing video sender safely
+                                const videoSender = tracks.find(sender => 
+                                    sender && 
+                                    (sender?.track?.kind === 'video' || 
+                                     (sender?.track === null && sender.dtmf === null)) // Video senders don't have dtmf
+                                );
+                        
+                                if (videoSender) {
+                                    // Handle existing sender
+                                    console.log('Replacing track for existing sender');
+                                    await videoSender.replaceTrack(newVideoTrack);
+                                } else {
+                                    // Clean up any stale senders first
+                                    tracks.forEach(sender => {
+                                        if (sender?.track === null) {
+                                            peerConnection.removeTrack(sender);
+                                        }
+                                    });
+                                    
+                                    // Add as new track
+                                    console.log('Adding new track');
+                                    peerConnection.addTrack(newVideoTrack, newStream);
+                                }
+                        
+                                // Verify final state
+                                const finalTracks = peerConnection.getSenders();
+                                console.log('Final tracks:', finalTracks.length);
+                        
+                                // Continue with offer creation
+                                const offer = await peerConnection.createOffer();
+                                await peerConnection.setLocalDescription(offer);
+                                
+                                // Update Firestore
+                                await updateDoc(doc(firestore, 'calls', roomId), {
+                                    offer: { type: offer.type, sdp: offer.sdp }
+                                });
+                        
+                            } catch (error) {
+                                console.error('Track handling error:', error);
+                            }
+                        } else {
+                            // Chrome/Edge handling remains the same
+                            const videoSender = peerConnection
+                                .getSenders()
+                                .find(sender => sender.track?.kind === 'video');
+    
+                            if (videoSender) {
+                                await videoSender.replaceTrack(newVideoTrack);
+                            } else {
+                                peerConnection.addTrack(newVideoTrack, newStream);
+                            }
+                        }
+    
+                        // Update local stream and video element
+                        localStream.addTrack(newVideoTrack);
+                        if (localVideoRef.current) {
+                            localVideoRef.current.srcObject = localStream;
+                        }
+    
+                        setIsVideoMuted(false);
+                    } catch (error) {
+                        console.error('Error restarting video:', error);
+                        alert('Failed to restart video: ' + error.message);
                     }
-                });
+                }
             }
         }
     }
@@ -263,9 +356,14 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
 
     // Helper function to clean up media and connections
     const cleanup = () => {
+        console.log('Starting cleanup...');
+        
         // Stop all tracks in local stream
         if (localStream) {
+            console.log('Stopping all local stream tracks...');
             localStream.getTracks().forEach(track => {
+                console.log(`Stopping track: ${track.kind} - ${track.label}`);
+                track.enabled = false;
                 track.stop();
             });
             setLocalStream(null);
@@ -273,17 +371,32 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
         // Clear video elements
         if (localVideoRef.current) {
+            const currentTracks = localVideoRef.current.srcObject?.getTracks() || [];
+            currentTracks.forEach(track => {
+                console.log(`Stopping video element track: ${track.kind} - ${track.label}`);
+                track.enabled = false;
+                track.stop();
+            });
             localVideoRef.current.srcObject = null;
         }
         if (remoteVideoRef.current) {
+            const currentTracks = remoteVideoRef.current.srcObject?.getTracks() || [];
+            currentTracks.forEach(track => {
+                console.log(`Stopping remote video element track: ${track.kind} - ${track.label}`);
+                track.enabled = false;
+                track.stop();
+            });
             remoteVideoRef.current.srcObject = null;
         }
     
         // Close peer connection
         if (peerConnection) {
+            console.log('Cleaning up peer connection...');
             // Stop all tracks from peer connection senders
             peerConnection.getSenders().forEach(sender => {
                 if (sender.track) {
+                    console.log(`Stopping sender track: ${sender.track.kind} - ${sender.track.label}`);
+                    sender.track.enabled = false;
                     sender.track.stop();
                 }
             });
@@ -293,6 +406,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
         // Clear data channel
         if (dataChannel) {
+            console.log('Closing data channel...');
             dataChannel.close();
             setDataChannel(null);
         }
@@ -300,6 +414,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         if (setRoomId) {
             setRoomId('');
         }
+        console.log('Cleanup completed');
     };
 
     async function endCall() {
