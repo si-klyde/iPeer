@@ -49,12 +49,12 @@ const Footer = () => {
             <h4 className="text-sm font-semibold mb-4">SERVICE</h4>
             <ul>
               <li className="mb-2">
-                <a href="#" className="hover:underline">
+                <a href="/waitingroom" className="hover:underline">
                   Peer Counseling
                 </a>
               </li>
               <li className="mb-2">
-                <a href="#" className="hover:underline">
+                <a href="/therapy" className="hover:underline">
                   Online Therapy
                 </a>
               </li>

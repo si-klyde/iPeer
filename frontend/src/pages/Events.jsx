@@ -2,6 +2,36 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import EventModal from '../components/EventModal';
 
+// Add DeleteConfirmationModal component
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, eventName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Delete Event</h2>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete "{eventName}"? This action cannot be undone.
+        </p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EventCatalog = () => {
     const [events, setEvents] = useState([]);
     const [newEvent, setNewEvent] = useState({
@@ -16,6 +46,8 @@ const EventCatalog = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState(null);
 
     const [currentPage, setCurrentPage] = useState(1);
     const eventsPerPage = 10;
@@ -94,9 +126,16 @@ const EventCatalog = () => {
       setIsModalOpen(true);
     };
   
-    const handleDelete = async (eventId) => {
+    const handleDelete = async (event) => {
+      setEventToDelete(event);
+      setDeleteModalOpen(true);
+    };
+  
+    const confirmDelete = async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/${eventId}`);
+        await axios.delete(`http://localhost:5000/api/${eventToDelete.id}`);
+        setDeleteModalOpen(false);
+        setEventToDelete(null);
         fetchEvents();
       } catch (error) {
         console.error('Error deleting event:', error);
@@ -104,8 +143,8 @@ const EventCatalog = () => {
     };
   
     return (
-        <div className="container mx-auto p-4 min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-          <h1 className="text-3xl font-bold mb-6 text-center text-blue-800">Mental Health Event Catalog</h1>
+        <div className="container mx-auto p-4 min-h-screen bg-white">
+          <h1 className="text-3xl font-bold mb-6 text-center text-black">Mental Health Event Catalog</h1>
 
           <div className="flex justify-end mb-6">
             <button
@@ -122,17 +161,30 @@ const EventCatalog = () => {
                     category: ''
                 });
                 }}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
             >
                 Add New Event
             </button>
           </div>
 
           {/* Events List */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {currentEvents.map(event => (
               <div key={event.id} 
-                   className="bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-200 hover:scale-105">
+                   className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="h-48 bg-gray-100 overflow-hidden">
+                  {event.imageUrl ? (
+                    <img
+                      src={event.imageUrl}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-gray-400">
+                      No Image Available
+                    </div>
+                  )}
+                </div>
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-4">
                     <h2 className="text-xl font-bold text-gray-800">{event.title}</h2>
@@ -166,13 +218,13 @@ const EventCatalog = () => {
                   <div className="mt-6 flex space-x-3">
                     <button
                       onClick={() => handleEdit(event)}
-                      className="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 
+                      className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 
                                transition-colors duration-200"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(event.id)}
+                      onClick={() => handleDelete(event)}
                       className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 
                                transition-colors duration-200"
                     >
@@ -189,17 +241,17 @@ const EventCatalog = () => {
             <button 
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-200"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-400 hover:bg-blue-600 transition-colors duration-200"
             >
               Previous
             </button>
-            <span className="px-4 py-2 bg-white rounded-lg shadow">
+            <span className="px-4 py-2 bg-white text-n-8/80 rounded-lg shadow-lg">
               Page {currentPage} of {totalPages}
             </span>
             <button 
               onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-200"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-400 hover:bg-blue-600 transition-colors duration-200"
             >
               Next
             </button>
@@ -212,6 +264,16 @@ const EventCatalog = () => {
             newEvent={newEvent}
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
+          />
+
+          <DeleteConfirmationModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setEventToDelete(null);
+            }}
+            onConfirm={confirmDelete}
+            eventName={eventToDelete?.title || ''}
           />
         </div>
     );

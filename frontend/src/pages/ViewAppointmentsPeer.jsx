@@ -92,7 +92,7 @@ const ViewAppointmentsPeer = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading appointments...</div>
+        <div className="text-xl text-black">Loading appointments...</div>
       </div>
     );
   }

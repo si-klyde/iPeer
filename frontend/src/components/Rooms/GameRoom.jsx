@@ -3,11 +3,11 @@ import { PuzzlePieceIcon, ShieldExclamationIcon, LightBulbIcon, HashtagIcon, Lan
 
 // Common game container style
 const GameContainer = ({ icon, title, children }) => (
-  <div className="mx-5 relative w-[30rem] md:w-[25rem] sm:w-full bg-white/90 rounded-2xl pt-24 pb-8 px-6 shadow-2xl flex flex-col items-center">
-    <div className="border-2 border-n-6 absolute rounded-xl bg-gradient-to-br from-green-400 to-green-600 size-20 p-5 z-10 -top-8 shadow-xl">
+  <div className="mx-auto w-full max-w-[90vw] md:max-w-[30rem] relative bg-white/90 rounded-2xl pt-20 sm:pt-24 pb-8 px-4 sm:px-6 shadow-2xl flex flex-col items-center">
+    <div className="border-2 border-n-6 absolute rounded-xl bg-gradient-to-br from-green-400 to-green-600 size-16 sm:size-20 p-4 sm:p-5 z-10 -top-8 shadow-xl">
       {icon}
     </div>
-    <label className="font-bold text-n-6 text-xl mb-6">{title}</label>
+    <label className="font-bold text-n-6 text-lg sm:text-xl mb-4 sm:mb-6 text-center">{title}</label>
     {children}
   </div>
 );
