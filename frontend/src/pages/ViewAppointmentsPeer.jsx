@@ -142,6 +142,7 @@ const ViewAppointmentsPeer = () => {
           <PendingAppointments 
             appointments={appointments}
             clients={clients}
+            role="peer-counselor"
             handleAppointmentStatus={handleAppointmentStatus}
           />
         )}
@@ -150,10 +151,16 @@ const ViewAppointmentsPeer = () => {
           <AcceptedAppointments 
             appointments={appointments}
             clients={clients}
+            role="peer-counselor"
           />
         )}
 
-        {activeTab === 'history' && <SessionHistory />}
+        {activeTab === 'history' && (
+            <SessionHistory 
+              role="peer-counselor"
+              clients={clients}
+            />
+          )}
       </div>
     </div>
   );
