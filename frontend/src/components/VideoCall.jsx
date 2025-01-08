@@ -374,8 +374,8 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                 if (!isVideoMuted) {
                     // Turning video off - same for all browsers
                     localStream.getVideoTracks().forEach(track => {
-                        track.stop();
                         track.enabled = false;
+                        track.stop();
                     });
                     
                     const videoSenders = peerConnection
@@ -383,15 +383,20 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                         .filter(sender => sender.track?.kind === 'video');
                     videoSenders.forEach(sender => {
                         if (sender.track) {
-                            sender.track.stop();
                             sender.track.enabled = false;
+                            sender.track.stop();
                         }
                     });
     
                     setIsVideoMuted(true);
                 } else {
-                    // Turning video on
                     try {
+                        // Update state first
+                        setIsVideoMuted(false);
+                        
+                        // Wait for next render cycle
+                        await new Promise(resolve => setTimeout(resolve, 0));
+    
                         // Log initial senders
                         console.log('Initial video senders:', peerConnection.getSenders()
                             .filter(sender => sender.track?.kind === 'video'));
@@ -404,58 +409,42 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
                         const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
                         const newVideoTrack = newStream.getVideoTracks()[0];
+                        console.log('Got new video track:', newVideoTrack?.label);
     
                         if (navigator.userAgent.toLowerCase().includes('firefox')) {
                             try {
-                                // Log initial state
+                                // Firefox specific handling...
                                 const tracks = peerConnection.getSenders();
-                                console.log('Initial tracks:', tracks.map(t => ({
-                                    kind: t?.track?.kind,
-                                    state: t?.track?.readyState
-                                })));
-                        
-                                // Find existing video sender safely
                                 const videoSender = tracks.find(sender => 
                                     sender && 
                                     (sender?.track?.kind === 'video' || 
-                                     (sender?.track === null && sender.dtmf === null)) // Video senders don't have dtmf
+                                     (sender?.track === null && sender.dtmf === null))
                                 );
-                        
+    
                                 if (videoSender) {
-                                    // Handle existing sender
-                                    console.log('Replacing track for existing sender');
                                     await videoSender.replaceTrack(newVideoTrack);
                                 } else {
-                                    // Clean up any stale senders first
                                     tracks.forEach(sender => {
                                         if (sender?.track === null) {
                                             peerConnection.removeTrack(sender);
                                         }
                                     });
-                                    
-                                    // Add as new track
-                                    console.log('Adding new track');
                                     peerConnection.addTrack(newVideoTrack, newStream);
                                 }
-                        
-                                // Verify final state
-                                const finalTracks = peerConnection.getSenders();
-                                console.log('Final tracks:', finalTracks.length);
-                        
-                                // Continue with offer creation
+    
                                 const offer = await peerConnection.createOffer();
                                 await peerConnection.setLocalDescription(offer);
                                 
-                                // Update Firestore
                                 await updateDoc(doc(firestore, 'calls', roomId), {
                                     offer: { type: offer.type, sdp: offer.sdp }
                                 });
-                        
                             } catch (error) {
-                                console.error('Track handling error:', error);
+                                console.error('Firefox track handling error:', error);
+                                setIsVideoMuted(true); // Reset state if failed
+                                return;
                             }
                         } else {
-                            // Chrome/Edge handling remains the same
+                            // Chrome/Edge handling
                             const videoSender = peerConnection
                                 .getSenders()
                                 .find(sender => sender.track?.kind === 'video');
@@ -467,16 +456,20 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                             }
                         }
     
-                        // Update local stream and video element
-                        localStream.addTrack(newVideoTrack);
+                        // Now try to access video element
                         if (localVideoRef.current) {
+                            localStream.addTrack(newVideoTrack);
                             localVideoRef.current.srcObject = localStream;
+                            console.log('Successfully updated local video');
+                        } else {
+                            console.error('Video element not mounted');
+                            setIsVideoMuted(true); // Reset state if video element isn't available
+                            return;
                         }
     
-                        setIsVideoMuted(false);
                     } catch (error) {
                         console.error('Error restarting video:', error);
-                        alert('Failed to restart video: ' + error.message);
+                        setIsVideoMuted(true); // Reset state if failed
                     }
                 }
             }
@@ -616,17 +609,17 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     height: localVideoAspectRatio > 1 ? '160px' : '280px'
                 }}
             >
-                {!isVideoMuted ? (
-                    <video 
-                        className="w-full h-full transform scale-x-[-1]"
-                        ref={localVideoRef} 
-                        autoPlay 
-                        playsInline 
-                        muted
-                        onLoadedMetadata={handleLocalVideoMetadata}
-                        style={{ objectFit: 'contain' }}
-                    />
-                ) : (
+                <video 
+                    className={`w-full h-full transform scale-x-[-1] ${isVideoMuted ? 'hidden' : ''}`}
+                    ref={localVideoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted
+                    onLoadedMetadata={handleLocalVideoMetadata}
+                    style={{ objectFit: 'contain' }}
+                />
+                
+                {isVideoMuted && (
                     <div className="w-full h-full flex items-center justify-center bg-gray-900">
                         {localUserPhoto ? (
                             <img 
