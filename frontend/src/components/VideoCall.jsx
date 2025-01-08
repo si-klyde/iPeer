@@ -203,7 +203,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     playsInline
                     style={{ objectFit: 'contain' }}
                 />
-                {(!hasRemoteVideo || !remoteVideoRef.current?.srcObject) && (
+                {(hasRemoteVideo && !remoteVideoEnabled) && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                         <div className="text-white mb-4">
                             {!hasRemoteVideo ? 'Waiting for remote video...' : 'Video turned off'}
@@ -376,6 +376,10 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
             setUnreadMessages(0);
         }
     }, [showChat]);
+
+    useEffect(() => {
+        console.log('Remote video enabled state:', remoteVideoEnabled);
+    }, [remoteVideoEnabled]);
 
     async function toggleVideo() {
         if (localStream && peerConnection) {
