@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { firestore } from '../firebase';
+import { firestore, auth } from '../firebase';
 import { collection, doc, setDoc, getDoc, onSnapshot, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ClipboardEdit, Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
@@ -26,6 +26,10 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const [unreadMessages, setUnreadMessages] = useState(0);
     const lastMessageCountRef = useRef(0);
     const [localVideoAspectRatio, setLocalVideoAspectRatio] = useState(16/9);
+    const [remoteUserPhoto, setRemoteUserPhoto] = useState(null);
+    const [localUserPhoto, setLocalUserPhoto] = useState(null);
+    const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
+    const [remoteVideoEnabled, setRemoteVideoEnabled] = useState(false);
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -68,9 +72,40 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
         // Handle remote tracks
         pc.ontrack = event => {
+            console.log('Track received:', event.track.kind, event.track.enabled);
             const [remoteStream] = event.streams;
+            
             if (remoteVideoRef.current && remoteStream) {
+                console.log('Setting remote stream');
                 remoteVideoRef.current.srcObject = remoteStream;
+                
+                // Check for video tracks
+                const videoTracks = remoteStream.getVideoTracks();
+                setHasRemoteVideo(videoTracks.length > 0);
+                
+                // Monitor track enabled state
+                if (videoTracks.length > 0) {
+                    const videoTrack = videoTracks[0];
+                    setRemoteVideoEnabled(videoTrack.enabled);
+                    
+                    videoTrack.onmute = () => {
+                        console.log('Remote video track muted');
+                        setRemoteVideoEnabled(false);
+                    };
+                    
+                    videoTrack.onunmute = () => {
+                        console.log('Remote video track unmuted');
+                        setRemoteVideoEnabled(true);
+                    };
+                    
+                    // Monitor enabled state changes
+                    const checkEnabled = setInterval(() => {
+                        setRemoteVideoEnabled(videoTrack.enabled);
+                    }, 1000);
+                    
+                    // Cleanup interval
+                    return () => clearInterval(checkEnabled);
+                }
             }
         };
     
@@ -140,6 +175,124 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         setLocalVideoAspectRatio(video.videoWidth / video.videoHeight);
     };
 
+    const renderRemoteVideo = () => {
+        console.log('Render remote video:', {
+            hasRemoteVideo,
+            remoteVideoRef: remoteVideoRef.current?.srcObject,
+            tracks: remoteVideoRef.current?.srcObject?.getTracks()?.map(t => ({
+                kind: t.kind,
+                enabled: t.enabled,
+                readyState: t.readyState
+            }))
+        });
+    
+        return (
+            <>
+                <video 
+                    className={`w-auto h-full max-w-full ${!hasRemoteVideo ? 'hidden' : ''}`}
+                    ref={remoteVideoRef} 
+                    autoPlay 
+                    playsInline
+                    style={{ objectFit: 'contain' }}
+                />
+                {(!hasRemoteVideo || !remoteVideoRef.current?.srcObject) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                        <div className="text-white mb-4">Waiting for remote video...</div>
+                        {remoteUserPhoto ? (
+                            <img 
+                                src={remoteUserPhoto}
+                                alt="Remote user"
+                                className="w-64 h-64 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-64 h-64 rounded-full bg-gray-700 flex items-center justify-center">
+                                <span className="text-4xl text-white">
+                                    {userRole === 'peer-counselor' ? 'C' : 'PC'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </>
+        );
+    };
+
+    const fetchUserPhoto = async (userId) => {
+        try {
+            const profileRef = doc(firestore, 'users', userId, 'profile', 'details');
+            const profileDoc = await getDoc(profileRef);
+            return profileDoc.data()?.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
+            ;
+        } catch (error) {
+            console.error('Error fetching user photo:', error);
+            return null;
+        }
+    };
+
+    useEffect(() => {
+        const loadProfilePhotos = async () => {
+            // Get local user's photo
+            const localUserId = auth.currentUser?.uid;
+            console.log('Local User ID:', localUserId);
+            
+            if (localUserId) {
+                const photo = await fetchUserPhoto(localUserId);
+                console.log('Local User Photo URL:', photo);
+                setLocalUserPhoto(photo);
+            }
+        };
+    
+        // Separate useEffect for remote user to watch for changes
+        const watchRemoteUser = () => {
+            const callDoc = doc(firestore, 'calls', roomId);
+            return onSnapshot(callDoc, async (snapshot) => {
+                const data = snapshot.data();
+                const remoteUserId = userRole === 'peer-counselor' ? 
+                    data?.clientId : // Changed from clientId prop to data.clientId
+                    data?.counselorId;
+                
+                console.log('Remote User ID (from snapshot):', remoteUserId);
+                
+                if (remoteUserId) {
+                    const photo = await fetchUserPhoto(remoteUserId);
+                    console.log('Remote User Photo URL:', photo);
+                    setRemoteUserPhoto(photo);
+                }
+            });
+        };
+    
+        if (roomId) {
+            console.log('Room ID:', roomId);
+            console.log('User Role:', userRole);
+            loadProfilePhotos();
+            const unsubscribe = watchRemoteUser();
+            return () => unsubscribe();
+        }
+    }, [roomId, userRole]);
+
+    useEffect(() => {
+        if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
+            const video = remoteVideoRef.current;
+            
+            const handlePlay = () => console.log('Remote video started playing');
+            const handleError = (e) => console.error('Remote video error:', e);
+            const handleLoadedMetadata = () => console.log('Remote video metadata loaded');
+            
+            video.addEventListener('play', handlePlay);
+            video.addEventListener('error', handleError);
+            video.addEventListener('loadedmetadata', handleLoadedMetadata);
+            
+            // Try to force play
+            video.play().catch(e => console.error('Auto-play failed:', e));
+            
+            return () => {
+                video.removeEventListener('play', handlePlay);
+                video.removeEventListener('error', handleError);
+                video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            };
+        }
+    }, [remoteVideoRef.current?.srcObject]);
+    
     useEffect(() => {
         const init = async () => {
             try {
@@ -451,13 +604,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         <div className="relative w-full h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)] bg-gray-900">
             {/* Remote Video */}
             <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
-                <video 
-                    className="w-auto h-full max-w-full"
-                    ref={remoteVideoRef} 
-                    autoPlay 
-                    playsInline
-                    style={{ objectFit: 'contain' }}
-                />
+                {renderRemoteVideo()}
             </div>
 
             {/* Local Video */}
@@ -469,15 +616,33 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     height: localVideoAspectRatio > 1 ? '160px' : '280px'
                 }}
             >
-                <video 
-                    className="w-full h-full transform scale-x-[-1]"
-                    ref={localVideoRef} 
-                    autoPlay 
-                    playsInline 
-                    muted
-                    onLoadedMetadata={handleLocalVideoMetadata}
-                    style={{ objectFit: 'contain' }}
-                />
+                {!isVideoMuted ? (
+                    <video 
+                        className="w-full h-full transform scale-x-[-1]"
+                        ref={localVideoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted
+                        onLoadedMetadata={handleLocalVideoMetadata}
+                        style={{ objectFit: 'contain' }}
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                        {localUserPhoto ? (
+                            <img 
+                                src={localUserPhoto}
+                                alt="You"
+                                className="w-32 h-32 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center">
+                                <span className="text-2xl text-white">
+                                    {userRole === 'client' ? 'C' : 'PC'}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Controls */}
