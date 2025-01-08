@@ -99,12 +99,18 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     };
                     
                     // Monitor enabled state changes
-                    const checkEnabled = setInterval(() => {
+                    const observer = new MutationObserver(() => {
                         setRemoteVideoEnabled(videoTrack.enabled);
-                    }, 1000);
-                    
-                    // Cleanup interval
-                    return () => clearInterval(checkEnabled);
+                    });
+
+                    // Observe the track's enabled property
+                    observer.observe(videoTrack, {
+                        attributes: true,
+                        attributeFilter: ['enabled']
+                    });
+
+                    // Return cleanup function
+                    return () => observer.disconnect();
                 }
             }
         };
@@ -189,7 +195,9 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         return (
             <>
                 <video 
-                    className={`w-auto h-full max-w-full ${!hasRemoteVideo ? 'hidden' : ''}`}
+                    className={`w-auto h-full max-w-full ${
+                        !hasRemoteVideo || !remoteVideoEnabled ? 'hidden' : ''
+                    }`}
                     ref={remoteVideoRef} 
                     autoPlay 
                     playsInline
@@ -197,7 +205,9 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                 />
                 {(!hasRemoteVideo || !remoteVideoRef.current?.srcObject) && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                        <div className="text-white mb-4">Waiting for remote video...</div>
+                        <div className="text-white mb-4">
+                            {!hasRemoteVideo ? 'Waiting for remote video...' : 'Video turned off'}
+                        </div>
                         {remoteUserPhoto ? (
                             <img 
                                 src={remoteUserPhoto}
