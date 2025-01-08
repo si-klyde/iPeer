@@ -161,7 +161,7 @@ const ViewAppointments = () => {
                       </a>
                     ) : (
                       <span className="text-gray-500 italic">
-                        You can join 30 minutes before or after scheduled time—no rush, we’re here for you.
+                        You can join 30 minutes before but not later than scheduled time—no rush, we’re here for you.
                       </span>
                     );
                   })()}

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ClipboardEdit, Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 import Chat from './Chat';
 import SessionNotes from './SessionNotes';
+import axios from 'axios';
 
 const servers = {
     iceServers: [
@@ -30,6 +31,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const [localUserPhoto, setLocalUserPhoto] = useState(null);
     const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
     const [remoteVideoEnabled, setRemoteVideoEnabled] = useState(false);
+    const [sessionNotes, setSessionNotes] = useState('');
 
     const setupPeerConnection = useCallback(async (id) => {
         const callDoc = doc(collection(firestore, 'calls'), id);
@@ -125,6 +127,17 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
             }
         };
     
+        pc.onconnectionstatechange = async () => {
+            if (pc.connectionState === 'connected') {
+                // If client and counselor are both present, set start time
+                if (callData.clientId && callData.counselorId) {
+                    await updateDoc(callDoc, {
+                        startTime: new Date().toISOString(),
+                        status: 'active'
+                    });
+                }
+            }
+        };
     
         if (!callData?.offer) {
             const offerDescription = await pc.createOffer();
@@ -386,22 +399,50 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
             const videoTrack = localStream.getVideoTracks()[0];
             if (videoTrack) {
                 if (!isVideoMuted) {
-                    // Turning video off - same for all browsers
-                    localStream.getVideoTracks().forEach(track => {
-                        track.enabled = false;
-                        track.stop();
-                    });
-                    
-                    const videoSenders = peerConnection
-                        .getSenders()
-                        .filter(sender => sender.track?.kind === 'video');
-                    videoSenders.forEach(sender => {
-                        if (sender.track) {
-                            sender.track.enabled = false;
-                            sender.track.stop();
-                        }
-                    });
+                    if (navigator.userAgent.toLowerCase().includes('firefox')) {
+                        try {
+                            // Firefox-specific video off handling
+                            const tracks = peerConnection.getSenders();
+                            const videoSender = tracks.find(sender => 
+                                sender && 
+                                (sender?.track?.kind === 'video' || 
+                                 (sender?.track === null && sender.dtmf === null))
+                            );
     
+                            if (videoSender) {
+                                await videoSender.replaceTrack(null);
+                                if (videoSender.track) {
+                                    videoSender.track.stop();
+                                }
+                            }
+    
+                            // Create and send new offer
+                            const offer = await peerConnection.createOffer();
+                            await peerConnection.setLocalDescription(offer);
+                            await updateDoc(doc(firestore, 'calls', roomId), {
+                                offer: { type: offer.type, sdp: offer.sdp }
+                            });
+                        } catch (error) {
+                            console.error('Firefox video off error:', error);
+                            return;
+                        }
+                    } else {
+                        // Existing code for Chrome/Edge
+                        localStream.getVideoTracks().forEach(track => {
+                            track.enabled = false;
+                            track.stop();
+                        });
+                        
+                        const videoSenders = peerConnection
+                            .getSenders()
+                            .filter(sender => sender.track?.kind === 'video');
+                        videoSenders.forEach(sender => {
+                            if (sender.track) {
+                                sender.track.enabled = false;
+                                sender.track.stop();
+                            }
+                        });
+                    }
                     setIsVideoMuted(true);
                 } else {
                     try {
@@ -579,18 +620,55 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
 
     async function endCall() {
         if (userRole === 'peer-counselor') {
+            const endTime = new Date().toISOString();
             try {
                 // Send end meeting signal to all participants
                 if (dataChannel && dataChannel.readyState === 'open') {
                     dataChannel.send('endMeeting');
                 }
     
+                // Get current user token
+                const token = await auth.currentUser.getIdToken();
+                
                 // Update call document status instead of deleting
                 const callDoc = doc(firestore, 'calls', roomId);
+                const callData = (await getDoc(callDoc)).data();
                 await updateDoc(callDoc, {
                     status: 'ended',
-                    endedAt: new Date().toISOString()
+                    endedAt: endTime
                 });
+
+                // Create session record
+                const sessionData = {
+                    roomId,
+                    clientId: callData.clientId,
+                    counselorId: callData.counselorId,
+                    startTime: callData.startTime,
+                    endTime,
+                    status: 'completed',
+                    duration: new Date(endTime) - new Date(callData.startTime),
+                    notes: sessionNotes
+                };
+    
+                try {
+                    const response = await axios.post(
+                        'http://localhost:5000/api/sessions', 
+                        { sessionData, token },
+                        { 
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        }
+                    );
+    
+                    if (!response.data?.sessionId) {
+                        throw new Error('Invalid session creation response');
+                    }
+    
+                } catch (error) {
+                    throw new Error(`Session creation failed: ${error.message}`);
+                }
     
                 cleanup();
                 alert('Session ended successfully');
@@ -713,6 +791,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     clientId={clientId}
                     isOpen={showNotes}
                     onClose={() => setShowNotes(false)} 
+                    onNotesUpdate={(notes) => setSessionNotes(notes)} 
                 />
             )}
         </div>

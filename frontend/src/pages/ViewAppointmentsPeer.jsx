@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, authStateChanged } from '../firebase';
 import PendingAppointments from '../components/PendingAppointments';
 import AcceptedAppointments from '../components/AcceptedAppointments';
+import SessionHistory from '../components/SessionHistory';
 
 const ViewAppointmentsPeer = () => {
   const [appointments, setAppointments] = useState([]);
@@ -125,6 +126,16 @@ const ViewAppointmentsPeer = () => {
           >
             Accepted Appointments
           </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              activeTab === 'history'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white text-gray-600 hover:bg-indigo-50'
+            }`}
+          >
+            Session History
+          </button>
         </div>
 
         {activeTab === 'pending' && (
@@ -141,6 +152,8 @@ const ViewAppointmentsPeer = () => {
             clients={clients}
           />
         )}
+
+        {activeTab === 'history' && <SessionHistory />}
       </div>
     </div>
   );
