@@ -23,7 +23,7 @@ const TherapySection = ({ id, title, description, backgroundImage, isExpanded, o
       layout
       onClick={onExpand}
       className={`relative cursor-pointer transition-all duration-500 ease-in-out ${
-        isExpanded ? 'w-screen' : 'w-[33.33vw]'
+        isExpanded ? 'w-screen' : 'w-full md:w-full lg:w-[33.33vw]'
       } h-screen`}
       style={{
         backgroundImage: `url(${backgroundImage})`,
@@ -38,27 +38,27 @@ const TherapySection = ({ id, title, description, backgroundImage, isExpanded, o
       >
         {!isExpanded && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <h2 className="text-4xl font-bold text-white transform -rotate-0 px-4 text-center">
+            <h2 className="text-2xl md:text-4xl font-bold text-white transform -rotate-0 px-4 text-center">
               {title}
             </h2>
           </div>
         )}
         
         {isExpanded && (
-          <div className="w-full max-w-4xl px-8 py-6 text-white">
+          <div className="w-full max-w-4xl px-4 md:px-8 py-6 text-white hidden md:block">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-4xl font-bold mb-6 text-center">{title}</h2>
-              <p className="text-lg mb-8 text-center max-w-2xl mx-auto leading-relaxed">
+              <h2 className="text-2xl md:text-4xl font-bold mb-6 text-center">{title}</h2>
+              <p className="text-base md:text-lg mb-8 text-center max-w-2xl mx-auto leading-relaxed">
                 {description}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <div className="bg-black/30 p-6 rounded-lg backdrop-blur-sm">
-                  <h3 className="text-xl font-semibold mb-4">Features</h3>
+                  <h3 className="text-lg md:text-xl font-semibold mb-4">Features</h3>
                   <ul className="space-y-3">
                     {id === 'play' ? (
                       <>
@@ -122,7 +122,7 @@ const TherapySection = ({ id, title, description, backgroundImage, isExpanded, o
                 </div>
                 
                 <div className="bg-black/30 p-6 rounded-lg backdrop-blur-sm">
-                  <h3 className="text-xl font-semibold mb-4">Benefits</h3>
+                  <h3 className="text-lg md:text-xl font-semibold mb-4">Benefits</h3>
                   <ul className="space-y-3">
                     {id === 'play' ? (
                       <>
@@ -208,6 +208,27 @@ const TherapySection = ({ id, title, description, backgroundImage, isExpanded, o
             </motion.div>
           </div>
         )}
+        {isExpanded && (
+          <div className=" md:hidden w-full flex justify-center">
+            <button 
+              onClick={handleEnterRoom}
+              className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transition-colors flex items-center space-x-2"
+            >
+              <span>Enter Room</span>
+              <svg 
+                className="w-5 h-5" 
+                fill="none" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -248,10 +269,10 @@ const Therapy = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#E6F4EA] to-[#fff9f9] px-4">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 text-center">
+        <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4 text-center">
           Find Your Space to Unwind
         </h1>
-        <p className="text-lg md:text-xl text-gray-600 max-w-2xl text-center mb-8">
+        <p className="text-base md:text-xl text-gray-600 max-w-2xl text-center mb-8">
           Discover different ways to de-stress and relax between classes, during study breaks, or whenever you need a moment for yourself.
         </p>
         <button 
@@ -273,7 +294,7 @@ const Therapy = () => {
         </button>
       </div>
 
-      <div ref={therapySectionRef} className="relative h-screen flex overflow-hidden">
+      <div ref={therapySectionRef} className="relative h-screen flex flex-col md:flex-row overflow-hidden">
         {therapyOptions.map((therapy) => (
           <TherapySection
             key={therapy.id}

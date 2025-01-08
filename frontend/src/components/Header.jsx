@@ -7,6 +7,8 @@ import { disablePageScroll, enablePageScroll } from 'scroll-lock';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import logo from '../assets/ipeer-icon.png';
+import ProfileDropdown from './ProfileDropdown';
+import NotificationBell from './NotificationBell';
 
 const Header = ({ user }) => {
   const location = useLocation();
@@ -18,9 +20,19 @@ const Header = ({ user }) => {
   // Define paths where Header should not appear
   const hideHeaderPaths = ['/login'];
 
+  // Define limited navigation for peer-counselors
+  const peerCounselorNavigation = navigation.filter(item =>
+    ['Home', 'Calendar', 'Information', 'Dashboard'].includes(item.title)
+  );
+
+  // Define navigation for clients (excluding Dashboard)
+  const clientNavigation = navigation.filter(item =>
+    ['Home', 'Therapy', 'Calendar', 'Information', 'Counseling'].includes(item.title)
+  );
+
   useEffect(() => {
     const handleScroll = () => {
-      setIsShrunk(window.scrollY > 50);
+      setIsShrunk(window.scroll  > 50);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -63,10 +75,10 @@ const Header = ({ user }) => {
         isShrunk ? 'bg-[#FFF9F9] shadow-md h-14' : 'bg-[#FFF9F9] shadow-md h-20'
       }`}
     >
-      <div className="flex items-center justify-between px-5 lg:px-7.5 xl:px-10 h-full">
+      <div className="flex items-center justify-between px-4 sm:px-5 md:px-7.5 lg:px-10 h-full">
         {/* Logo and Title */}
-        <a href="/" className="text-2xl font-semibold flex items-center space-x-3">
-          <img src={logo} alt="" className="w-15 inline-block" />
+        <a href="/" className="text-xl sm:text-2xl font-semibold flex items-center space-x-2 sm:space-x-3">
+          <img src={logo} alt="" className="w-12 sm:w-15 inline-block" />
           <span className="text-[#0e0e0e] font-code">iPeer</span>
         </a>
 
@@ -74,78 +86,70 @@ const Header = ({ user }) => {
         <nav
           className={`${
             openNavigation ? 'flex' : 'hidden'
-          } fixed top-[4rem] left-0 right-0 bottom-0 bg-n-8 lg:static lg:flex lg:mx-auto lg:bg-transparent`}
+          } fixed top-[4rem] sm:top-[5rem] left-0 right-0 bottom-[8rem] sm:bottom-[10rem] bg-[#FFF9F9] lg:static lg:flex lg:mx-auto lg:bg-transparent`}
         >
           <div className="relative z-10 flex flex-col items-center justify-center m-auto lg:flex-row">
-            {navigation.map((item) => (
+            {(user?.role === 'peer-counselor' ? peerCounselorNavigation : clientNavigation).map((item) => (
               <a
                 key={item.id}
                 href={item.url}
                 onClick={handleClick}
-                className={`block relative font-roboto text-2xl transition-colors hover:text-n-5 ${
+                className={`block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 ${
                   item.onlyMobile ? 'lg:hidden' : ''
-                } px-6 py-4 lg:py-2 lg:text-sm lg:font-medium ${
+                } px-3 sm:px-4 py-2 sm:py-3 lg:py-2 lg:text-sm lg:font-medium ${
                   item.url === location.pathname ? 'text-n-5' : 'text-n-8'
-                } lg:leading-5 lg:hover:text-green-500 xl:px-8 drop-shadow-lg`}
+                } lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg`}
               >
                 {item.title}
               </a>
             ))}
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 px-3 sm:px-4 py-2 sm:py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <button
+                className="block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 px-3 sm:px-4 py-2 sm:py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+                onClick={() => window.location.href = '/login'}
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </nav>
 
         {/* Buttons */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex rounded-full bg-white hover:bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <img
-                  className="h-8 w-8 rounded-full object-cover"
-                  src={user.photoURL}
-                  alt="Profile"
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <NotificationBell user={user} />
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex rounded-full bg-white hover:bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <img
+                    className="h-8 w-8 rounded-full object-cover"
+                    src={user.photoURL}
+                    alt="Profile"
+                  />
+                </button>
+                <ProfileDropdown 
+                  user={user}
+                  isOpen={isDropdownOpen}
+                  onSignOut={handleSignOut}
                 />
-              </button>
-              
-              {isDropdownOpen && (
-                <div className="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5">
-                  <div className="px-4 py-3 text-sm font-semibold bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-t-md">
-                    Hi, {user.fullName || 'User'} 👋
-                  </div>
-                  <a
-                    href="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Your Profile
-                  </a>
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <a
-                    href="/notifications" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Notifications
-                  </a>
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <div className="px-4 py-2">
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full text-sm text-white bg-red-500 hover:bg-red-600 py-2 px-4 rounded-md transition-colors duration-200"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           ) : (
             <Button className="hidden lg:flex lg:text-xs text-n-8" href="/login">
               Sign In
             </Button>
           )}
-
-          <Button className="lg:hidden px-3" onClick={toggleNavigation}>
+          <Button className="lg:hidden px-2 sm:px-3" onClick={toggleNavigation}>
             <MenuSvg openNavigation={openNavigation} />
           </Button>
         </div>

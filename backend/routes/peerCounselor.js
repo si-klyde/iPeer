@@ -1,13 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../firebaseAdmin');
+const { decrypt } = require('../utils/encryption.utils');
 
 // Route to get all peer counselors
 router.get('/peer-counselors', async (req, res) => {
   try {
-    const peerCounselorsSnapshot = await db.collection('users').where('role', '==', 'peer-counselor').get();
-    const peerCounselors = peerCounselorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.status(200).send(peerCounselors);
+    const peerCounselorsSnapshot = await db.collection('users')
+      .where('role', '==', 'peer-counselor')
+      .get();
+
+    const peerCounselors = peerCounselorsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Check if data is encrypted (has iv, content, tag format)
+        email: decrypt(data.email),
+        fullName: decrypt(data.fullName)
+      };
+    });    res.status(200).send(peerCounselors);
   } catch (error) {
     console.error('Error fetching peer counselors:', error);
     res.status(500).send({ error: 'Error fetching peer counselors' });
@@ -24,8 +36,14 @@ router.get('/peer-counselors/:id', async (req, res) => {
       console.log(`Peer counselor with ID ${peerCounselorId} not found.`);
       return res.status(404).send({ error: 'Peer counselor not found' });
     }
-    console.log(`Peer counselor data:`, peerCounselorDoc.data());
-    res.status(200).send(peerCounselorDoc.data());
+    const data = peerCounselorDoc.data();
+    const decryptedData = {
+      ...data,
+      email: decrypt(data.email),
+      fullName: decrypt(data.fullName)
+    };
+    console.log(`Peer counselor data:`, decryptedData);
+    res.status(200).send(decryptedData);
   } catch (error) {
     console.error('Error fetching peer counselor:', error);
     res.status(500).send({ error: 'Error fetching peer counselor' });

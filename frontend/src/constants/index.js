@@ -25,9 +25,8 @@ export const navigation = [
     url: "/waitingroom",
   },
   {
-    id: "5",
-    title: "Sign in",
-    url: "/login",
-    onlyMobile: true,
+   id: "5",
+    title: "Dashboard",
+    url: "/peer-dashboard",
   },
 ];

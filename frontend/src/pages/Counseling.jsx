@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import VideoCall from '../components/VideoCall';
 import Chat from '../components/Chat';
-import { Save, X, ClipboardEdit } from 'lucide-react';
+import { MessageCircle, ClipboardEdit } from 'lucide-react';
 import { auth } from '../firebase';
 import axios from 'axios';
 import SessionNotes from '../components/SessionNotes';
@@ -15,13 +15,25 @@ const Counseling = () => {
     const location = useLocation();
     const isCreating = location.state?.isCreating;
     const [clientId, setClientId] = useState(null);
-
-
     const [isValidRoom, setIsValidRoom] = useState(false);
     const [currentRoomId, setCurrentRoomId] = useState(roomId);
-
     const [userRole, setUserRole] = useState(null);
-    
+    const [showChat, setShowChat] = useState(false);
+    const [showNotes, setShowNotes] = useState(false);
+
+    useEffect(() => {
+        // Hide Header and Footer
+        const appHeader = document.querySelector('header');
+        const appFooter = document.querySelector('footer');
+        if (appHeader) appHeader.style.display = 'none';
+        if (appFooter) appFooter.style.display = 'none';
+        return () => {
+            // Restore Header and Footer visibility when leaving the page
+            if (appHeader) appHeader.style.display = '';
+            if (appFooter) appFooter.style.display = '';
+        };
+    }, []);
+  
     useEffect(() => {
         const checkUserRole = async () => {
             try {
@@ -40,34 +52,46 @@ const Counseling = () => {
                 }
             }
         };
-    
+
         checkUserRole();
     }, []);
-    
+
     useEffect(() => {
         const fetchRoomData = async () => {
-            if (roomId) {
-                try {
-                    const roomRef = doc(firestore, 'calls', roomId);
-                    const roomSnapshot = await getDoc(roomRef);
-                    if (roomSnapshot.exists()) {
-                        const roomData = roomSnapshot.data();
-                        console.log('Room data fetched:', roomData);
+            if (!roomId || !userRole) return;
+    
+            try {
+                console.log('Fetching room:', roomId, 'as role:', userRole);
+
+                const roomRef = doc(firestore, 'calls', roomId);
+                const unsubscribe = onSnapshot(roomRef, async (snapshot) => {
+                if (snapshot.exists()) {
+                    const roomData = snapshot.data();
+                    console.log('Room snapshot:', roomData);
+
+                    if (roomData.clientId) {
                         setClientId(roomData.clientId);
-                        console.log('Setting clientId:', roomData.clientId);
-                    } else {
-                        console.log('Room does not exist'); 
                     }
-                } catch (error) {
-                    console.error("Error fetching room data:", error);
+
+                    // If counselor and room waiting, join
+                    if (userRole === 'peer-counselor' && roomData.status === 'waiting') {
+                        await updateDoc(roomRef, {
+                            counselorId: auth.currentUser.uid,
+                            status: 'active',
+                            joinedAt: new Date()
+                        });
+                    }
                 }
-            } else {
-                console.log('No roomId provided');
+            });
+
+            return () => unsubscribe();
+            } catch (error) {
+                console.error('Error fetching room:', error);
             }
         };
-    
+
         fetchRoomData();
-    }, [roomId]);
+    }, [roomId, userRole]);
 
     useEffect(() => {
         const checkRoom = async () => {
@@ -75,7 +99,7 @@ const Counseling = () => {
                 try {
                     const roomRef = doc(firestore, 'calls', roomId);
                     const roomSnapshot = await getDoc(roomRef);
-        
+
                     if (roomSnapshot.exists()) {
                         // Room exists and we're not creating it - this is fine
                         setIsValidRoom(true);
@@ -95,41 +119,35 @@ const Counseling = () => {
                 setIsValidRoom(false);
             }
         };
-    
+
         checkRoom();
     }, [roomId, navigate, location.state]);
-    
 
+  
     if (!isValidRoom) {
         return <div className="min-h-screen flex items-center justify-center text-white">Checking room validity...</div>;
     }
 
-
+  
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
-            <div className="p-4 flex flex-col h-screen">
-                {/* Header */}
-                <header className="flex justify-between items-center mb-4 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
-                    <h1 className="text-2xl font-semibold text-green-800">iPeer Counseling Session</h1>
-                    <div className="text-sm text-green-600 font-medium">
-                        Room ID: {roomId}
+            <div className="p-2 md:p-4 flex flex-col h-screen">
+                {/* Responsive header */}
+                <header className="flex flex-col md:flex-row justify-between items-center mb-2 md:mb-4 px-3 md:px-6 py-2 md:py-3 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
+                    <h1 className="text-xl md:text-2xl font-semibold text-green-800">iPeer Session</h1>
+                    <div className="text-sm text-green-600">
+                        Room: {roomId}
                     </div>
                 </header>
-
-                {/* Main Content */}
-                <div className="flex-1 flex gap-4">
-                    {/* Left Side - Video Call */}
-                    <div className="flex-1 flex flex-col">
-                        <VideoCall roomId={roomId} setRoomId={setCurrentRoomId} />
-                    </div>
-
-                    {/* Right Side - Chat and Notes */}
-                    <div className="w-96 flex flex-col gap-4">
-                        <Chat roomId={roomId} />
-                        {userRole === 'peer-counselor' && (
-                            <SessionNotes roomId={roomId} clientId={clientId} />
-                        )}
-                    </div>
+    
+                {/* Main content */}
+                <div className="flex-1">
+                    <VideoCall 
+                        roomId={roomId} 
+                        setRoomId={setCurrentRoomId} 
+                        userRole={userRole}
+                        clientId={clientId}
+                    />
                 </div>
             </div>
         </div>

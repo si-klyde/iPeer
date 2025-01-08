@@ -3,6 +3,8 @@ const { auth, db } = require('../firebaseAdmin.js');
 const router = express.Router();
 const crypto = require('crypto');
 const {createClientDocument, createPeerCounselorDocument} = require('../models/userCreation');
+const SECURITY_CONFIG = require('../config/security.config.js');
+const { decrypt } = require('../utils/encryption.utils');
 require('dotenv').config();
 
 router.post('/google-signin', async (req, res) => {
@@ -60,17 +62,17 @@ router.post('/google-signin', async (req, res) => {
 });
 
 // Function to hash a password with salt and iterations
-const hashPassword = (password, salt, iterations) => {
+const hashPassword = (password, salt) => {
   if (!password || !salt) {
     throw new Error('Password and salt are required for hashing');
   }
   
-  let hash = crypto.createHmac('sha256', Buffer.from(salt, 'hex'))
+  let hash = crypto.createHmac(SECURITY_CONFIG.HASH_ALGORITHM, Buffer.from(salt, 'hex'))
     .update(password)
     .digest('hex');
     
-  for (let i = 1; i < iterations; i++) {
-    hash = crypto.createHmac('sha256', Buffer.from(salt, 'hex'))
+  for (let i = 1; i < SECURITY_CONFIG.HASH_ITERATIONS; i++) {
+    hash = crypto.createHmac(SECURITY_CONFIG.HASH_ALGORITHM, Buffer.from(salt, 'hex'))
       .update(hash)
       .digest('hex');
   }
@@ -78,13 +80,13 @@ const hashPassword = (password, salt, iterations) => {
 };
 
 // Function to verify a password
-const verifyPassword = (password, salt, iterations, storedHash) => {
-  if (!password || !salt || !iterations || !storedHash) {
+const verifyPassword = (password, salt, storedHash) => {
+  if (!password || !salt || !storedHash) {
     throw new Error('Missing required parameters for password verification');
   }
   
   try {
-    const hashedPassword = hashPassword(password, salt, iterations);
+    const hashedPassword = hashPassword(password, salt);
     return hashedPassword === storedHash;
   } catch (error) {
     console.error('Error in password verification:', error);
@@ -97,11 +99,10 @@ router.post('/register-peer-counselor', async (req, res) => {
 
   try {
     // Generate a salt
-    const salt = crypto.randomBytes(16).toString('hex');
-    const iterations = 10000; // Number of iterations
-
+    const salt = crypto.randomBytes(SECURITY_CONFIG.SALT_BYTES).toString('hex');
+    
     // Hash the password with salt and iterations
-    const hash = hashPassword(password, salt, iterations);
+    const hash = hashPassword(password, salt);
 
     // Create user in Firebase Auth
     const userRecord = await auth.createUser({
@@ -114,7 +115,7 @@ router.post('/register-peer-counselor', async (req, res) => {
     await createPeerCounselorDocument(
       userRecord.uid,
       { email, fullName },
-      { salt, iterations, password: hash }
+      { salt, password: hash }
     );
 
     res.status(201).send({ message: 'Peer counselor registered successfully' });
@@ -134,15 +135,20 @@ router.post('/login-peer-counselor', async (req, res) => {
 
     // Find user by email
     const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('email', '==', email)
-                                 .where('role', '==', 'peer-counselor')
+    const snapshot = await usersRef.where('role', '==', 'peer-counselor')
                                  .get();
 
-    if (snapshot.empty) {
+    // Find matching email after decryption
+    const userDoc = snapshot.docs.find(doc => {
+      const data = doc.data();
+      const decryptedEmail =decrypt(data.email);
+      return decryptedEmail === email;
+    });
+
+    if (!userDoc) {
       return res.status(404).send({ error: 'User not found' });
     }
 
-    const userDoc = snapshot.docs[0];
     const userData = userDoc.data();
 
     // Get auth credentials
@@ -156,8 +162,8 @@ router.post('/login-peer-counselor', async (req, res) => {
       return res.status(401).send({ error: 'Authentication failed' });
     }
 
-    const { salt, iterations, password: storedHash } = authDoc.data();
-    const isValid = verifyPassword(password, salt, iterations, storedHash);
+    const { salt, password: storedHash } = authDoc.data();
+    const isValid = verifyPassword(password, salt, storedHash);
 
     if (!isValid) {
       return res.status(401).send({ error: 'Invalid credentials' });
@@ -174,13 +180,13 @@ router.post('/login-peer-counselor', async (req, res) => {
         isAvailable: true
       }
     });
-
+    
     res.status(200).send({
       token: customToken,
       user: {
         uid: userDoc.id,
-        email: userData.email,
-        fullName: userData.fullName,
+        email: decrypt(userData.email),
+        fullName: decrypt(userData.fullName),
         role: userData.role
       }
     });
@@ -227,8 +233,8 @@ router.post('/check-role', async (req, res) => {
     res.status(200).send({
       role: userData.role,
       uid: userDoc.id,
-      email: userData.email,
-      fullName: userData.fullName,
+      email: decrypt(userData.email),
+      fullName: decrypt(userData.fullName),
       profile: userProfile,
       currentStatus: userData.currentStatus || null
     });

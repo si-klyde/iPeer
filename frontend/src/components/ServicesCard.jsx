@@ -6,9 +6,9 @@ import { FaBookMedical } from 'react-icons/fa';
 
 function ServicesCard() {
   return (
-    <div className="grid grid-cols-2 gap-x-0.25 gap-y-10 p-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-10 p-6">
       {/* Card 1 */}
-      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-3/4 p-4 mx-auto">
+      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-full md:w-3/4 p-4 mx-auto">
         <div className="rounded-xl flex items-center justify-center w-1/3 h-full bg-transparent">
           <FaHandshake className="w-16 h-16 text-green-500" />
         </div>
@@ -20,7 +20,7 @@ function ServicesCard() {
       </div>
 
       {/* Card 2 */}
-      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-3/4 p-4 mx-auto">
+      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-full md:w-3/4 p-4 mx-auto">
         <div className="rounded-xl flex items-center justify-center w-1/3 h-full bg-transparent">
           <FaBookMedical className="w-16 h-16 text-green-500" />
         </div>
@@ -32,19 +32,19 @@ function ServicesCard() {
       </div>
 
       {/* Card 3 */}
-      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-3/4 p-4 mx-auto">
+      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-full md:w-3/4 p-4 mx-auto">
         <div className="rounded-xl flex items-center justify-center w-1/3 h-full bg-transparent">
           <FaCalendar className="w-16 h-16 text-green-500 font-bold" />
         </div>
         <div className="flex flex-col justify-center w-2/3 pl-4">
           <h5 className="text-xl font-semibold text-gray-900">Calendar of Events and Seminars</h5>
-          <p className="text-gray-700">Explore and Stay Updated with Upcoming Events and Seminars.</p>
+          <p className="text-gray-700">Stay Updated with Events and Seminars.</p>
           <a href="/calendar" className="mt-2 text-gray-500 hover:underline">Discover More</a>
         </div>
       </div>
 
       {/* Card 4 */}
-      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-3/4 p-4 mx-auto">
+      <div className="flex flex-row items-center rounded-lg bg-white shadow-lg h-48 w-full md:w-3/4 p-4 mx-auto">
         <div className="rounded-xl flex items-center justify-center w-1/3 h-full bg-transparent">
           <FaLaptopMedical className="w-16 h-16 text-green-500" />
         </div>
