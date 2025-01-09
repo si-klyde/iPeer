@@ -46,7 +46,7 @@ const createReminderNotification = async (appointment) => {
   await createNotification(peerCounselorId, {
     type: 'APPOINTMENT_REMINDER',
     title: 'Upcoming Session Reminder',
-    message: `You have a counseling session starting in 1 hour at ${time}`,
+    message: `You have a counseling session starting in 30mins at ${time}`,
     appointmentId: appointment.id,
     roomId
   });

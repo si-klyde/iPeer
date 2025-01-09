@@ -7,7 +7,8 @@ const createAppointment = async (appointmentData) => {
 
   //Create the appointment document
   await appointmentRef.set(
-    Object.assign({}, appointmentData, { 
+    Object.assign({}, appointmentData, {
+      reminderSent: false, 
       createdAt: new Date(), 
       roomId,
     })

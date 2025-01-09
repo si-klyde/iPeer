@@ -98,6 +98,9 @@ const NotificationBell = ({ user }) => {
                   {notification.type === 'APPOINTMENT_DECLINED' && (
                     <XCircleIcon className="h-6 w-6 text-red-500 mt-1" />
                   )}
+                  {notification.type === 'APPOINTMENT_REMINDER' && (
+                    <CalendarIcon className="h-6 w-6 text-yellow-500 mt-1" />
+                  )}
                   <div className="flex-1">
                     <p className="font-bold text-gray-900">{notification.title}</p>
                     <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
