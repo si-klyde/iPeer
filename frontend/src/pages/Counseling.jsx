@@ -62,25 +62,34 @@ const Counseling = () => {
     
             try {
                 console.log('Fetching room:', roomId, 'as role:', userRole);
-
+                const currentUser = auth.currentUser;
                 const roomRef = doc(firestore, 'calls', roomId);
+
                 const unsubscribe = onSnapshot(roomRef, async (snapshot) => {
                 if (snapshot.exists()) {
                     const roomData = snapshot.data();
                     console.log('Room snapshot:', roomData);
 
-                    if (roomData.clientId) {
-                        setClientId(roomData.clientId);
-                    }
-
                     // If counselor and room waiting, join
-                    if (userRole === 'peer-counselor' && roomData.status === 'waiting') {
+                    if (userRole === 'client' && !roomData.clientId) {
                         await updateDoc(roomRef, {
-                            counselorId: auth.currentUser.uid,
+                            clientId: currentUser.uid,
+                            status: 'active'
+                        });
+                    } else if (userRole === 'peer-counselor' && !roomData.counselorId) {
+                        await updateDoc(roomRef, {
+                            counselorId: currentUser.uid,
                             status: 'active',
                             joinedAt: new Date()
                         });
                     }
+
+                    if (roomData.clientId) {
+                        setClientId(roomData.clientId);
+                    }
+                } else if (!location.state?.isCreating) {
+                    alert("This room does not exist");
+                    navigate('/waitingroom');
                 }
             });
 
@@ -91,7 +100,7 @@ const Counseling = () => {
         };
 
         fetchRoomData();
-    }, [roomId, userRole]);
+    }, [roomId, userRole, navigate, location.state?.isCreating]);
 
     useEffect(() => {
         const checkRoom = async () => {
