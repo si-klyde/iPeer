@@ -104,7 +104,6 @@ const sendAppointmentConfirmation = async (clientEmail, counselorEmail, appointm
             <p>📅 Date: ${appointmentDetails.date}</p>
             <p>🕒 Time: ${appointmentDetails.time}</p>
             <p>👤 Client Name: ${appointmentDetails.clientName}</p>
-            <p>🔗 Virtual Room: <a href="${appointmentDetails.roomLink}">Click here to join the session</a></p>
           </div>
           
           <p>Please ensure you are available at the scheduled time.</p>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BellIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import notification from '../assets/notification/notification.mp3';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 
@@ -8,6 +9,8 @@ const NotificationBell = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const audioRef = useRef(new Audio(notification)); // Add audio file to public folder
+  const [previousCount, setPreviousCount] = useState(0);
   const navigate = useNavigate();
 
   const fetchNotifications = async () => {
@@ -56,6 +59,16 @@ const NotificationBell = ({ user }) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (notifications.length > previousCount) {
+      try {
+        audioRef.current.play();
+      } catch (error) {
+      }
+    }
+    setPreviousCount(notifications.length);
+  }, [notifications.length]);
+
   return (
     <div className="relative">
       <button 
@@ -97,6 +110,9 @@ const NotificationBell = ({ user }) => {
                   )}
                   {notification.type === 'APPOINTMENT_DECLINED' && (
                     <XCircleIcon className="h-6 w-6 text-red-500 mt-1" />
+                  )}
+                  {notification.type === 'APPOINTMENT_REMINDER' && (
+                    <CalendarIcon className="h-6 w-6 text-yellow-500 mt-1" />
                   )}
                   <div className="flex-1">
                     <p className="font-bold text-gray-900">{notification.title}</p>
@@ -149,6 +165,9 @@ const NotificationBell = ({ user }) => {
                   )}
                   {notification.type === 'APPOINTMENT_DECLINED' && (
                     <XCircleIcon className="h-6 w-6 text-gray-500 mt-1" />
+                  )}
+                  {notification.type === 'APPOINTMENT_REMINDER' && (
+                      <CalendarIcon className="h-6 w-6 text-yellow-500 mt-1" />
                   )}
                   <div className="flex-1">
                     <p className="font-medium text-gray-700">{notification.title}</p>

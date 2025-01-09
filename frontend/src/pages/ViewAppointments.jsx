@@ -35,10 +35,17 @@ const ViewAppointments = () => {
   
     const fetchAppointments = async () => {
       if (!currentUserId) return;
+  
+      const cachedAppointments = localStorage.getItem(`appointments_${currentUserId}`);
+      if (cachedAppointments) {
+        setAppointments(JSON.parse(cachedAppointments));
+      }
+  
       try {
         const { data: appointments } = await axios.get(`http://localhost:5000/api/appointments/client/${currentUserId}`);
         const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
         setAppointments(sortedAppointments);
+        localStorage.setItem(`appointments_${currentUserId}`, JSON.stringify(sortedAppointments));
       } catch (error) {
         console.error('Error fetching appointments:', error);
       } finally {
@@ -52,12 +59,23 @@ const ViewAppointments = () => {
   useEffect(() => {
     const fetchPeerCounselorDetails = async (peerCounselorId) => {
       if (!peerCounselors[peerCounselorId]) {
-        try {
-          const response = await axios.get(`http://localhost:5000/api/peer-counselors/${peerCounselorId}`);
+        const cachedCounselor = localStorage.getItem(`counselor_${peerCounselorId}`);
+        if (cachedCounselor) {
           setPeerCounselors(prevState => ({
             ...prevState,
-            [peerCounselorId]: response.data.fullName || 'Name not available'
+            [peerCounselorId]: JSON.parse(cachedCounselor)
           }));
+          return;
+        }
+    
+        try {
+          const response = await axios.get(`http://localhost:5000/api/peer-counselors/${peerCounselorId}`);
+          const counselorName = response.data.fullName || 'Name not available';
+          setPeerCounselors(prevState => ({
+            ...prevState,
+            [peerCounselorId]: counselorName
+          }));
+          localStorage.setItem(`counselor_${peerCounselorId}`, JSON.stringify(counselorName));
         } catch (error) {
           console.error('Error fetching peer counselor details:', error);
           setPeerCounselors(prevState => ({

@@ -30,25 +30,27 @@ const markNotificationAsRead = async (notificationId) => {
   return notificationId;
 };
 
-const createReminderNotification = async (appointment) => {
+const createReminderNotification = async (appointment, counselorName, clientName) => {
   const { clientId, peerCounselorId, date, time, roomId } = appointment;
   
   // Create notification for client
   await createNotification(clientId, {
     type: 'APPOINTMENT_REMINDER',
-    title: 'Upcoming Appointment Reminder',
-    message: `Your appointment is starting in 1 hour at ${time}`,
+    title: 'Your Session Starts Soon',
+    message: `Your counseling session with ${counselorName} starts in 30 minutes at ${time}. Click to join the room.`,
     appointmentId: appointment.id,
-    roomId
+    roomId,
+    scheduledFor: `${date} ${time}`
   });
 
-  // Create notification for peer counselor
+  // Create notification for peer counselor  
   await createNotification(peerCounselorId, {
     type: 'APPOINTMENT_REMINDER',
-    title: 'Upcoming Session Reminder',
-    message: `You have a counseling session starting in 1 hour at ${time}`,
+    title: 'Upcoming Counseling Session',
+    message: `Your counseling session with ${clientName} starts in 30 minutes at ${time}. Click to join the room.`,
     appointmentId: appointment.id,
-    roomId
+    roomId,
+    scheduledFor: `${date} ${time}`
   });
 };
 

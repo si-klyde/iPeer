@@ -35,10 +35,17 @@ const ViewAppointmentsPeer = () => {
   
     const fetchAppointments = async () => {
       if (!currentUserId) return;
+  
+      const cachedAppointments = localStorage.getItem(`appointments_${currentUserId}`);
+      if (cachedAppointments) {
+        setAppointments(JSON.parse(cachedAppointments));
+      }
+  
       try {
         const { data: appointments } = await axios.get(`http://localhost:5000/api/appointments/peer-counselor/${currentUserId}`);
         const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
         setAppointments(sortedAppointments);
+        localStorage.setItem(`appointments_${currentUserId}`, JSON.stringify(sortedAppointments));
       } catch (error) {
         console.error('Error fetching appointments:', error);
       } finally {
@@ -53,12 +60,23 @@ const ViewAppointmentsPeer = () => {
   useEffect(() => {
     const fetchClientDetails = async (clientId) => {
       if (!clients[clientId]) {
-        try {
-          const response = await axios.get(`http://localhost:5000/api/client/${clientId}`);
+        const cachedClients = localStorage.getItem(`clients_${clientId}`);
+        if (cachedClients) {
           setClients(prevState => ({
             ...prevState,
-            [clientId]: response.data.fullName || 'Name not available'
+            [clientId]: JSON.parse(cachedClients)
           }));
+          return;
+        }
+    
+        try {
+          const response = await axios.get(`http://localhost:5000/api/client/${clientId}`);
+          const clientName = response.data.fullName || 'Name not available';
+          setClients(prevState => ({
+            ...prevState,
+            [clientId]: clientName
+          }));
+          localStorage.setItem(`clients_${clientId}`, JSON.stringify(clientName));
         } catch (error) {
           console.error('Error fetching client details:', error);
           setClients(prevState => ({
