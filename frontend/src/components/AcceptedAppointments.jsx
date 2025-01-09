@@ -1,8 +1,18 @@
 import React from 'react';
 
-const AcceptedAppointments = ({ appointments, clients }) => {
+const AcceptedAppointments = ({ appointments, clients, peerCounselors, role }) => {
   const acceptedAppointments = appointments.filter(apt => apt.status === 'accepted');
 
+  const getUserName = (appointment) => {
+    if (role === 'client') {
+      return peerCounselors[appointment.peerCounselorId] || 'Loading...';
+    }
+    return clients[appointment.clientId] || 'Loading...';
+  };
+
+  const getUserLabel = () => {
+    return role === 'client' ? 'Peer Counselor' : 'Client';
+  };
   return (
     <div className="space-y-4">
       {acceptedAppointments.length === 0 ? (
@@ -37,7 +47,7 @@ const AcceptedAppointments = ({ appointments, clients }) => {
                     <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="text-gray-700">
-                    Client: {clients[appointment.clientId] || 'Loading...'}
+                    {getUserLabel()}: {getUserName(appointment)}
                   </span>
                 </div>
               </div>
@@ -56,6 +66,12 @@ const AcceptedAppointments = ({ appointments, clients }) => {
               const earliestJoinTime = new Date(appointmentDateTime.getTime() - 30 * 60000);
               const latestJoinTime = new Date(appointmentDateTime.getTime() + 30 * 60000);
               const isTimeToJoin = now >= earliestJoinTime && now <= latestJoinTime;
+              const getCallMessage = (role, appointment) => {
+                if (role === 'client') {
+                  return `The call will be available 30 minutes before and after your scheduled time: ${appointment.date} ${appointment.time}. Don't be late—we're excited to connect with you! 😊`;
+                }
+                return `The call will be accessible 30 minutes before and after the scheduled time: ${appointment.date} ${appointment.time}. Please be ready to assist your client! 😊`;
+              };
 
               return isTimeToJoin ? (
                 <a
@@ -71,7 +87,7 @@ const AcceptedAppointments = ({ appointments, clients }) => {
                 </a>
               ) : (
                 <span className="mt-4 block text-gray-500 italic">
-                  Call will be available 30 minutes before and after scheduled time: {appointment.date} {appointment.time}
+                  {getCallMessage(role, appointment)}
                 </span>
               );
             })()}

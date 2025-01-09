@@ -3,7 +3,7 @@ import { Save, X, ClipboardEdit } from 'lucide-react';
 import { auth } from '../firebase';
 import axios from 'axios';
 
-const SessionNotes = ({ roomId, clientId, isOpen, onClose }) => {
+const SessionNotes = ({ roomId, clientId, isOpen, onClose, onNotesUpdate }) => {
     const [notes, setNotes] = useState('');
     const textareaRef = useRef(null);
     const [cursorPosition, setCursorPosition] = useState(null);
@@ -13,8 +13,10 @@ const SessionNotes = ({ roomId, clientId, isOpen, onClose }) => {
 
     const handleNotesChange = (e) => {
         const { selectionStart } = e.target;
-        setNotes(e.target.value);
+        const newNotes = e.target.value;
+        setNotes(newNotes);
         setCursorPosition(selectionStart);
+        onNotesUpdate?.(newNotes);
     };
 
     useEffect(() => {
