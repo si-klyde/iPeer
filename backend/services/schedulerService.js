@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const { db } = require('../firebaseAdmin');
 const { sendAppointmentReminder } = require('./emailService');
+const { createReminderNotification } = require('../models/notifications');
 const moment = require('moment-timezone');
 const { decrypt } = require('../utils/encryption.utils');
 
@@ -128,6 +129,9 @@ cron.schedule(CRON_SCHEDULE, async () => {
             lastReminderSentAt: now.toDate()
           })
         ]);
+
+        // Store reminder in database
+        await createReminderNotification(appointment, counselorName, clientName);
 
         console.log(`Reminder sent for appointment ${appointment.id} on ${appointment.date} at ${appointment.time}`);
       } catch (error) {
