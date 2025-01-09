@@ -1,9 +1,7 @@
 const { db } = require('../firebaseAdmin');
-const { v4: uuidv4 } = require('uuid');
-
 const createAppointment = async (appointmentData) => {
   const appointmentRef = db.collection('appointments').doc();
-  const roomId = uuidv4();
+  const roomId = Math.random().toString(36).substring(2, 15);
 
   //Create the appointment document
   await appointmentRef.set(
