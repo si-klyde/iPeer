@@ -32,6 +32,7 @@ import axios from 'axios';
 
 const App = () => {
     const [user, setUser] = useState(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const location = useLocation();
     const hideHeaderFooterPaths = ['/login'];
 
@@ -41,6 +42,12 @@ const App = () => {
         let unsubscribeProfile;
     
         const setupUserListener = async (currentUser) => {
+            if (!currentUser && !isInitialLoad && user) {
+                clearLocalStorage();
+                setUser(null);
+                return;
+            }
+            
             if (currentUser) {
                 try {
                     // Get user role
@@ -120,9 +127,11 @@ const App = () => {
                     setUser(null);
                     localStorage.removeItem(`userData_${currentUser.uid}`);
                 }
-            } else {
-                setUser(null);
-                localStorage.removeItem(`userData_${currentUser?.uid}`);
+            } 
+
+            //Mark initial load complete
+            if (isInitialLoad) {
+                setIsInitialLoad(false);
             }
         };
     
@@ -134,6 +143,19 @@ const App = () => {
             if (unsubscribeProfile) unsubscribeProfile();
         };
     }, []);    
+
+    // Helper function to clear localStorage
+    const clearLocalStorage = () => {
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes('appointments_') || 
+                key.includes('clients_') || 
+                key.includes('counselor_') || 
+                key.includes('peerCounselors') ||
+                key.includes('userData_')) {
+                localStorage.removeItem(key);
+            }
+        });
+    };
 
     return (
         <>
