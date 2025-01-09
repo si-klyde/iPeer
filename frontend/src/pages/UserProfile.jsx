@@ -10,6 +10,14 @@ const UserProfile = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileCache, setProfileCache] = useState({
+    data: null,
+    timestamp: null
+  });
+
+  // Cache duration: 15 minutes
+  const CACHE_DURATION = 15 * 60 * 1000;
+
 
   useEffect(() => {
     // Hide Header and Footer
@@ -31,8 +39,16 @@ const UserProfile = () => {
 
     const setupProfileListener = async () => {
       try {
-        setLoading(true);
-        // Get initial decrypted data from backend
+        // Check cache first
+        if (profileCache.data && profileCache.timestamp) {
+          const now = Date.now();
+          if (now - profileCache.timestamp < CACHE_DURATION) {
+            setUserProfile(profileCache.data);
+            return;
+          }
+        }
+
+        // Fetch fresh data if cache invalid
         const idToken = await user.getIdToken();
         const endpoint = `http://localhost:5000/api/${user.role === 'peer-counselor' ? 'peer-counselors' : 'client'}/${user.uid}`;
         const response = await axios.get(endpoint, {
@@ -45,20 +61,22 @@ const UserProfile = () => {
         unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
           const profileData = profileDoc.exists() ? profileDoc.data() : {};
           
-          setUserProfile(prevProfile => ({
-            ...prevProfile,
+          const updatedProfile = {
             ...decryptedData,
             ...profileData,
             photoURL: user.photoURL || profileData.photoURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'
+          };
 
-          }));
-          setLoading(false);
+          setUserProfile(updatedProfile);
+          // Update cache
+          setProfileCache({
+            data: updatedProfile,
+            timestamp: Date.now()
+          });
         });
 
-      } catch (err) {
-        console.error('Error setting up profile:', err);
-        setError('Failed to load profile');
-        setLoading(false);
+      } catch (error) {
+        console.error('Error setting up profile:', error);
       }
     };
 
@@ -69,6 +87,13 @@ const UserProfile = () => {
     };
   }, []);
 
+  // Clear cache when needed
+  const clearCache = () => {
+    setProfileCache({
+      data: null,
+      timestamp: null
+    });
+  };
 
   // Update handleImageUpload to store in subcollection
   const handleImageUpload = async (event) => {
@@ -103,6 +128,9 @@ const UserProfile = () => {
       ...prevProfile,
       photoURL: downloadURL
     }));
+
+    // Clear cache to force fresh data fetch
+    clearCache();
 
     // Update photoURL in Firebase Authentication
     await updateProfile(user, {
