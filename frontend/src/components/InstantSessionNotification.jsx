@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { firestore, auth } from '../firebase';
-import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDoc, updateDoc, doc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import notificationSound from '../assets/notification/notification.mp3';
 import axios from 'axios';
@@ -10,20 +10,47 @@ const InstantSessionNotification = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Listen for instant session requests
+    const currentUser = auth.currentUser;
+    let callsUnsubscribe = null;
+
+    // Listen to counselor's status
+    const counselorRef = doc(firestore, 'users', currentUser.uid);
+    const statusUnsubscribe = onSnapshot(counselorRef, (doc) => {
+        const counselorData = doc.data();
+        
+        // Clear existing notifications and listener if counselor is offline/unavailable
+        if (!counselorData?.currentStatus?.isAvailable || 
+            counselorData?.currentStatus?.status !== 'online') {
+            if (callsUnsubscribe) {
+                callsUnsubscribe();
+                callsUnsubscribe = null;
+            }
+            // Dismiss all notifications
+            const toastIds = Object.keys(toast.isActive())
+                .filter(id => id.startsWith('session-'));
+            toastIds.forEach(id => toast.dismiss(id));
+            return;
+        }
+
+        // Set up calls listener only if counselor is available
         const callsQuery = query(
             collection(firestore, 'calls'),
             where('status', '==', 'waiting_for_counselor'),
             where('type', '==', 'instant')
         );
 
-        const unsubscribe = onSnapshot(callsQuery, async (snapshot) => {
+        callsUnsubscribe = onSnapshot(callsQuery, async (snapshot) => {
             snapshot.docChanges().forEach(async (change) => {
                 if (change.type === 'added') {
                     const callData = {
                         id: change.doc.id,
                         ...change.doc.data()
                     };
+
+                    // Skip if current counselor already rejected this call
+                    if (callData.rejectedBy?.includes(auth.currentUser.uid)) {
+                        return;
+                    }
                     
                     try {
                         const token = await auth.currentUser.getIdToken();
@@ -34,11 +61,6 @@ const InstantSessionNotification = () => {
                             }
                         );
                         
-                        console.log('Response data:', {  // Debug response
-                            fullName: response.data.fullName,
-                            responseData: response.data
-                        });
-
                         showSessionRequest({
                             ...callData,
                             clientName: response.data.fullName
@@ -51,11 +73,28 @@ const InstantSessionNotification = () => {
                         });
                     }
                 }
+                else if (change.type === 'modified') {
+                    const callData = change.doc.data();
+                    if (callData.status === 'active' && 
+                        callData.counselorId !== auth.currentUser.uid) {
+                        toast.dismiss(`session-${change.doc.id}`);
+                    }
+                }
+                else if (change.type === 'removed') {
+                    toast.dismiss(`session-${change.doc.id}`);
+                }
             });
         });
+    });
 
-        return () => unsubscribe();
-    }, []);
+    // Cleanup function
+    return () => {
+        statusUnsubscribe();
+        if (callsUnsubscribe) {
+            callsUnsubscribe();
+        }
+    };
+}, []);
 
     const showSessionRequest = (callData) => {
         const audio = new Audio(notificationSound);;
@@ -99,13 +138,29 @@ const InstantSessionNotification = () => {
     const handleAccept = async (callId) => {
         try {
             const currentUser = auth.currentUser;
-            await updateDoc(doc(firestore, 'calls', callId), {
+            const callRef = doc(firestore, 'calls', callId);
+            
+            // Get current call status
+            const callDoc = await getDoc(callRef);
+            if (!callDoc.exists()) {
+                toast.error('Session no longer available');
+                return;
+            }
+    
+            const callData = callDoc.data();
+            if (callData.status !== 'waiting_for_counselor') {
+                toast.error('Session already taken by another counselor');
+                return;
+            }
+    
+            // Update call status
+            await updateDoc(callRef, {
                 counselorId: currentUser.uid,
                 status: 'active',
                 acceptedAt: new Date()
             });
-
-            // Update peer counselor's status to busy
+    
+            // Update peer counselor's status
             const token = await currentUser.getIdToken();
             await axios.put(
                 `http://localhost:5000/api/peer-counselor/status/${currentUser.uid}`,
@@ -118,7 +173,7 @@ const InstantSessionNotification = () => {
                 }
             );
             
-            toast.dismiss();
+            toast.dismiss(`session-${callId}`);
             navigate(`/counseling/${callId}`);
         } catch (error) {
             console.error('Error accepting call:', error);
@@ -127,13 +182,29 @@ const InstantSessionNotification = () => {
     };
 
     const handleReject = async (callId) => {
-        const currentUser = auth.currentUser;
-            await updateDoc(doc(firestore, 'calls', callId), {
-                counselorId: currentUser.uid,
-                status: 'rejected',
-                acceptedAt: new Date()
+        try {
+            const currentUser = auth.currentUser;
+            const callRef = doc(firestore, 'calls', callId);
+            
+            // Get the call document
+            const callDoc = await getDoc(callRef);
+            if (!callDoc.exists()) {
+                toast.dismiss(`session-${callId}`);
+                return;
+            }
+    
+            // Update the call document to include rejected counselors
+            await updateDoc(callRef, {
+                rejectedBy: [
+                    ...(callDoc.data().rejectedBy || []),
+                    currentUser.uid
+                ]
             });
-        toast.dismiss();
+            
+            toast.dismiss(`session-${callId}`);
+        } catch (error) {
+            console.error('Error rejecting call:', error);
+        }
     };
 
     return null;
