@@ -167,9 +167,9 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="text-center container mx-auto px-4 py-20">
-      <h1 className="text-3xl text-black font-bold mb-10">User Profile</h1>
-      <div className="relative w-3/4 mx-auto bg-white shadow-md drop-shadow-md border-2 rounded px-8 pt-6 pb-8 mb-4">
+    <div className="text-center mx-auto px-4 py-20 bg-gradient-to-b from-green-200 via-green-100 to-white">
+      <h1 className="text-5xl text-black font-bold mb-10">User Profile</h1>
+      <div className="relative w-2/4 mx-auto bg-white shadow-md drop-shadow-md rounded px-8 pt-6 pb-8 mb-4 border-t-4 border-green-500">
         <div className="mb-4 flex flex-col items-center">
           <div className="relative">
             <img
@@ -220,16 +220,16 @@ const UserProfile = () => {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
         <div className="mb-4 space-y-3">
-          <label className="block text-gray-700 text-md font-bold mb-2">Name</label>
-          <p className="text-gray-700">{userProfile.fullName}</p>
+          <label className="block text-black text-lg font-bold mb-2">Name</label>
+          <p className="text-green-700 text-lg">{userProfile.fullName}</p>
         </div>
         <div className="mb-4 space-y-3">
-          <label className="block text-gray-700 text-md font-bold mb-2">Email</label>
-          <p className="text-gray-700">{userProfile.email}</p>
+          <label className="block text-black text-lg font-bold mb-2">Email</label>
+          <p className="text-green-700 text-lg">{userProfile.email}</p>
         </div>
         <div className="mb-4 space-y-3">
-          <label className="block text-gray-700 text-md font-bold mb-2">Role</label>
-          <p className="text-gray-700 capitalize">{userProfile.role}</p>
+          <label className="block text-black text-lg font-bold mb-2">Role</label>
+          <p className="text-green-700 capitalize text-lg">{userProfile.role}</p>
         </div>
       </div>
     </div>
