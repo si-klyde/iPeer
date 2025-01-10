@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import EventModal from '../components/EventModal';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 
 // Add DeleteConfirmationModal component
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, eventName }) => {
@@ -66,16 +68,49 @@ const EventCatalog = () => {
     useEffect(() => {
       fetchEvents();
     }, []);
-  
+
+    const [eventsCache, setEventsCache] = useState({
+        data: null,
+        timestamp: null
+    });
+    
+    // Cache duration in milliseconds (e.g., 5 minutes)
+    const CACHE_DURATION = 5 * 60 * 1000;
+
     const fetchEvents = async () => {
         try {
-          const response = await axios.get('http://localhost:5000/api/events');
-          setEvents(Array.isArray(response.data) ? response.data : []);
+            // Check if cache is valid
+            if (eventsCache.data && eventsCache.timestamp) {
+                const now = Date.now();
+                if (now - eventsCache.timestamp < CACHE_DURATION) {
+                    setEvents(eventsCache.data);
+                    return;
+                }
+            }
+
+            // Fetch fresh data if cache is invalid
+            const response = await axios.get('http://localhost:5000/api/events');
+            const newData = Array.isArray(response.data) ? response.data : [];
+            
+            // Update cache and state
+            setEventsCache({
+                data: newData,
+                timestamp: Date.now()
+            });
+            setEvents(newData);
         } catch (error) {
-          console.error('Error fetching events:', error);
-          setEvents([]); 
+            console.error('Error fetching events:', error);
+            setEvents([]); 
         }
-    };  
+    };
+
+    // Clear cache
+    const clearCache = () => {
+        setEventsCache({
+            data: null,
+            timestamp: null
+        });
+    };
   
     const handleInputChange = (e) => {
       const { name, value } = e.target;
@@ -88,11 +123,26 @@ const EventCatalog = () => {
     const handleSubmit = async (e) => {
       e.preventDefault();
       try {
+        const eventData = {
+          ...newEvent
+        };
+    
+        let updatedEvent;
         if (isEditing) {
-          await axios.put(`http://localhost:5000/api/${editingId}`, newEvent);
+          await axios.put(`http://localhost:5000/api/${editingId}`, eventData);
+          // Update the edited event in current state
+          setEvents(events.map(event => 
+            event.id === editingId ? {...event, ...eventData} : event
+          ));
         } else {
-          await axios.post('http://localhost:5000/api/add-events', newEvent);
+          const response = await axios.post('http://localhost:5000/api/add-events', eventData);
+          updatedEvent = { ...eventData, id: response.data.eventId };
+          // Add new event to current state
+          setEvents(prevEvents => [...prevEvents, updatedEvent]);
         }
+
+        clearCache(); // Clear cache after mutation
+        
         setNewEvent({
           title: '',
           description: '',
@@ -100,16 +150,17 @@ const EventCatalog = () => {
           time: '',
           location: '',
           maxParticipants: '',
-          category: ''
+          category: '',
+          imageUrl: ''
         });
+        
         setIsEditing(false);
         setEditingId(null);
         setIsModalOpen(false);
-        fetchEvents();
       } catch (error) {
         console.error('Error saving event:', error);
       }
-    };
+    };    
   
     const handleEdit = (event) => {
       setIsEditing(true);
@@ -134,12 +185,33 @@ const EventCatalog = () => {
     const confirmDelete = async () => {
       try {
         await axios.delete(`http://localhost:5000/api/${eventToDelete.id}`);
+        // Immediately remove the deleted event from state
+        setEvents(currentEvents => 
+          currentEvents.filter(event => event.id !== eventToDelete.id)
+        );
+        clearCache();
         setDeleteModalOpen(false);
         setEventToDelete(null);
-        fetchEvents();
       } catch (error) {
         console.error('Error deleting event:', error);
       }
+    };
+
+    const handleImageUpload = async (file) => {
+      const fileName = `event-photos/${Date.now()}-${file.name}`;
+      const storageRef = ref(storage, fileName);
+      
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          'uploadedAt': new Date().toISOString()
+        }
+      };
+    
+      const snapshot = await uploadBytes(storageRef, file, metadata);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      return downloadURL;
     };
   
     return (

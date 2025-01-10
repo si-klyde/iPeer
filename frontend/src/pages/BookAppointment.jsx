@@ -94,6 +94,9 @@ const BookAppointment = () => {
         clientId: currentUserId,
       });
 
+      const appointmentData = response.data;
+      console.log('Appointment created:', appointmentData);
+
       setBookingSuccess(true);
       setTimeout(() => {
         navigate(`/appointments/client`);

@@ -1,7 +1,18 @@
 import React from 'react';
 
-const PendingAppointments = ({ appointments, clients, handleAppointmentStatus }) => {
+const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppointmentStatus, role }) => {
   const pendingAppointments = appointments.filter(apt => apt.status === 'pending');
+
+  const getUserName = (appointment) => {
+    if (role === 'client') {
+      return peerCounselors[appointment.peerCounselorId] || 'Loading...';
+    }
+    return clients[appointment.clientId] || 'Loading...';
+  };
+
+  const getUserLabel = () => {
+    return role === 'client' ? 'Peer Counselor' : 'Client';
+  };
 
   return (
     <div className="space-y-4">
@@ -37,7 +48,7 @@ const PendingAppointments = ({ appointments, clients, handleAppointmentStatus })
                     <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="text-gray-700">
-                    Client: {clients[appointment.clientId] || 'Loading...'}
+                    {getUserLabel()}: {getUserName(appointment)}
                   </span>
                 </div>
               </div>
@@ -50,20 +61,37 @@ const PendingAppointments = ({ appointments, clients, handleAppointmentStatus })
               </p>
             </div>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => handleAppointmentStatus(appointment.id, 'accepted')}
-                className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => handleAppointmentStatus(appointment.id, 'declined')}
-                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Decline
-              </button>
+            <div className="mt-4">
+                <p className={`text-sm font-medium mb-2 ${
+                  appointment.status === 'accepted' ? 'text-green-600' : 
+                  appointment.status === 'declined' ? 'text-red-600' : 
+                  'text-yellow-600'
+                }`}>
+                  Status: {appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : 'Pending'}
+                </p>
+                {role === 'client' && appointment.status === 'pending' && (
+                  <p className="text-xs text-gray-500">
+                    Thanks for your patience! Your request is under review. 😊
+                  </p>
+                )}
             </div>
+
+            {role === 'peer-counselor' && handleAppointmentStatus && (
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => handleAppointmentStatus(appointment.id, 'accepted')}
+                  className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleAppointmentStatus(appointment.id, 'declined')}
+                  className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Decline
+                </button>
+              </div>
+            )}
           </div>
         ))
       )}
