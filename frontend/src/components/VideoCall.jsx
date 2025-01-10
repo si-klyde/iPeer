@@ -638,6 +638,18 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     endedAt: endTime
                 });
 
+                // Update peer counselor status to available
+                await axios.put(
+                    `http://localhost:5000/api/peer-counselor/status/${auth.currentUser.uid}`,
+                    {
+                        status: 'online',
+                        isAvailable: true
+                    },
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+
                 // Create session record
                 const sessionData = {
                     roomId,

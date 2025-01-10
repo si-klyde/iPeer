@@ -28,6 +28,9 @@ import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
 import EventCatalog from './pages/Events.jsx';
 import Notifications from './pages/Notifications.jsx';
+import InstantSessionNotification from './components/InstantSessionNotification.jsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 
 const App = () => {
@@ -159,6 +162,7 @@ const App = () => {
 
     return (
         <>
+            {user?.role === 'peer-counselor' && <InstantSessionNotification />}
             {!hideHeaderFooterPaths.includes(location.pathname) && <Header user={user} />}
             <div
             className={`${
@@ -260,6 +264,18 @@ const App = () => {
                 </Routes>
             </div>
             {!hideHeaderFooterPaths.includes(location.pathname) && <Footer />}
+            <ToastContainer
+                position="top-right"
+                autoClose={false}
+                newestOnTop
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable={false}
+                theme="light"
+                limit={3}
+                className="!p-4"
+            />
         </>
     );
 };
