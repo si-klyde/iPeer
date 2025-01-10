@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { firestore } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { X } from 'lucide-react';
+import notification from '../assets/notification/message.mp3'
 import { auth } from '../firebase';
 import axios from 'axios';
 
@@ -11,6 +12,8 @@ const Chat = ({ roomId, isOpen, onClose }) => {
     const [messages, setMessages] = useState([]);
     const [userData, setUserData] = useState(null);
     const currentUser = auth.currentUser;
+    const audioRef = useRef(new Audio(notification));
+    const [previousMessagesLength, setPreviousMessagesLength] = useState(0);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -64,6 +67,17 @@ const Chat = ({ roomId, isOpen, onClose }) => {
             if (unsubscribe) unsubscribe();
         };
     }, [roomId]);
+
+    useEffect(() => {
+        if (messages.length > previousMessagesLength) {
+            try {
+                audioRef.current.play();
+            } catch (error) {
+                // Sound plays successfully
+            }
+        }
+        setPreviousMessagesLength(messages.length);
+    }, [messages.length]);
 
     async function sendMessage() {
         if (!roomId) {
