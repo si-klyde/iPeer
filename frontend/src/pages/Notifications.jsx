@@ -2,10 +2,72 @@ import { useState, useEffect } from 'react';
 import { BellIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Notifications = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
+  const navigate = useNavigate();
+
+  const handleNotificationClick = async (notification) => {
+    try {
+      await markAsRead(notification.id);
+
+      // Navigate based on notification type and user role
+      if (notification.type.includes('APPOINTMENT')) {
+        if (user?.role === 'peer-counselor') {
+          if (notification.type === 'NEW_APPOINTMENT_REQUEST') {
+            navigate('/appointments/peer-counselor', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          } else if (notification.type === 'APPOINTMENT_ACCEPTED' || notification.type === 'APPOINTMENT_REMINDER') {
+            navigate('/appointments/peer-counselor', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          }
+        } else {
+          if (notification.type === 'APPOINTMENT_REQUEST' || notification.type === 'APPOINTMENT_REMINDER') {
+            navigate('/appointments/client', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          } else if (notification.type === 'APPOINTMENT_ACCEPTED') {
+            navigate('/appointments/client', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    }
+  };
+
+  // Add click handler for read notifications too
+  const handleReadNotificationClick = async (notification) => {
+    try {
+      if (notification.type.includes('APPOINTMENT')) {
+        if (user?.role === 'peer_counselor') {
+          navigate('/appointments/peer-counselor');
+        } else {
+          navigate('/appointments/client');
+        }
+      }
+    } catch (error) {
+      console.error('Error handling read notification click:', error);
+    }
+  };
 
   const fetchAllNotifications = async () => {
     try {
@@ -72,7 +134,7 @@ const Notifications = ({ user }) => {
         <div 
             key={notification.id}
             className="p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer transform hover:scale-[1.01] border-l-4 border-green-500"
-            onClick={() => markAsRead(notification.id)}
+            onClick={() => handleNotificationClick(notification)}
         >
             <div className="flex items-start space-x-4">
                 {notification.type === 'APPOINTMENT_REQUEST' && (
@@ -127,7 +189,8 @@ const Notifications = ({ user }) => {
             {readNotifications.map((notification) => (
                 <div 
                 key={notification.id}
-                className="p-4 hover:bg-gray-50 transition-all duration-200"
+                className="p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+                onClick={() => handleNotificationClick(notification)}
                 >
                 <div className="flex items-start space-x-4">
                     {notification.type === 'APPOINTMENT_REQUEST' && (

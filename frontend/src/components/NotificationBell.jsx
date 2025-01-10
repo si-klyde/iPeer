@@ -69,6 +69,60 @@ const NotificationBell = ({ user }) => {
     setPreviousCount(notifications.length);
   }, [notifications.length]);
 
+  const handleNotificationClick = async (notification) => {
+    try {
+      console.log('Notification clicked:', notification);
+      console.log('User role:', user?.role);
+      console.log('Notification type:', notification.type);
+      
+      await markAsRead(notification.id);
+      setIsOpen(false); // Close the notification dropdown
+
+      // Navigate based on notification type and user role
+      if (notification.type.includes('APPOINTMENT')) {
+        if (user?.role === 'peer-counselor') {
+          if (notification.type === 'NEW_APPOINTMENT_REQUEST') {
+            console.log('Navigating to peer appointments with state:', {
+              notificationId: notification.id,
+              appointmentId: notification.appointmentId
+            });
+            navigate('/appointments/peer-counselor', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          } else if (notification.type === 'APPOINTMENT_ACCEPTED' || notification.type === 'APPOINTMENT_REMINDER') {
+            navigate('/appointments/peer-counselor', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          } 
+        } else {
+          if (notification.type === 'APPOINTMENT_REQUEST' || notification.type === 'APPOINTMENT_REMINDER') {
+            navigate('/appointments/client', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          } else if (notification.type === 'APPOINTMENT_ACCEPTED') {
+            navigate('/appointments/client', { 
+              state: { 
+                notificationId: notification.id,
+                appointmentId: notification.appointmentId 
+              }
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    }
+  };
+
   return (
     <div className="relative">
       <button 
@@ -95,7 +149,7 @@ const NotificationBell = ({ user }) => {
               <div 
                 key={notification.id}
                 className="p-4 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer border-l-4 border-blue-500"
-                onClick={() => markAsRead(notification.id)}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
                   {/* Icon based on notification type */}
@@ -151,7 +205,8 @@ const NotificationBell = ({ user }) => {
             {readNotifications.map((notification) => (
               <div 
                 key={notification.id}
-                className="p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                className="p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
                   {notification.type === 'APPOINTMENT_REQUEST' && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import PendingAppointments from '../components/PendingAppointments';
 import AcceptedAppointments from '../components/AcceptedAppointments';
 import SessionHistory from '../components/SessionHistory';
@@ -13,6 +13,16 @@ const ViewAppointments = () => {
   const [activeTab, setActiveTab] = useState('pending');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Get tab from URL parameters
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     authStateChanged(auth, (user) => {
@@ -93,6 +103,32 @@ const ViewAppointments = () => {
     });
   }, [appointments, peerCounselors]);
 
+  useEffect(() => {
+    // Handle navigation state
+    if (location.state?.appointmentId) {
+      const appointment = appointments.find(app => app.id === location.state.appointmentId);
+      if (appointment) {
+        // Set the appropriate tab based on appointment status
+        if (appointment.status === 'pending') {
+          setActiveTab('pending');
+        } else if (appointment.status === 'accepted') {
+          setActiveTab('accepted');
+        } else if (appointment.status === 'completed') {
+          setActiveTab('history');
+        }
+
+        // Scroll to the appointment after a short delay to ensure rendering
+        setTimeout(() => {
+          const element = document.getElementById(`appointment-${appointment.id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('highlight-appointment');
+          }
+        }, 100);
+      }
+    }
+  }, [location.state, appointments]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -102,68 +138,80 @@ const ViewAppointments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+    <div className="min-h-screen bg-[#E6F4EA] py-8 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-2xl sm:text-[32px] font-bold text-center text-[#2D3748] mb-8 sm:mb-12">
           Your Appointments
-        </h2>
+        </h1>
 
-        <div className="flex space-x-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:space-x-6 mb-8">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
               activeTab === 'pending'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-indigo-50'
+                ? 'bg-[#9CDBA6] text-[#2D3748] shadow-lg shadow-green-200'
+                : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
             }`}
           >
             Pending Appointments
           </button>
           <button
             onClick={() => setActiveTab('accepted')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
               activeTab === 'accepted'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-indigo-50'
+                ? 'bg-[#9CDBA6] text-[#2D3748] shadow-lg shadow-green-200'
+                : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
             }`}
           >
             Accepted Appointments
           </button>
           <button
-              onClick={() => setActiveTab('history')}
-              className={`px-4 py-2 rounded-lg font-medium ${
-                activeTab === 'history'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-indigo-50'
-              }`}
-            >
-              Session History
-            </button>
-          </div>
+            onClick={() => setActiveTab('history')}
+            className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
+              activeTab === 'history'
+                ? 'bg-[#9CDBA6] text-[#2D3748] shadow-lg shadow-green-200'
+                : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
+            }`}
+          >
+            Session History
+          </button>
+        </div>
 
-        {activeTab === 'pending' && (
-          <PendingAppointments 
-            appointments={appointments}
-            peerCounselors={peerCounselors}
-            role="client"
-          />
-        )}
-        
-        {activeTab === 'accepted' && (
-          <AcceptedAppointments 
-            appointments={appointments}
-            peerCounselors={peerCounselors}
-            role="client"
-          />
-        )}
+        <style>{`
+          .highlight-appointment {
+            animation: highlight 2s ease-in-out;
+          }
+          @keyframes highlight {
+            0% { background-color: rgba(156, 219, 166, 0.3); }
+            100% { background-color: transparent; }
+          }
+        `}</style>
 
-        {activeTab === 'history' && (
-          <SessionHistory 
-            clientId={currentUserId}
-            role="client"
-            peerCounselors={peerCounselors}
-          />
-        )}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-8">
+          {activeTab === 'pending' && (
+            <PendingAppointments 
+              appointments={appointments}
+              peerCounselors={peerCounselors}
+              role="client"
+            />
+          )}
+          
+          {activeTab === 'accepted' && (
+            <AcceptedAppointments 
+              appointments={appointments}
+              peerCounselors={peerCounselors}
+              role="client"
+            />
+          )}
+
+          {activeTab === 'history' && (
+            <SessionHistory 
+              clientId={currentUserId}
+              role="client"
+              peerCounselors={peerCounselors}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
