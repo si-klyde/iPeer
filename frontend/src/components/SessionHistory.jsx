@@ -60,39 +60,42 @@ const SessionHistory = ({ role, peerCounselors }) => {
     return userNames[userId] || 'Loading...';
   };
 
-  if (loading) return <div className="text-center py-4">Loading sessions...</div>;
+  if (loading) return <div className="text-center text-gray-600 py-4">Loading sessions...</div>;
   if (error) return <div className="text-center text-red-500 py-4">{error}</div>;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">Session History</h2>
+    <div className="bg-transparent">
+      <h2 className="text-xl font-semibold text-[#2D3748] mb-6">Session History</h2>
       {sessions.length === 0 ? (
-        <div className="text-center text-gray-500">No session history available</div>
+        <div className="text-center text-gray-500 bg-white rounded-lg p-6 shadow-sm">No session history available</div>
       ) : (
         <div className="space-y-4">
           {sessions.map((session) => (
-            <div key={session.id} className="border rounded-lg p-4 hover:bg-gray-50">
-              <div className="flex flex-col space-y-3">
-                <div className="flex items-center text-gray-600">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <span>{new Date(session.startTime).toLocaleDateString()}</span>
+            <div 
+              key={session.id} 
+              className="bg-white border border-[#9CDBA6]/20 rounded-xl p-6 hover:shadow-lg hover:border-[#9CDBA6]/50 transition-all duration-200"
+            >
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center text-[#4A5568]">
+                  <Calendar className="w-5 h-5 mr-3 text-[#50B498]" />
+                  <span className="font-medium">{new Date(session.startTime).toLocaleDateString()}</span>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>
+                <div className="flex items-center text-[#4A5568]">
+                  <Clock className="w-5 h-5 mr-3 text-[#50B498]" />
+                  <span className="font-medium">
                     {new Date(session.startTime).toLocaleTimeString()} - 
                     {new Date(session.endTime).toLocaleTimeString()}
                   </span>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <User className="w-4 h-4 mr-2" />
-                  <span>{getUserLabel()}: {getUserName(session)}</span>
+                <div className="flex items-center text-[#4A5568]">
+                  <User className="w-5 h-5 mr-3 text-[#50B498]" />
+                  <span className="font-medium">{getUserLabel()}: {getUserName(session)}</span>
                 </div>
                 {role === 'peer-counselor' && session.notes && (
-                  <div className="mt-2 bg-gray-50 p-3 rounded-md">
-                    <div className="flex items-start text-gray-600">
-                      <ClipboardList className="w-4 h-4 mr-2 mt-1" />
-                      <p className="whitespace-pre-wrap text-sm">{session.notes}</p>
+                  <div className="mt-2 bg-[#E6F4EA] p-4 rounded-lg">
+                    <div className="flex items-start text-[#4A5568]">
+                      <ClipboardList className="w-5 h-5 mr-3 text-[#50B498] mt-1" />
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{session.notes}</p>
                     </div>
                   </div>
                 )}

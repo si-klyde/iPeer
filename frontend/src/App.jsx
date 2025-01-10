@@ -177,7 +177,7 @@ const App = () => {
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
                     <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
-                    <Route path="/viewevent" element={<ViewEvent />} />                           
+                    {/* <Route path="/viewevent" element={<ViewEvent />} />                            */}
                     <Route path="/event" element={<EventCatalog />} />
 
                     {/* Client-Only Routes */}

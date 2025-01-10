@@ -126,9 +126,9 @@ const Calendar = () => {
     </ul>
   );
 
-  const handleViewEvent = () => {
-    navigate('/viewevent');
-  };
+  // const handleViewEvent = () => {
+  //   navigate('/viewevent');
+  // };
 
   // Get today's date for highlighting the current day
   const today = new Date();
