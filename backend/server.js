@@ -8,6 +8,7 @@ const clientRoutes = require('./routes/client');
 const notesRouter = require('./routes/notes');
 const eventRoutes = require('./routes/event');
 const notificationsRoutes = require('./routes/notifications');
+const sessionHistoryRoutes = require('./routes/sessionHistory');
 const cors = require('cors');
 
 require('./services/schedulerService');
@@ -29,6 +30,7 @@ app.use('/api', clientRoutes);
 app.use('/api', notesRouter);
 app.use('/api', eventRoutes);
 app.use('/api', notificationsRoutes);
+app.use('/api', sessionHistoryRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

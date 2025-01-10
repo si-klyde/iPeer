@@ -142,6 +142,9 @@ const Notifications = ({ user }) => {
                     {notification.type === 'APPOINTMENT_DECLINED' && (
                         <XCircleIcon className="h-6 w-6 text-gray-500 mt-1" />
                     )}
+                    {notification.type === 'APPOINTMENT_REMINDER' && (
+                      <CalendarIcon className="h-6 w-6 text-yellow-500 mt-1" />
+                    )}
                     <div className="flex-1">
                     <p className="font-medium text-gray-700">{notification.title}</p>
                     <p className="text-sm text-gray-500 mt-1">{notification.message}</p>

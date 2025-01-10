@@ -10,6 +10,14 @@ const UserProfile = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileCache, setProfileCache] = useState({
+    data: null,
+    timestamp: null
+  });
+
+  // Cache duration: 15 minutes
+  const CACHE_DURATION = 15 * 60 * 1000;
+
 
   useEffect(() => {
     // Hide Header and Footer
@@ -31,8 +39,16 @@ const UserProfile = () => {
 
     const setupProfileListener = async () => {
       try {
-        setLoading(true);
-        // Get initial decrypted data from backend
+        // Check cache first
+        if (profileCache.data && profileCache.timestamp) {
+          const now = Date.now();
+          if (now - profileCache.timestamp < CACHE_DURATION) {
+            setUserProfile(profileCache.data);
+            return;
+          }
+        }
+
+        // Fetch fresh data if cache invalid
         const idToken = await user.getIdToken();
         const endpoint = `http://localhost:5000/api/${user.role === 'peer-counselor' ? 'peer-counselors' : 'client'}/${user.uid}`;
         const response = await axios.get(endpoint, {
@@ -45,20 +61,22 @@ const UserProfile = () => {
         unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
           const profileData = profileDoc.exists() ? profileDoc.data() : {};
           
-          setUserProfile(prevProfile => ({
-            ...prevProfile,
+          const updatedProfile = {
             ...decryptedData,
             ...profileData,
             photoURL: user.photoURL || profileData.photoURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'
+          };
 
-          }));
-          setLoading(false);
+          setUserProfile(updatedProfile);
+          // Update cache
+          setProfileCache({
+            data: updatedProfile,
+            timestamp: Date.now()
+          });
         });
 
-      } catch (err) {
-        console.error('Error setting up profile:', err);
-        setError('Failed to load profile');
-        setLoading(false);
+      } catch (error) {
+        console.error('Error setting up profile:', error);
       }
     };
 
@@ -69,6 +87,13 @@ const UserProfile = () => {
     };
   }, []);
 
+  // Clear cache when needed
+  const clearCache = () => {
+    setProfileCache({
+      data: null,
+      timestamp: null
+    });
+  };
 
   // Update handleImageUpload to store in subcollection
   const handleImageUpload = async (event) => {
@@ -103,6 +128,9 @@ const UserProfile = () => {
       ...prevProfile,
       photoURL: downloadURL
     }));
+
+    // Clear cache to force fresh data fetch
+    clearCache();
 
     // Update photoURL in Firebase Authentication
     await updateProfile(user, {
@@ -139,9 +167,9 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="text-center container mx-auto px-4 py-20">
-      <h1 className="text-3xl text-black font-bold mb-10">User Profile</h1>
-      <div className="relative w-3/4 mx-auto bg-white shadow-md drop-shadow-md border-2 rounded px-8 pt-6 pb-8 mb-4">
+    <div className="text-center mx-auto px-4 py-20 bg-gradient-to-b from-green-200 via-green-100 to-white">
+      <h1 className="text-5xl text-black font-bold mb-10">User Profile</h1>
+      <div className="relative w-2/4 mx-auto bg-white shadow-md drop-shadow-md rounded px-8 pt-6 pb-8 mb-4 border-t-4 border-green-500">
         <div className="mb-4 flex flex-col items-center">
           <div className="relative">
             <img
@@ -192,16 +220,16 @@ const UserProfile = () => {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
         <div className="mb-4 space-y-3">
-          <label className="block text-gray-700 text-md font-bold mb-2">Name</label>
-          <p className="text-gray-700">{userProfile.fullName}</p>
+          <label className="block text-black text-lg font-bold mb-2">Name</label>
+          <p className="text-green-700 text-lg">{userProfile.fullName}</p>
         </div>
         <div className="mb-4 space-y-3">
-          <label className="block text-gray-700 text-md font-bold mb-2">Email</label>
-          <p className="text-gray-700">{userProfile.email}</p>
+          <label className="block text-black text-lg font-bold mb-2">Email</label>
+          <p className="text-green-700 text-lg">{userProfile.email}</p>
         </div>
         <div className="mb-4 space-y-3">
-          <label className="block text-gray-700 text-md font-bold mb-2">Role</label>
-          <p className="text-gray-700 capitalize">{userProfile.role}</p>
+          <label className="block text-black text-lg font-bold mb-2">Role</label>
+          <p className="text-green-700 capitalize text-lg">{userProfile.role}</p>
         </div>
       </div>
     </div>

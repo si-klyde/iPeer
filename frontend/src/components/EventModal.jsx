@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 
 const compressImage = (file) => {
   return new Promise((resolve) => {
@@ -45,10 +47,15 @@ const EventModal = ({
   handleSubmit 
 }) => {
   const [previewImage, setPreviewImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadingImage(true);
+      setUploadError(null);
       // Check file size (10MB = 10 * 1024 * 1024 bytes)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (file.size > maxSize) {
@@ -68,19 +75,29 @@ const EventModal = ({
           return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviewImage(reader.result);
-          handleInputChange({
-            target: {
-              name: 'imageUrl',
-              value: reader.result
-            }
-          });
+        // Upload to Firebase Storage
+        const fileName = `event-photos/${Date.now()}-${file.name}`;
+        const storageRef = ref(storage, fileName);
+        const metadata = {
+          contentType: file.type,
+          customMetadata: {
+            'uploadedAt': new Date().toISOString()
+          }
         };
-        reader.readAsDataURL(compressedBlob);
+
+        const snapshot = await uploadBytes(storageRef, compressedBlob, metadata);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        // Update preview and form state
+        setPreviewImage(downloadURL);
+        handleInputChange({
+          target: {
+            name: 'imageUrl',
+            value: downloadURL
+          }
+        });
       } catch (error) {
-        console.error('Error compressing image:', error);
+        console.error('Error processing image:', error);
         alert('Error processing image. Please try again.');
         e.target.value = '';
       }
@@ -107,28 +124,39 @@ const EventModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-          <div className="mb-4">
-            <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
-              {(previewImage || newEvent.imageUrl) ? (
-                <img
-                  src={previewImage || newEvent.imageUrl}
-                  alt="Event preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  <span>Upload Event Image</span>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        <div className="mb-4">
+          <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
+            {(previewImage || newEvent.imageUrl) ? (
+              <img
+                src={previewImage || newEvent.imageUrl}
+                alt="Event preview"
+                className="w-full h-full object-cover"
               />
-            </div>
-            <p className="mt-2 text-sm text-gray-500">Maximum image size: 10MB</p>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                {uploadingImage ? (
+                  <div className="flex flex-col items-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <span className="mt-2">Uploading image...</span>
+                  </div>
+                ) : (
+                  <span>Upload Event Image</span>
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={uploadingImage}
+            />
           </div>
+          {uploadError && (
+            <p className="mt-2 text-sm text-red-500">{uploadError}</p>
+          )}
+          <p className="mt-2 text-sm text-gray-500">Maximum image size: 10MB</p>
+        </div>
 
           <div>
             <input

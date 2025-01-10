@@ -32,6 +32,7 @@ import axios from 'axios';
 
 const App = () => {
     const [user, setUser] = useState(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const location = useLocation();
     const hideHeaderFooterPaths = ['/login'];
 
@@ -39,29 +40,39 @@ const App = () => {
         let unsubscribeAuth;
         let unsubscribeUser;
         let unsubscribeProfile;
-
+    
         const setupUserListener = async (currentUser) => {
+            if (!currentUser && !isInitialLoad && user) {
+                clearLocalStorage();
+                setUser(null);
+                return;
+            }
+            
             if (currentUser) {
                 try {
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
                     const userDoc = await getDoc(userDocRef);
                     const userRole = userDoc.data()?.role;
-
+    
+                    // Check cache first
+                    const cachedUserData = localStorage.getItem(`userData_${currentUser.uid}`);
+                    if (cachedUserData) {
+                        setUser(JSON.parse(cachedUserData));
+                    }
+    
                     // Get decrypted data from backend
                     const endpoint = userRole === 'peer-counselor'
                         ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
                         : `http://localhost:5000/api/client/${currentUser.uid}`;
-
-                        console.log('Fetching from endpoint:', endpoint);
-
+    
                     const response = await axios.get(endpoint, {
                         headers: {
                             Authorization: `Bearer ${await currentUser.getIdToken()}`
                         }
                     });
                     const decryptedData = response.data;
-                    
+    
                     // Set up profile listener
                     const profileDocRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
                     unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
@@ -69,15 +80,22 @@ const App = () => {
                         const photoURL = currentUser.photoURL || 
                             profileData.photoURL || 
                             `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
-
-                        setUser(prevUser => ({
-                            ...prevUser,
+    
+                        const userData = {
                             ...decryptedData,
                             ...profileData,
                             photoURL: photoURL
+                        };
+    
+                        setUser(prevUser => ({
+                            ...prevUser,
+                            ...userData
                         }));
+    
+                        // Cache the updated user data
+                        localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(userData));
                     });
-
+    
                     // Listen for role changes
                     unsubscribeUser = onSnapshot(userDocRef, async (doc) => {
                         if (doc.exists()) {
@@ -86,37 +104,58 @@ const App = () => {
                                 const newEndpoint = newRole === 'peer-counselor'
                                     ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
                                     : `http://localhost:5000/api/client/${currentUser.uid}`;
-
+    
                                 const newResponse = await axios.get(newEndpoint, {
                                     headers: {
                                         Authorization: `Bearer ${await currentUser.getIdToken()}`
                                     }
                                 });
-                                setUser(prevUser => ({
+                                
+                                const newUserData = {
                                     ...prevUser,
                                     ...newResponse.data
-                                }));
+                                };
+                                
+                                setUser(newUserData);
+                                localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(newUserData));
                             }
                         }
                     });
-
+    
                 } catch (error) {
                     console.error('Error setting up user data:', error);
                     setUser(null);
+                    localStorage.removeItem(`userData_${currentUser.uid}`);
                 }
-            } else {
-                setUser(null);
+            } 
+
+            //Mark initial load complete
+            if (isInitialLoad) {
+                setIsInitialLoad(false);
             }
         };
-
+    
         unsubscribeAuth = authStateChanged(auth, setupUserListener);
-
+    
         return () => {
             if (unsubscribeAuth) unsubscribeAuth();
             if (unsubscribeUser) unsubscribeUser();
             if (unsubscribeProfile) unsubscribeProfile();
         };
-    }, []);
+    }, []);    
+
+    // Helper function to clear localStorage
+    const clearLocalStorage = () => {
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes('appointments_') || 
+                key.includes('clients_') || 
+                key.includes('counselor_') || 
+                key.includes('peerCounselors') ||
+                key.includes('userData_')) {
+                localStorage.removeItem(key);
+            }
+        });
+    };
 
     return (
         <>
