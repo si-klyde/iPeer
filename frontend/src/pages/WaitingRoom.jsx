@@ -168,94 +168,156 @@ const WaitingRoom = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#E6F4EA] to-white p-4">
-            <div className="text-center space-y-8 max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <div className="space-y-3">
-                    <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
-                        Instant Counseling
+        <div className="min-h-screen bg-gradient-to-b from-[#E6F4EA] via-white to-[#E6F4EA]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                {/* Header */}
+                <div className="text-center space-y-4 mb-16">
+                    <h1 className="text-4xl md:text-5xl font-bold text-[#325D55]">
+                        Get Support Today
                     </h1>
-                    <p className="text-gray-600 text-lg">
-                        Connect with an available peer counselor for immediate support
+                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        Choose your preferred way to connect with our peer-counselors
                     </p>
                 </div>
-                
-                <div className="flex flex-col space-y-5">
-                    {isRequesting ? (
-                        <>
-                            <div className="flex flex-col items-center space-y-4 p-6 bg-gray-50 rounded-xl">
-                                <div className="relative">
-                                    <div className="w-16 h-16 border-4 border-green-100 rounded-full animate-spin border-t-green-500"></div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-8 h-8 bg-white rounded-full"></div>
+
+                {isRequesting && (
+                    <div className="max-w-md mx-auto mt-12 mb-12">
+                        <div className="bg-[#FEFAE0] p-6 rounded-xl border border-[#CCD5AE]">
+                            <div className="font-semibold text-[#508D4E] mb-3 flex items-center">
+                                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                While You Wait
+                            </div>
+                            <p className="text-[#325D55] text-sm mb-4">
+                                Feel free to explore our website. We'll notify you when a counselor is ready.
+                            </p>
+                            <button 
+                                onClick={() => navigate('/therapy')}
+                                className="flex items-center text-[#508D4E] hover:text-[#325D55] text-sm font-medium
+                                        transition-all hover:translate-x-1"
+                            >
+                                Visit Therapy Services
+                                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
+    
+                {/* Cards Grid */}
+                <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    {/* Book Appointment Card */}
+                    <div className="relative group h-[550px]">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#508D4E] to-[#325D55] rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                        <div className="relative bg-white rounded-2xl p-8 h-full shadow-xl transition-all duration-300 hover:translate-y-[-4px]">
+                            <div className="flex flex-col h-full justify-between items-center">
+                                <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+                                    <div className="w-40 h-40 bg-[#E9EDC9] rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                                        <svg className="w-20 h-20 text-[#508D4E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="space-y-3 text-center max-w-sm">
+                                        <h2 className="text-2xl font-bold text-[#325D55]">Book an Appointment</h2>
+                                        <p className="text-gray-600">
+                                            Schedule a session in advance with your preferred peer-counselor
+                                        </p>
                                     </div>
                                 </div>
-                                <span className="text-gray-700 font-medium">Looking for counselors...</span>
-                            </div>
-                            
-                            <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    While You Wait
-                                </h4>
-                                <p className="text-blue-700 text-sm mb-4">
-                                    Feel free to explore our website. We'll notify you when a counselor is ready.
-                                </p>
                                 <button 
-                                    onClick={() => navigate('/therapy')}
-                                    className="flex items-center text-blue-700 hover:text-blue-800 text-sm font-medium
-                                             transition-all hover:translate-x-1"
+                                    onClick={() => navigate('/book-appointment')}
+                                    className="w-full mt-auto py-4 px-6 rounded-xl font-semibold bg-[#508D4E] text-white
+                                            shadow-lg shadow-green-100/50 hover:bg-[#325D55] 
+                                            transition-all duration-300 hover:shadow-xl
+                                            transform hover:-translate-y-0.5
+                                            focus:outline-none focus:ring-2 focus:ring-[#508D4E] focus:ring-offset-2"
                                 >
-                                    Visit Therapy Services
-                                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                    </svg>
+                                    Schedule Appointment
                                 </button>
                             </div>
-                            
-                            <button 
-                                onClick={() => setShowCancelModal(true)}
-                                className="w-full py-4 px-6 rounded-xl font-medium text-red-600 bg-red-50
-                                         hover:bg-red-100 border border-red-200 transition-all duration-200"
-                            >
-                                Cancel Request
-                            </button>
-                        </>
-                    ) : (
-                        <button 
-                            onClick={requestInstantSession}
-                            className="w-full py-4 px-6 rounded-xl font-semibold bg-[#408f40] 
-                                     hover:bg-green-600 text-white shadow-lg shadow-green-100
-                                     transition-all duration-200 hover:shadow-xl hover:shadow-green-200
-                                     transform hover:-translate-y-0.5"
-                        >
-                            Start Instant Session
-                        </button>
-                    )}
-                    
+                        </div>
+                    </div>
+
+                    {/* Instant Session Card */}
+                    <div className="relative group h-[550px]">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#508D4E] to-[#325D55] rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                        <div className="relative bg-white rounded-2xl p-8 h-full shadow-xl transition-all duration-300 hover:translate-y-[-4px]">
+                            <div className="flex flex-col h-full justify-between items-center">
+                                <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+                                    <div className="w-40 h-40 bg-[#E9EDC9] rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                                        <svg className="w-20 h-20 text-[#508D4E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                                        </svg>
+                                    </div>
+                                    <div className="space-y-3 text-center max-w-sm">
+                                        <h2 className="text-2xl font-bold text-[#325D55]">Book an Appointment</h2>
+                                        <p className="text-gray-600">
+                                            Connect with an available counselor immediately
+                                        </p>
+                                    </div>
+                                </div>
+                                {isRequesting ? (
+                                    <div className="space-y-4 mt-auto">
+                                        <div className="flex flex-col items-center space-y-4 p-6 bg-gray-50/80 backdrop-blur-sm rounded-xl">
+                                            <div className="space-y-4">
+                                                <div className="relative" aria-label="Loading spinner">
+                                                    <div className="w-16 h-16 border-4 border-green-100 rounded-full animate-spin border-t-green-500"></div>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="w-8 h-8 bg-white rounded-full"></div>
+                                                    </div>
+                                                </div>
+                                                <span className="text-gray-700 font-medium">Looking for counselors...</span>
+                                            </div>
+                                        </div>
+        
+                                        <button 
+                                            onClick={() => setShowCancelModal(true)}
+                                            className="w-full py-4 px-6 rounded-xl font-medium text-red-600 bg-red-50
+                                                    hover:bg-red-100 border border-red-200 transition-all duration-200"
+                                        >
+                                            Cancel Request
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button 
+                                        onClick={requestInstantSession}
+                                        className="w-full mt-auto py-4 px-6 rounded-xl font-semibold bg-[#508D4E]
+                                                hover:bg-[#325D55] text-white shadow-lg
+                                                transition-all duration-200 hover:shadow-xl
+                                                transform hover:-translate-y-0.5"
+                                    >
+                                        Start Instant Session
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                {/* Return Home Button */}
+                <div className="mt-12 text-center">
                     <button
                         onClick={() => navigate('/')}
-                        className="w-full py-3 px-6 bg-gray-50 text-gray-600 rounded-xl
-                                 hover:bg-gray-100 transition-colors font-medium"
+                        className="inline-flex items-center px-6 py-3 bg-white/80 text-gray-700 
+                                 rounded-xl hover:bg-white/90 transition-all duration-300
+                                 font-medium shadow-sm hover:shadow group"
                     >
+                        <svg className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
                         Return Home
                     </button>
                 </div>
             </div>
-
-            {/* Cancel Confirmation Modal */}
+    
+            {/* Cancel Modal */}
             {showCancelModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div 
-                    className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 
-                            transform transition-all duration-300 ease-in-out
-                            scale-100 opacity-100
-                            motion-safe:transition-all motion-safe:duration-300
-                            motion-safe:transform motion-safe:opacity-100"
-                >
-                    <div className="p-6">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
                         <h3 className="text-xl font-semibold text-gray-900 mb-4">
                             Cancel Request?
                         </h3>
@@ -281,8 +343,7 @@ const WaitingRoom = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
         </div>
     );
 };
