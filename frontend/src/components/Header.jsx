@@ -10,7 +10,7 @@ import logo from '../assets/ipeer-icon.png';
 import ProfileDropdown from './ProfileDropdown';
 import NotificationBell from './NotificationBell';
 
-const Header = ({ user }) => {
+const Header = ({ user, setUser }) => {
   const location = useLocation();
   const [openNavigation, setOpenNavigation] = useState(false);
   const [isShrunk, setIsShrunk] = useState(false);
@@ -58,12 +58,20 @@ const Header = ({ user }) => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      // Clear localStorage
+      localStorage.clear();
+      
+      // Reset user context/state if using context
+      setUser(null);
+
       navigate('/home');
+      // window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
+  
   // Check if the current path is in the list of paths where the header should be hidden
   if (hideHeaderPaths.includes(location.pathname)) {
     return null;

@@ -9,6 +9,7 @@ const notesRouter = require('./routes/notes');
 const eventRoutes = require('./routes/event');
 const notificationsRoutes = require('./routes/notifications');
 const sessionHistoryRoutes = require('./routes/sessionHistory');
+const schoolsRouter = require('./routes/schools');
 const cors = require('cors');
 
 require('./services/schedulerService');
@@ -22,6 +23,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+
+app.use('/api', schoolsRouter);
 
 app.use('/api', authRoutes);
 app.use('/api', appointmentRoutes);
