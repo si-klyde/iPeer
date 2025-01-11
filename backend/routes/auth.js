@@ -95,7 +95,7 @@ const verifyPassword = (password, salt, storedHash) => {
 };
 
 router.post('/register-peer-counselor', async (req, res) => {
-  const { email, password, fullName } = req.body;
+  const { email, password, fullName, school } = req.body;
 
   try {
     // Generate a salt
@@ -114,7 +114,7 @@ router.post('/register-peer-counselor', async (req, res) => {
     // Add user to Firestore with role 'peer-counselor'
     await createPeerCounselorDocument(
       userRecord.uid,
-      { email, fullName },
+      { email, fullName, school },
       { salt, password: hash }
     );
 

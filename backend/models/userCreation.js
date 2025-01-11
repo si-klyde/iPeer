@@ -33,6 +33,7 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
     uid: uid,
     email: encryptedEmail, 
     fullName: encryptedFullName,
+    school: userData.school,
     role: 'peer-counselor',
     createdAt: new Date(),
     lastLogin: new Date(),
@@ -42,6 +43,7 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
       lastStatusUpdate: new Date(),
       isAvailable: false
     }
+    
   });
 
   await db.collection('users').doc(uid)
