@@ -1,44 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-
-const therapists = [
-  {
-    name: "PCO 1",
-    position: "Counselor",
-    department: "College of Science",
-    email: "something@gmail.com",
-  },
-  {
-    name: "PCO 2",
-    position: "Counselor",
-    department: "College of Science",
-    email: "something@gmail.com",
-  },
-  {
-    name: "PCO 3",
-    position: "Counselor",
-    department: "College of Science",
-    email: "something@gmail.com",
-  },
-  {
-    name: "PCO 4",
-    position: "Counselor",
-    department: "College of Science",
-    email: "something@gmail.com",
-  },
-  {
-    name: "PCO 5",
-    position: "Counselor",
-    department: "College of Science",
-    email: "something@gmail.com",
-  },
-];
+import axios from "axios";
+import { doc, onSnapshot } from 'firebase/firestore';
+import { auth, authStateChanged, firestore } from '../firebase';
 
 const Carousel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [peerCounselors, setPeerCounselors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [clientSchool, setClientSchool] = useState('');
+  const [counselorPhotos, setCounselorPhotos] = useState({});
+
+  useEffect(() => {
+    authStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUserId(user.uid);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const unsubscribers = [];
+  
+    peerCounselors.forEach((counselor) => {
+      const profileDocRef = doc(firestore, 'users', counselor.id, 'profile', 'details');
+      const unsubscribe = onSnapshot(profileDocRef, (profileDoc) => {
+        const profileData = profileDoc.exists() ? profileDoc.data() : {};
+        setCounselorPhotos(prev => ({
+          ...prev,
+          [counselor.id]: profileData.photoURL
+        }));
+      });
+      unsubscribers.push(unsubscribe);
+    });
+  
+    return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+  }, [peerCounselors]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentUserId) return;
+      
+      try {
+        // Get client's school
+        const clientResponse = await axios.get(`http://localhost:5000/api/client/${currentUserId}`);
+        const userSchool = clientResponse.data.school;
+        setClientSchool(userSchool);
+
+        // Get peer counselors
+        const counselorsResponse = await axios.get('http://localhost:5000/api/peer-counselors');
+        
+        // Filter by school
+        const filteredCounselors = counselorsResponse.data.filter(counselor => 
+          counselor.school === userSchool
+        );
+
+        setPeerCounselors(filteredCounselors);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [currentUserId]);
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
@@ -64,9 +94,9 @@ const Carousel = () => {
   // Slick Carousel settings
   const settings = {
     dots: true,
-    infinite: true,
+    infinite: false,
     speed: 500,
-    slidesToShow: 3,
+    slidesToShow: Math.min(3, peerCounselors.length),
     slidesToScroll: 1,
     centerPadding: "30px",
     nextArrow: <NextArrow />,
@@ -75,7 +105,7 @@ const Carousel = () => {
       {
         breakpoint: 1024, // Medium screens
         settings: {
-          slidesToShow: 2, // Show 2 cards
+          slidesToShow: Math.min(2, peerCounselors.length), // Show 2 cards
         },
       },
       {
@@ -87,6 +117,10 @@ const Carousel = () => {
     ],
   };
 
+  if (loading) {
+    return <div className="text-center py-10">Loading counselors...</div>;
+  }
+
   return (
     <div className="flex flex-col items-center bg-[#FFF9F9] py-10 px-4 sm:px-6 lg:px-8">
       {/* Header Section */}
@@ -94,27 +128,38 @@ const Carousel = () => {
         On-Campus Mental Health Support Staff
       </h2>
       <h3 className="text-sm sm:text-md lg:text-lg text-gray-600 mt-4 text-center">
-        Meet the counselors available to support mental health and wellness.
+        Meet the peer-counselors available to support mental health and wellness.
       </h3>
 
       {/* Carousel Container */}
       <div className="w-full sm:w-[85%]">
         <Slider {...settings}>
-          {therapists.map((therapist, index) => (
-            <div key={index} className="px-4 sm:px-8 py-10">
+          {peerCounselors.map((counselor) => (
+            <div key={counselor.id} className="px-4 sm:px-8 py-10">
               {/* Card */}
-              <div className="flex flex-col h-64 mt-5 items-center bg-[#FFF9F9] rounded-lg shadow-lg drop-shadow-md border border-gray-200">
+              <div className="flex flex-col h-100 mt-5 items-center bg-[#FFF9F9] rounded-lg shadow-lg drop-shadow-md border border-gray-200">
                 {/* Green Top Bar */}
                 <div className="w-full h-2 bg-green-600 rounded-t-lg"></div>
+
+                <div className="mt-6">
+                  <img
+                    src={counselorPhotos[counselor.id] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'}
+                    alt={`${counselor.fullName}'s profile`}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-green-600"
+                    onError={(e) => {
+                      e.target.src = '/default-avatar.png';
+                    }}
+                  />
+                </div>
                 <div className="p-6 sm:p-10 space-y-4 text-center">
                   <p className="font-semibold text-md sm:text-lg text-gray-800 mb-2">
-                    {therapist.name}
+                    {counselor.fullName}
                   </p>
-                  <p className="text-gray-600">{therapist.position}</p>
+                  <p className="text-gray-600">Peer Counselor</p>
                   <p className="text-gray-500 text-sm mt-2">
-                    {therapist.department}
+                    {counselor.school}
                   </p>
-                  <p className="text-gray-500 text-sm mt-2">{therapist.email}</p>
+                  <p className="text-gray-500 text-sm mt-2">{counselor.email}</p>
                 </div>
               </div>
             </div>
