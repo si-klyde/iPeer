@@ -248,27 +248,25 @@ const Hero = () => {
             </p>
 
             <div className="border-t border-gray-300 mt-4 pt-4">
-              <h2 className="font-semibold text-lg text-gray-800 mb-5">iPeer Counseling and Appointment Schedule</h2>
-              <div className="text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Mon - Tue:</span>
-                  <span>8:00 - 17:30</span>
+              <h2 className="font-semibold text-lg text-gray-800 mb-5">iPeer Services Hours</h2>
+              <div className="text-sm text-gray-600 space-y-4">
+                <div>
+                  <p className="font-medium mb-2">iPeer Counseling:</p>
+                  <div className="flex justify-between">
+                    <span>Monday - Friday:</span>
+                    <span>8:00 AM - 5:00 PM</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Weekends:</span>
+                    <span className="text-red-500">Closed</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Wed - Thu:</span>
-                  <span>8:00 - 17:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Fri:</span>
-                  <span>8:00 - 17:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sat:</span>
-                  <span className="text-red-500">Closed</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sun:</span>
-                  <span className="text-red-500">Closed</span>
+                <div>
+                  <p className="font-medium mb-2">Appointment Scheduling:</p>
+                  <div className="flex justify-between">
+                    <span>Available:</span>
+                    <span className="text-green-600">24/7</span>
+                  </div>
                 </div>
               </div>
             </div>
