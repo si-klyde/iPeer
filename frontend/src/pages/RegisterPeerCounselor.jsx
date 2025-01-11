@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,14 +8,33 @@ const RegisterPeerCounselor = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [middleInitial, setMiddleInitial] = useState('');
+  const [schools, setSchools] = useState([]);
+  const [selectedSchool, setSelectedSchool] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/schools');
+        setSchools(response.data);
+      } catch (error) {
+        console.error('Error fetching schools - Full error:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        // res.status(500).json({ error: 'Error fetching schools' });
+        setErrorMessage('Error loading schools');
+      }
+    };
+
+    fetchSchools();
+  }, []);
+
   const handleRegister = async (e) => {
     e.preventDefault();
   
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password ||!selectedSchool) {
       setErrorMessage('Required fields must be filled.');
       return;
     }
@@ -29,7 +48,12 @@ const RegisterPeerCounselor = () => {
     try {
       const response = await axios.post(
         'http://localhost:5000/api/register-peer-counselor',
-        { email, password, fullName }
+        { 
+          email, 
+          password, 
+          fullName,
+          school: selectedSchool
+        }
       );
       console.log('Registration successful:', response.data);
       navigate('/');
@@ -144,6 +168,31 @@ const RegisterPeerCounselor = () => {
             className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             disabled={loading}
           />
+        </div>
+
+        {/* School Dropdown */}
+        <div className="mb-6">
+          <label
+            htmlFor="school"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            School*
+          </label>
+          <select
+            id="school"
+            value={selectedSchool}
+            onChange={(e) => setSelectedSchool(e.target.value)}
+            className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            disabled={loading}
+            required
+          >
+            <option value="">Select your school</option>
+            {schools.map((school) => (
+              <option key={school.domain} value={school.name}>
+                {school.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Register Button */}
