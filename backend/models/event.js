@@ -19,14 +19,15 @@ const { db } = require('../firebaseAdmin');
     );
   };
 
-  const getAllEvents = async () => {
+  const getAllEvents = async (userSchool) => {
     const eventsSnapshot = await db.collection('events')
-        .orderBy('date', 'asc')
-        .get();
+      .where('school', '==', userSchool)
+      .orderBy('date', 'asc')
+      .get();
     return eventsSnapshot.docs.map(doc => 
-        Object.assign({}, { id: doc.id }, doc.data())
+      Object.assign({}, { id: doc.id }, doc.data())
     );
-};
+  };
   
   const updateEvent = async (eventId, eventData) => {
     const eventRef = db.collection('events').doc(eventId);
