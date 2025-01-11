@@ -163,7 +163,11 @@ const App = () => {
     return (
         <>
             {user?.role === 'peer-counselor' && <InstantSessionNotification />}
-            {!hideHeaderFooterPaths.includes(location.pathname) && <Header user={user} />}
+            {!hideHeaderFooterPaths.includes(location.pathname) && 
+                <Header 
+                    user={user} 
+                    setUser={setUser}
+                />}
             <div
             className={`${
                 hideHeaderFooterPaths.includes(location.pathname) ? '' : 'pt-[4.75rem] lg:pt-[5rem]'
