@@ -253,7 +253,7 @@ const WaitingRoom = () => {
                                         </svg>
                                     </div>
                                     <div className="space-y-3 text-center max-w-sm">
-                                        <h2 className="text-2xl font-bold text-[#325D55]">Book an Appointment</h2>
+                                        <h2 className="text-2xl font-bold text-[#325D55]">Instant Session</h2>
                                         <p className="text-gray-600">
                                             Connect with an available counselor immediately
                                         </p>
