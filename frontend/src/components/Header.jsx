@@ -9,6 +9,19 @@ import { auth } from '../firebase';
 import logo from '../assets/ipeer-icon.png';
 import ProfileDropdown from './ProfileDropdown';
 import NotificationBell from './NotificationBell';
+import { HiHome, HiCalendar, HiInformationCircle, HiClipboardList, HiUserGroup, HiAcademicCap, HiLogout, HiLogin } from 'react-icons/hi';
+
+const getIcon = (title) => {
+  switch (title) {
+    case 'Home': return <HiHome className="w-5 h-5" />;
+    case 'Therapy': return <HiUserGroup className="w-5 h-5" />;
+    case 'Calendar': return <HiCalendar className="w-5 h-5" />;
+    case 'Information': return <HiInformationCircle className="w-5 h-5" />;
+    case 'Counseling': return <HiClipboardList className="w-5 h-5" />;
+    case 'Dashboard': return <HiAcademicCap className="w-5 h-5" />;
+    default: return null;
+  }
+};
 
 const Header = ({ user }) => {
   const location = useLocation();
@@ -84,38 +97,55 @@ const Header = ({ user }) => {
 
         {/* Navigation Links */}
         <nav
-          className={`${
-            openNavigation ? 'flex' : 'hidden'
-          } fixed top-[4rem] sm:top-[5rem] left-0 right-0 bottom-[8rem] sm:bottom-[10rem] bg-[#FFF9F9] lg:static lg:flex lg:mx-auto lg:bg-transparent`}
+          className={`fixed top-[4.5rem] right-4 w-64 bg-white py-2 rounded-lg shadow-lg lg:static lg:flex lg:w-auto lg:bg-transparent lg:shadow-none
+          transform transition-all duration-300 ease-in-out origin-top
+          ${openNavigation 
+            ? 'opacity-100 scale-y-100 translate-y-0' 
+            : 'opacity-0 scale-y-0 -translate-y-4 pointer-events-none'
+          } lg:opacity-100 lg:scale-y-100 lg:translate-y-0 lg:pointer-events-auto`}
         >
-          <div className="relative z-10 flex flex-col items-center justify-center m-auto lg:flex-row">
+          <div className="relative z-10 flex flex-col w-full py-2 lg:flex-row">
             {(user?.role === 'peer-counselor' ? peerCounselorNavigation : clientNavigation).map((item) => (
               <a
                 key={item.id}
                 href={item.url}
                 onClick={handleClick}
-                className={`block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 ${
-                  item.onlyMobile ? 'lg:hidden' : ''
-                } px-3 sm:px-4 py-2 sm:py-3 lg:py-2 lg:text-sm lg:font-medium ${
-                  item.url === location.pathname ? 'text-n-5' : 'text-n-8'
-                } lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg`}
+                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out
+                ${item.onlyMobile ? 'lg:hidden' : ''}
+                ${item.url === location.pathname 
+                  ? 'text-green-600 bg-gray-50 lg:bg-transparent' 
+                  : 'text-gray-700 hover:text-green-500'
+                }
+                lg:px-4 lg:py-2 
+                hover:bg-gray-100/90 hover:translate-x-1 lg:hover:translate-x-0
+                lg:hover:bg-transparent lg:hover:scale-105
+                rounded-md`}
               >
-                {item.title}
+                <span className="text-current lg:hidden">{getIcon(item.title)}</span>
+                <span className={`${!getIcon(item.title) ? 'lg:ml-0' : ''}`}>{item.title}</span>
               </a>
             ))}
             {user ? (
               <button
                 onClick={handleSignOut}
-                className="block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 px-3 sm:px-4 py-2 sm:py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 
+                transition-all duration-200 ease-in-out 
+                hover:bg-gray-100/90 hover:text-green-500 hover:translate-x-1
+                rounded-md lg:hidden"
               >
-                Sign Out
+                <HiLogout className="w-5 h-5" />
+                <span>Sign Out</span>
               </button>
             ) : (
               <button
-                className="block relative font-roboto text-lg sm:text-xl transition-colors hover:text-n-5 px-3 sm:px-4 py-2 sm:py-3 lg:hidden lg:py-2 lg:text-sm lg:font-medium text-n-8 lg:leading-5 lg:hover:text-green-500 xl:px-6 drop-shadow-lg"
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 
+                transition-all duration-200 ease-in-out 
+                hover:bg-gray-100/90 hover:text-green-500 hover:translate-x-1
+                rounded-md lg:hidden"
                 onClick={() => window.location.href = '/login'}
               >
-                Sign In
+                <HiLogin className="w-5 h-5" />
+                <span>Sign In</span>
               </button>
             )}
           </div>
