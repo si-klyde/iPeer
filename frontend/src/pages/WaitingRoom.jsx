@@ -115,9 +115,18 @@ const WaitingRoom = () => {
             );
     
             // Enhanced timeout notification
-            setTimeout(() => {
+            setTimeout(async () => {
                 unsubscribe();
                 if (document.getElementById('waiting-counselor')) {
+                    // Delete the call document
+                    if (currentRoomId) {
+                        try {
+                            await deleteDoc(doc(firestore, 'calls', currentRoomId));
+                            setCurrentRoomId(null);
+                        } catch (error) {
+                            console.error('Error deleting call document:', error);
+                        }
+                    }
                     toast.dismiss('waiting-counselor');
                     toast.error(
                         <div className="space-y-2">
@@ -131,7 +140,7 @@ const WaitingRoom = () => {
                     );
                     setIsRequesting(false);
                 }
-            }, 300000);
+            }, 180000);
     
         } catch (error) {
             toast.error(
