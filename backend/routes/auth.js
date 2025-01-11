@@ -27,6 +27,15 @@ router.post('/google-signin', async (req, res) => {
       return res.status(400).send('Email not verified');
     }
 
+    const domain = decodedToken.email.split('@')[1];
+    const schoolSnapshot = await db.collection('school')
+      .where('domain', '==', domain)
+      .get();
+
+    if (schoolSnapshot.empty) {
+      return res.status(403).send('Email domain not associated with any registered school');
+    }
+
     // Proceed to check the user in Firebase
     let userRecord;
     try {
