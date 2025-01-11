@@ -1,18 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../firebaseAdmin');
+const { auth, db } = require('../firebaseAdmin');
 const { createEvent, getEvents, updateEvent, deleteEvent, getAllEvents } = require('../models/event');
 
 router.post('/add-events', async (req, res) => {
-    try {
-      console.log('Received event data:', req.body); // Log incoming data
-      const result = await createEvent(req.body);
+  try {
+      const token = req.headers.authorization?.split('Bearer ')[1];
+      if (!token) {
+          return res.status(401).json({ message: 'No token provided' });
+      }
+
+      const decodedToken = await auth.verifyIdToken(token);
+      const counselorId = decodedToken.uid;
+      
+      // Get counselor's data and validate
+      const counselorDoc = await db.collection('users').doc(counselorId).get();
+      if (!counselorDoc.exists) {
+          return res.status(404).json({ message: 'Counselor profile not found' });
+      }
+
+      const counselorData = counselorDoc.data();
+      if (!counselorData.school) {
+          return res.status(400).json({ message: 'Counselor school not set' });
+      }
+
+      const eventData = {
+          ...req.body,
+          counselorId,
+          school: counselorData.school,
+          createdAt: new Date()
+      };
+
+      // Remove any undefined values
+      Object.keys(eventData).forEach(key => {
+          if (eventData[key] === undefined) {
+              delete eventData[key];
+          }
+      });
+
+      const result = await createEvent(eventData);
       res.json(result);
-    } catch (error) {
+  } catch (error) {
       console.error('Error creating event:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
+      res.status(500).json({ message: error.message });
+  }
+});
 
   router.get('/events/all', async (req, res) => {
     const events = await getAllEvents();
