@@ -55,7 +55,24 @@ const App = () => {
                 try {
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
-                    const userDoc = await getDoc(userDocRef);
+                    
+                    // Retry logic
+                    let retries = 3;
+                    let userDoc;
+                    
+                    while (retries > 0) {
+                        userDoc = await getDoc(userDocRef);
+                        if (userDoc.exists()) {
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                        retries--;
+                    }
+
+                    if (!userDoc?.exists()) {
+                        throw new Error('User document not found after retries');
+                    }
+
                     const userRole = userDoc.data()?.role;
     
                     // Check cache first
