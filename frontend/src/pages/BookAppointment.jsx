@@ -15,6 +15,7 @@ const BookAppointment = () => {
   const [availabilityError, setAvailabilityError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [clientSchool, setClientSchool] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,16 +38,31 @@ const BookAppointment = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:5000/api/peer-counselors');
-        setPeerCounselors(response.data);
-        localStorage.setItem('peerCounselors', JSON.stringify(response.data));
+        //Fetch Client data 
+        const clientResponse = await axios.get(`http://localhost:5000/api/client/${currentUserId}`);
+        const userSchool = clientResponse.data.school;
+        setClientSchool(userSchool);
+
+        // Fetch peer counselors
+        const counselorsResponse = await axios.get('http://localhost:5000/api/peer-counselors');
+        
+        // Filter counselors by school
+        const filteredCounselors = counselorsResponse.data.filter(counselor => 
+          counselor.school === userSchool
+        );
+
+        setPeerCounselors(filteredCounselors);
+        localStorage.setItem('peerCounselors', JSON.stringify(filteredCounselors));
+
       } catch (error) {
         console.error('Error fetching peer counselors:', error);
       }
     };
 
-    fetchPeerCounselors();
-  }, []);
+    if (currentUserId) {
+      fetchPeerCounselors();
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
     authStateChanged(auth, (user) => {
