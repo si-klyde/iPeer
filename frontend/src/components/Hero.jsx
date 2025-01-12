@@ -7,6 +7,8 @@ import ProfileCard from "./Card";
 import TypingEffect from "./TypingEffect";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import ServicesCard from "./ServicesCard";
+import { auth,firestore } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const Hero = () => {
   const parallaxRef = useRef(null);
@@ -19,10 +21,35 @@ const Hero = () => {
     schedule: false,
     touch: false,
   });
+  const [schoolName, setSchoolName] = useState(""); 
+  const [loading, setLoading] = useState(true);
 
   const observerOptions = {
     threshold: 0.2, // Trigger the animation when 20% of the element is visible
   };
+
+  useEffect(() => {
+    const fetchSchoolName = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          // Get user role from Firestore
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          setSchoolName(userDoc.data()?.school);
+          
+        }             
+      } catch (error) {
+        console.error('Error fetching school:', error);
+        setSchoolName("Your University");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    
+    fetchSchoolName();
+  }, []);
 
   useEffect(() => {
     const sections = document.querySelectorAll("section");
@@ -74,7 +101,11 @@ const Hero = () => {
           <div className="text-center lg:text-left">
             <TypingEffect />
             <p className="max-w-3xl mb-6 text-lg text-n-8 lg:mb-8">
-              Welcome to iPeer: Bicol University's Mental Health Hub.
+              {loading ? (
+                "Welcome to iPeer..."
+              ) : (
+                `Welcome to iPeer: ${schoolName}'s Mental Health Hub.`
+              )}
             </p>
             <Button className="mb-5" href="#about">
               Get Started
