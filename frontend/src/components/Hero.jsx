@@ -7,7 +7,7 @@ import ProfileCard from "./Card";
 import TypingEffect from "./TypingEffect";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import ServicesCard from "./ServicesCard";
-import { auth,firestore } from "../firebase";
+import { auth, firestore } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 const Hero = () => {
@@ -30,25 +30,54 @@ const Hero = () => {
 
   useEffect(() => {
     const fetchSchoolName = async () => {
+      console.log('Fetching school name...'); // Debug start
+      
       try {
         const user = auth.currentUser;
-        if (user) {
-          // Get user role from Firestore
-          const userDocRef = doc(firestore, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          setSchoolName(userDoc.data()?.school);
+        console.log('Current user:', user); // Debug user
+
+        if (!user) {
+          console.log('No user logged in'); // Debug no user
+          setSchoolName("Your University");
+          setLoading(false);
+          return;
+        }
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        console.log('Fetching doc for uid:', user.uid); // Debug uid
+        
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
           
-        }             
+          if (!userData.school) {
+            console.warn('No school field found');
+            setSchoolName("A University Baed");
+          } else {
+            setSchoolName(userData.school);
+          }
+        } else {
+          console.warn('No user document found');
+          setSchoolName("A University Based");
+        }
       } catch (error) {
-        console.error('Error fetching school:', error);
-        setSchoolName("Your University");
+        console.error('Error in fetchSchoolName:', error); // Debug error
+        setSchoolName("A University Based");
       } finally {
         setLoading(false);
       }
     };
-    
-    
-    fetchSchoolName();
+
+    // Add auth state listener
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      console.log('Auth state changed:', user ? 'logged in' : 'logged out'); // Debug auth
+      if (user) {
+        fetchSchoolName();
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup
   }, []);
 
   useEffect(() => {
