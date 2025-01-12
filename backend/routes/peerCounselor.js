@@ -107,4 +107,39 @@ router.put('/peer-counselor/status/:userId', async (req, res) => {
   }
 });
 
+router.get('/peer-counselors/per-college/:college', async (req, res) => {
+  const token = req.headers.authorization?.split('Bearer ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    await admin.auth().verifyIdToken(token);
+    const { college } = req.params;
+    console.log('Fetching peer counselors for college:', college);
+
+    const peerCounselorsSnapshot = await db.collection('users')
+      .where('role', '==', 'peer-counselor')
+      .where('college', '==', college)
+      .get();
+
+    const peerCounselors = peerCounselorsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        email: decrypt(data.email),
+        fullName: decrypt(data.fullName)
+      };
+    });
+
+    console.log('Found counselors:', peerCounselors);
+    res.status(200).send(peerCounselors);
+  } catch (error) {
+    console.error('Error fetching peer counselors:', error);
+    res.status(500).send({ error: 'Error fetching peer counselors' });
+  }
+});
+
+
 module.exports = router;

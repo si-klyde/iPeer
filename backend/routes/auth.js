@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const {createClientDocument, createPeerCounselorDocument} = require('../models/userCreation');
 const SECURITY_CONFIG = require('../config/security.config.js');
 const { decrypt } = require('../utils/encryption.utils');
+const { hashPassword, verifyPassword } = require('../utils/password.utils');
 require('dotenv').config();
 
 router.post('/google-signin', async (req, res) => {
@@ -70,38 +71,38 @@ router.post('/google-signin', async (req, res) => {
   }
 });
 
-// Function to hash a password with salt and iterations
-const hashPassword = (password, salt) => {
-  if (!password || !salt) {
-    throw new Error('Password and salt are required for hashing');
-  }
+// // Function to hash a password with salt and iterations
+// const hashPassword = (password, salt) => {
+//   if (!password || !salt) {
+//     throw new Error('Password and salt are required for hashing');
+//   }
   
-  let hash = crypto.createHmac(SECURITY_CONFIG.HASH_ALGORITHM, Buffer.from(salt, 'hex'))
-    .update(password)
-    .digest('hex');
+//   let hash = crypto.createHmac(SECURITY_CONFIG.HASH_ALGORITHM, Buffer.from(salt, 'hex'))
+//     .update(password)
+//     .digest('hex');
     
-  for (let i = 1; i < SECURITY_CONFIG.HASH_ITERATIONS; i++) {
-    hash = crypto.createHmac(SECURITY_CONFIG.HASH_ALGORITHM, Buffer.from(salt, 'hex'))
-      .update(hash)
-      .digest('hex');
-  }
-  return hash;
-};
+//   for (let i = 1; i < SECURITY_CONFIG.HASH_ITERATIONS; i++) {
+//     hash = crypto.createHmac(SECURITY_CONFIG.HASH_ALGORITHM, Buffer.from(salt, 'hex'))
+//       .update(hash)
+//       .digest('hex');
+//   }
+//   return hash;
+// };
 
-// Function to verify a password
-const verifyPassword = (password, salt, storedHash) => {
-  if (!password || !salt || !storedHash) {
-    throw new Error('Missing required parameters for password verification');
-  }
+// // Function to verify a password
+// const verifyPassword = (password, salt, storedHash) => {
+//   if (!password || !salt || !storedHash) {
+//     throw new Error('Missing required parameters for password verification');
+//   }
   
-  try {
-    const hashedPassword = hashPassword(password, salt);
-    return hashedPassword === storedHash;
-  } catch (error) {
-    console.error('Error in password verification:', error);
-    return false;
-  }
-};
+//   try {
+//     const hashedPassword = hashPassword(password, salt);
+//     return hashedPassword === storedHash;
+//   } catch (error) {
+//     console.error('Error in password verification:', error);
+//     return false;
+//   }
+// };
 
 router.post('/register-peer-counselor', async (req, res) => {
   const { email, password, fullName, school, college } = req.body;
