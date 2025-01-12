@@ -1,16 +1,29 @@
 const { db } = require('../firebaseAdmin');
 
-const createEvent = async (eventData) => {
+  const createEvent = async (eventData) => {
     const eventRef = db.collection('events').doc();
     await eventRef.set({
       ...eventData,
-      createdAt: new Date()
+      createdAt: new Date(),
+      counselorId: eventData.counselorId
     });
     return { eventId: eventRef.id };
   };
-  
-  const getEvents = async () => {
-    const eventsSnapshot = await db.collection('events').get();
+
+  const getEvents = async (counselorId) => {
+    const eventsSnapshot = await db.collection('events')
+      .where('counselorId', '==', counselorId)
+      .get();
+    return eventsSnapshot.docs.map(doc => 
+      Object.assign({}, { id: doc.id }, doc.data())
+    );
+  };
+
+  const getAllEvents = async (userSchool) => {
+    const eventsSnapshot = await db.collection('events')
+      .where('school', '==', userSchool)
+      .orderBy('date', 'asc')
+      .get();
     return eventsSnapshot.docs.map(doc => 
       Object.assign({}, { id: doc.id }, doc.data())
     );
@@ -32,6 +45,7 @@ const createEvent = async (eventData) => {
     createEvent,
     getEvents,
     updateEvent,
-    deleteEvent
+    deleteEvent,
+    getAllEvents
   };
   

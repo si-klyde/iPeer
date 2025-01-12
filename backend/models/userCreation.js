@@ -6,21 +6,34 @@ const createClientDocument = async (uid, userRecord) => {
   const encryptedEmail = encrypt(userRecord.email);
   const encryptedName = encrypt(userRecord.displayName);
 
+  // Get domain from email
+  const domain = userRecord.email.split('@')[1];
+
+  // Find matching school
+  const schoolSnapshot = await db.collection('school')
+    .where('domain', '==', domain)
+    .get();
+
+  let schoolName = null;
+    if (!schoolSnapshot.empty) {
+      schoolName = schoolSnapshot.docs[0].data().name;
+  }
+
   await db.collection('users').doc(uid).set({
     uid: uid,
     email: encryptedEmail,
     fullName: encryptedName,
     role: 'client',
     createdAt: new Date(),
-    isActive: true
+    isActive: true,
+    school: schoolName
   });
 
   await db.collection('users').doc(uid)
     .collection('profile')
     .doc('details')
     .set({
-      photoURL: userRecord.photoURL || '',
-      college: ""
+      photoURL: userRecord.photoURL || ''
     });
 };
 
@@ -33,6 +46,8 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
     uid: uid,
     email: encryptedEmail, 
     fullName: encryptedFullName,
+    school: userData.school,
+    college: userData.college,
     role: 'peer-counselor',
     createdAt: new Date(),
     lastLogin: new Date(),
@@ -42,6 +57,7 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
       lastStatusUpdate: new Date(),
       isAvailable: false
     }
+    
   });
 
   await db.collection('users').doc(uid)
@@ -56,7 +72,6 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
         .collection('profile')
         .doc('details')
         .set({
-            college: "",
             photoURL: ""
         });
 };

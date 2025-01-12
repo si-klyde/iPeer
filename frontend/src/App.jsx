@@ -28,6 +28,9 @@ import OnCampus from './pages/OnCampus.jsx';
 import OffCampus from './pages/OffCampus.jsx';
 import EventCatalog from './pages/Events.jsx';
 import Notifications from './pages/Notifications.jsx';
+import InstantSessionNotification from './components/InstantSessionNotification.jsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 
 const App = () => {
@@ -52,7 +55,24 @@ const App = () => {
                 try {
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
-                    const userDoc = await getDoc(userDocRef);
+                    
+                    // Retry logic
+                    let retries = 3;
+                    let userDoc;
+                    
+                    while (retries > 0) {
+                        userDoc = await getDoc(userDocRef);
+                        if (userDoc.exists()) {
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                        retries--;
+                    }
+
+                    if (!userDoc?.exists()) {
+                        throw new Error('User document not found after retries');
+                    }
+
                     const userRole = userDoc.data()?.role;
     
                     // Check cache first
@@ -159,7 +179,12 @@ const App = () => {
 
     return (
         <>
-            {!hideHeaderFooterPaths.includes(location.pathname) && <Header user={user} />}
+            {user?.role === 'peer-counselor' && <InstantSessionNotification />}
+            {!hideHeaderFooterPaths.includes(location.pathname) && 
+                <Header 
+                    user={user} 
+                    setUser={setUser}
+                />}
             <div
             className={`${
                 hideHeaderFooterPaths.includes(location.pathname) ? '' : 'pt-[4.75rem] lg:pt-[5rem]'
@@ -260,6 +285,18 @@ const App = () => {
                 </Routes>
             </div>
             {!hideHeaderFooterPaths.includes(location.pathname) && <Footer />}
+            <ToastContainer
+                position="top-right"
+                autoClose={false}
+                newestOnTop
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable={false}
+                theme="light"
+                limit={3}
+                className="!p-4"
+            />
         </>
     );
 };

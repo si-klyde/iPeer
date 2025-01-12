@@ -7,6 +7,8 @@ import ProfileCard from "./Card";
 import TypingEffect from "./TypingEffect";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import ServicesCard from "./ServicesCard";
+import { auth, firestore } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const Hero = () => {
   const parallaxRef = useRef(null);
@@ -19,10 +21,64 @@ const Hero = () => {
     schedule: false,
     touch: false,
   });
+  const [schoolName, setSchoolName] = useState(""); 
+  const [loading, setLoading] = useState(true);
 
   const observerOptions = {
     threshold: 0.2, // Trigger the animation when 20% of the element is visible
   };
+
+  useEffect(() => {
+    const fetchSchoolName = async () => {
+      console.log('Fetching school name...'); // Debug start
+      
+      try {
+        const user = auth.currentUser;
+        console.log('Current user:', user); // Debug user
+
+        if (!user) {
+          console.log('No user logged in'); // Debug no user
+          setSchoolName("Your University");
+          setLoading(false);
+          return;
+        }
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        console.log('Fetching doc for uid:', user.uid); // Debug uid
+        
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          if (!userData.school) {
+            console.warn('No school field found');
+            setSchoolName("A University Baed");
+          } else {
+            setSchoolName(userData.school);
+          }
+        } else {
+          console.warn('No user document found');
+          setSchoolName("A University Based");
+        }
+      } catch (error) {
+        console.error('Error in fetchSchoolName:', error); // Debug error
+        setSchoolName("A University Based");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Add auth state listener
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      console.log('Auth state changed:', user ? 'logged in' : 'logged out'); // Debug auth
+      if (user) {
+        fetchSchoolName();
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup
+  }, []);
 
   useEffect(() => {
     const sections = document.querySelectorAll("section");
@@ -74,7 +130,11 @@ const Hero = () => {
           <div className="text-center lg:text-left">
             <TypingEffect />
             <p className="max-w-3xl mb-6 text-lg text-n-8 lg:mb-8">
-              Welcome to iPeer: Bicol University's Mental Health Hub.
+              {loading ? (
+                "Welcome to iPeer..."
+              ) : (
+                `Welcome to iPeer: ${schoolName}'s Mental Health Hub.`
+              )}
             </p>
             <Button className="mb-5" href="#about">
               Get Started
@@ -248,27 +308,25 @@ const Hero = () => {
             </p>
 
             <div className="border-t border-gray-300 mt-4 pt-4">
-              <h2 className="font-semibold text-lg text-gray-800 mb-5">iPeer Counseling and Appointment Schedule</h2>
-              <div className="text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Mon - Tue:</span>
-                  <span>8:00 - 17:30</span>
+              <h2 className="font-semibold text-lg text-gray-800 mb-5">iPeer Services Hours</h2>
+              <div className="text-sm text-gray-600 space-y-4">
+                <div>
+                  <p className="font-medium mb-2">iPeer Counseling:</p>
+                  <div className="flex justify-between">
+                    <span>Monday - Friday:</span>
+                    <span>8:00 AM - 5:00 PM</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Weekends:</span>
+                    <span className="text-red-500">Closed</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Wed - Thu:</span>
-                  <span>8:00 - 17:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Fri:</span>
-                  <span>8:00 - 17:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sat:</span>
-                  <span className="text-red-500">Closed</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sun:</span>
-                  <span className="text-red-500">Closed</span>
+                <div>
+                  <p className="font-medium mb-2">Appointment Scheduling:</p>
+                  <div className="flex justify-between">
+                    <span>Available:</span>
+                    <span className="text-green-600">24/7</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../firebaseAdmin');
+const { db, admin } = require('../firebaseAdmin');
 const { decrypt } = require('../utils/encryption.utils');
 
 // Route to get all peer counselors
@@ -23,6 +23,39 @@ router.get('/peer-counselors', async (req, res) => {
   } catch (error) {
     console.error('Error fetching peer counselors:', error);
     res.status(500).send({ error: 'Error fetching peer counselors' });
+  }
+});
+
+router.get('/peer-counselors/available', async (req, res) => {
+  const token = req.headers.authorization?.split('Bearer ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    await admin.auth().verifyIdToken(token);
+      
+    const counselorsSnapshot = await db.collection('users')
+      .where('role', '==', 'peer-counselor')
+      .where('currentStatus.status', '==', 'online')  // Update this line
+      .where('currentStatus.isAvailable', '==', true) // Update this line
+      .get();
+
+    const counselors = await Promise.all(counselorsSnapshot.docs.map(async doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        fullName: await decrypt(data.fullName),
+        status: data.currentStatus?.status,
+        isAvailable: data.currentStatus?.isAvailable
+      };
+    }));
+
+    console.log('Sending available counselors:', counselors);
+    res.json(counselors);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(403).json({ message: 'Authentication failed or error fetching counselors' });
   }
 });
 
@@ -60,9 +93,11 @@ router.put('/peer-counselor/status/:userId', async (req, res) => {
   try {
     const userRef = db.collection('users').doc(userId);
     await userRef.update({
-      status,
-      isAvailable,
-      lastStatusUpdate: new Date()
+      currentStatus: {
+        status,
+        isAvailable,
+        lastStatusUpdate: new Date()
+      }
     });
     
     res.status(200).json({ message: 'Status updated successfully' });
@@ -71,6 +106,5 @@ router.put('/peer-counselor/status/:userId', async (req, res) => {
     res.status(500).json({ error: 'Failed to update status' });
   }
 });
-
 
 module.exports = router;

@@ -5,6 +5,7 @@ const { db } = require('../firebaseAdmin');
 const { sendAppointmentConfirmation, sendAppointmentRejection } = require('../services/emailService');
 const { createNotification } = require('../models/notifications');
 const { decrypt } = require('../utils/encryption.utils');
+const { isTimeSlotAvailable, getAvailableTimeSlots } = require('../utils/timeslot');
 
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
@@ -87,13 +88,26 @@ router.post('/create-appointment', async (req, res) => {
   }
 });
 
+router.get('/available-slots/:peerCounselorId', async (req, res) => {
+  const { peerCounselorId } = req.params;
+  const { date } = req.query;
+  
+  try {
+    const availableSlots = await getAvailableTimeSlots(peerCounselorId, date);
+    res.status(200).json({ availableSlots });
+  } catch (error) {
+    console.error('Error getting available slots:', error);
+    res.status(500).json({ error: 'Error fetching available time slots' });
+  }
+});
+
 // Route to check availability
 router.get('/check-availability/:peerCounselorId', async (req, res) => {
   const { peerCounselorId } = req.params;
   const { date, time } = req.query;
 
   try {
-    const isAvailable = await checkPeerCounselorAvailability(peerCounselorId, date, time);
+    const isAvailable = await isTimeSlotAvailable(peerCounselorId, date, time);
     res.status(200).json({ available: isAvailable });
   } catch (error) {
     console.error('Error checking availability:', error);
