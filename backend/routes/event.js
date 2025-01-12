@@ -46,10 +46,35 @@ router.post('/add-events', async (req, res) => {
   }
 });
 
-  router.get('/events/all', async (req, res) => {
-    const events = await getAllEvents();
-    res.json(events);
-  });
+
+router.get('/events/all', async (req, res) => {
+    try {    
+        // Get token from request
+        const token = req.headers.authorization?.split('Bearer ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+    
+        // Verify user
+        const decodedToken = await auth.verifyIdToken(token);
+        const userId = decodedToken.uid;
+    
+        // Get user's school
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+        return res.status(404).json({ message: 'User not found' });
+        }
+    
+        const userData = userDoc.data();
+        const userSchool = userData.school;
+
+        // Get school-specific events
+        const events = await getAllEvents(userSchool);
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+    });
 
   router.get('/events', async (req, res) => {
     try {

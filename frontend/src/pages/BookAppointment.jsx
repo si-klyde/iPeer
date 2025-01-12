@@ -3,7 +3,23 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { auth, authStateChanged } from '../firebase';
 import logo from '../assets/ipeer-icon.png'; // Assuming you want to use the same logo
-import { appointmentImage } from '../assets';
+import { appointmentImage } from '../assets';4
+import { Tooltip } from 'react-tooltip'; // Add this package
+import { motion } from 'framer-motion';
+
+const getCurrentDateTime = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+
+  return {
+    currentDate: `${year}-${month}-${day}`,
+    currentTime: `${hours}:${minutes}`
+  };
+};
 
 const BookAppointment = () => {
   const [date, setDate] = useState('');
@@ -15,6 +31,10 @@ const BookAppointment = () => {
   const [availabilityError, setAvailabilityError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [clientSchool, setClientSchool] = useState('');
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [step, setStep] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +50,39 @@ const BookAppointment = () => {
   }, []);
 
   useEffect(() => {
+    const fetchAvailableSlots = async () => {
+      if (date && selectedPeerCounselor) {
+        console.log('Fetching slots - Parameters:', { 
+          counselorId: selectedPeerCounselor, 
+          date: date 
+        });
+        
+        try {
+          const response = await axios.get(
+            `http://localhost:5000/api/available-slots/${selectedPeerCounselor}`,
+            { params: { date } }
+          );
+          
+          console.log('API Response:', response.data);
+          
+          if (response.data.availableSlots) {
+            console.log('Setting available slots:', response.data.availableSlots);
+            setAvailableTimeSlots(response.data.availableSlots);
+          } else {
+            console.error('No available slots in response');
+            setAvailableTimeSlots([]);
+          }
+        } catch (error) {
+          console.error('Error fetching slots:', error.response || error);
+          setAvailableTimeSlots([]);
+        }
+      }
+    };
+  
+    fetchAvailableSlots();
+  }, [date, selectedPeerCounselor]);
+
+  useEffect(() => {
     const fetchPeerCounselors = async () => {
       const cachedCounselors = localStorage.getItem('peerCounselors');
       if (cachedCounselors) {
@@ -37,16 +90,31 @@ const BookAppointment = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:5000/api/peer-counselors');
-        setPeerCounselors(response.data);
-        localStorage.setItem('peerCounselors', JSON.stringify(response.data));
+        //Fetch Client data 
+        const clientResponse = await axios.get(`http://localhost:5000/api/client/${currentUserId}`);
+        const userSchool = clientResponse.data.school;
+        setClientSchool(userSchool);
+
+        // Fetch peer counselors
+        const counselorsResponse = await axios.get('http://localhost:5000/api/peer-counselors');
+        
+        // Filter counselors by school
+        const filteredCounselors = counselorsResponse.data.filter(counselor => 
+          counselor.school === userSchool
+        );
+
+        setPeerCounselors(filteredCounselors);
+        localStorage.setItem('peerCounselors', JSON.stringify(filteredCounselors));
+
       } catch (error) {
         console.error('Error fetching peer counselors:', error);
       }
     };
 
-    fetchPeerCounselors();
-  }, []);
+    if (currentUserId) {
+      fetchPeerCounselors();
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
     authStateChanged(auth, (user) => {
@@ -77,6 +145,22 @@ const BookAppointment = () => {
     setIsLoading(true);
     setBookingSuccess(false);
 
+    const { currentDate, currentTime } = getCurrentDateTime();
+
+    // Check if selected date is in the past
+    if (date < currentDate) {
+      setAvailabilityError('Cannot book appointments in the past. Please select a future date.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if selected time is in the past for today's appointments
+    if (date === currentDate && time < currentTime) {
+      setAvailabilityError('Cannot book appointments in the past. Please select a future time.');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const isAvailable = await checkAvailability(selectedPeerCounselor, date, time);
 
@@ -113,120 +197,283 @@ const BookAppointment = () => {
     }
   };
 
+  const steps = [
+    { number: 1, title: 'Select Counselor' },
+    { number: 2, title: 'Choose Date & Time' },
+    { number: 3, title: 'Add Details' }
+  ];
+
   return (
-        <div className="h-auto bg-gray-100 flex justify-center items-center p-4 sm:p-6">
-      <div className="max-w-screen-xl h-auto sm:h-[80vh] bg-white shadow-lg sm:rounded-lg flex flex-col sm:flex-row justify-center flex-1 animate-fade-up relative">
-        
-        {/* Back Arrow Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 bg-transparent text-black text-xl font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition duration-200"
-        >
-          &#8592; {/* Left Arrow character */}
-        </button>
+    
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-gray-100 flex justify-center items-center p-4 sm:p-6"
+    >
+      <div className="max-w-screen-xl w-full bg-white shadow-lg rounded-lg flex flex-col sm:flex-row justify-center">
+        {/* Progress Steps */}
+        <div className="w-full px-4 py-6">
+          <div className="flex justify-between items-center mb-8">
+            {steps.map((s, i) => (
+              <div key={s.number} className="flex items-center">
+                <div className={`
+                  w-8 h-8 rounded-full 
+                  flex items-center justify-center
+                  text-base font-medium
+                  transition-colors duration-200
+                  ${step >= s.number 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-300 text-gray-500'
+                  }
+                `}>
+                  {s.number}
+                </div>
+                <div className={`
+                  hidden sm:block ml-2 
+                  text-sm font-medium
+                  transition-colors duration-200
+                  ${step >= s.number 
+                    ? 'text-green-600' 
+                    : 'text-gray-500'
+                  }
+                `}>
+                  {s.title}
+                </div>
+                {i < steps.length - 1 && (
+                  <div className={`
+                    flex-1 h-1 w-20 mx-2
+                    transition-colors duration-200
+                    ${step > s.number 
+                      ? 'bg-green-500' 
+                      : 'bg-gray-200'
+                    }
+                  `} />
+                )}
+              </div>
+            ))}
+          </div>
 
-        {/* Left Section */}
-        <div className="w-full sm:w-1/2 lg:w-1/2 xl:w-5/12 p-6 sm:p-12 text-center">
-          <a
-            href="/home"
-            className="text-2xl font-semibold flex items-center justify-center"
-          >
-            <img src={logo} alt="iPeer Logo" className="w-15 inline-block" />
-            <span className="text-[#0e0e0e] font-code">iPeer</span>
-          </a>
-          <h2 className="text-4xl font-extrabold text-gray-800 my-8">
-            Book an Appointment
-          </h2>
+          <form onSubmit={handleBookAppointment} className="max-w-2xl mx-auto p-6 space-y-8">
+            {/* Step 1: Counselor Selection */}
+            {step === 1 && (
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                className="space-y-4"
+              >
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                  Choose Your Counselor
+                </h2>
+                <select
+                  value={selectedPeerCounselor}
+                  onChange={(e) => {
+                    setSelectedPeerCounselor(e.target.value);
+                    if (e.target.value) setStep(2);
+                  }}
+                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:text-gray-900 transition-all duration-200 bg-white shadow-sm hover:border-green-400"
+                >
+                  <option value="">Select a counselor...</option>
+                  {peerCounselors.map((counselor) => (
+                    <option key={counselor.id} value={counselor.id}>
+                      {counselor.fullName}
+                    </option>
+                  ))}
+                </select>
+              </motion.div>
+            )}
 
-          {availabilityError && (
-            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-              {availabilityError}
-            </div>
-          )}
+            {/* Step 2: Date & Time Selection */}
+            {step === 2 && (
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                  Schedule Your Session
+                </h2>
+                
+                <div className="space-y-4">
+                  <label className="text-lg font-medium text-gray-700">
+                    Select Date
+                  </label>
+                  <input
+                    type="date"
+                    value={date}
+                    min={getCurrentDateTime().currentDate}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full px-4 py-4 text-lg text-gray-800 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:text-gray-900 placeholder-gray-400 transition-all duration-200 bg-white shadow-sm hover:border-green-400"
+                  />
+                </div>
 
-          {bookingSuccess && (
-            <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-              Appointment booked successfully! Redirecting...
-            </div>
-          )}
+                <div className="space-y-4">
+                  <label className="text-lg font-medium text-gray-700">
+                    Select Time
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {availableTimeSlots.map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => {
+                          setTime(slot);
+                          setStep(3);
+                        }}
+                        className={`py-4 px-6 rounded-xl text-lg font-medium transition-all duration-200 ${
+                          time === slot
+                            ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                            : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-          <form onSubmit={handleBookAppointment}>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              />
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="custom-input-time mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
-            <textarea
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
-            <select
-              value={selectedPeerCounselor}
-              onChange={(e) => setSelectedPeerCounselor(e.target.value)}
-              className="mb-6 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            >
-              <option value="">Select a Peer Counselor</option>
-              {peerCounselors.map((counselor) => (
-                <option key={counselor.id} value={counselor.id}>
-                  {counselor.fullName}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className={`w-full p-2 ${
-                isLoading ? 'bg-blue-300' : 'rounded-lg bg-green-500 hover:bg-green-600'
-              } text-white rounded flex items-center justify-center`}
-              disabled={!date || !time || !selectedPeerCounselor || isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span className="animate-spin mr-2">⌛</span>
-                  Booking...
-                </>
-              ) : (
-                'Book Appointment'
-              )}
-            </button>
+            {/* Step 3: Description */}
+            {step === 3 && (
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                  Add Session Details
+                </h2>
+                
+                <div className="space-y-4">
+                  <label className="text-lg font-medium text-gray-700">
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="What would you like to discuss in this session?"
+                    className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 min-h-[150px] resize-none shadow-sm hover:border-green-400"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-4 px-6 text-lg font-semibold rounded-xl bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:shadow-none"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center space-x-2">
+                      <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Booking...</span>
+                    </span>
+                  ) : (
+                    'Confirm Appointment'
+                  )}
+                </button>
+              </motion.div>
+            )}
           </form>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-6">
+            {step > 1 && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setStep(step - 1)}
+                className="px-6 py-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors flex items-center space-x-2"
+              >
+                <svg 
+                  className="w-4 h-4" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M15 19l-7-7 7-7" 
+                  />
+                </svg>
+                <span>Back</span>
+              </motion.button>
+            )}
+          </div>
         </div>
 
-        {/* Right Section (Illustration) */}
-        <div className="hidden sm:flex flex-1 bg-green-50 items-center justify-center">
-          <div className="w-full lg:w-5/6 flex justify-end mr-10">
+        {/* Right Section */}
+        <div className="hidden lg:block lg:w-1/2 xl:w-2/5">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="h-full bg-green-50 rounded-r-lg p-8 flex items-center justify-center"
+          >
             <img
               src={appointmentImage}
               alt="Appointment Illustration"
-              className="size-[500px] rounded-lg"
+              className="max-w-md w-full h-auto"
             />
-          </div>
+          </motion.div>
         </div>
       </div>
-      <style>{`
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-up {
-          animation: fadeUp 0.7s ease-out;
-        }
-      `}</style>
-    </div>
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full"
+          />
+        </div>
+      )}
+
+      {/* Success Message */}
+      {bookingSuccess && (
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 100 }}
+          className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-white shadow-2xl rounded-xl p-6 flex items-center space-x-4 min-w-[320px] z-50"
+        >
+          <div className="bg-green-100 rounded-full p-3">
+            <svg 
+              className="w-8 h-8 text-green-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M5 13l4 4L19 7" 
+              />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg text-gray-800 mb-1">
+              Booking Confirmed!
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Your appointment has been successfully scheduled
+            </p>
+          </div>
+          <button 
+            onClick={() => setBookingSuccess(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 

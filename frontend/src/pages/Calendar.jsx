@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
 import { additional1, recentPic, upcomingPic, ongoingPic } from '../assets';
 
 const Calendar = () => {
@@ -18,7 +19,22 @@ const Calendar = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/events/all');
+        const user = auth.currentUser;
+        console.log('Current User:', user);
+        if (!user) {
+          console.error('User not authenticated');
+          throw new Error('User not authenticated');
+        }
+
+        const token = await user.getIdToken(true);
+        console.log('ID Token:', token);
+        
+        const response = await axios.get('http://localhost:5000/api/events/all', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
         const eventsData = {};
         
         response.data.forEach(event => {
