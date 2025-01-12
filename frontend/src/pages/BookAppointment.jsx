@@ -5,6 +5,20 @@ import { auth, authStateChanged } from '../firebase';
 import logo from '../assets/ipeer-icon.png'; // Assuming you want to use the same logo
 import { appointmentImage } from '../assets';
 
+const getCurrentDateTime = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+
+  return {
+    currentDate: `${year}-${month}-${day}`,
+    currentTime: `${hours}:${minutes}`
+  };
+};
+
 const BookAppointment = () => {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -16,6 +30,7 @@ const BookAppointment = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [clientSchool, setClientSchool] = useState('');
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +44,39 @@ const BookAppointment = () => {
       document.querySelector('footer')?.classList.remove('hidden');
     };
   }, []);
+
+  useEffect(() => {
+    const fetchAvailableSlots = async () => {
+      if (date && selectedPeerCounselor) {
+        console.log('Fetching slots - Parameters:', { 
+          counselorId: selectedPeerCounselor, 
+          date: date 
+        });
+        
+        try {
+          const response = await axios.get(
+            `http://localhost:5000/api/available-slots/${selectedPeerCounselor}`,
+            { params: { date } }
+          );
+          
+          console.log('API Response:', response.data);
+          
+          if (response.data.availableSlots) {
+            console.log('Setting available slots:', response.data.availableSlots);
+            setAvailableTimeSlots(response.data.availableSlots);
+          } else {
+            console.error('No available slots in response');
+            setAvailableTimeSlots([]);
+          }
+        } catch (error) {
+          console.error('Error fetching slots:', error.response || error);
+          setAvailableTimeSlots([]);
+        }
+      }
+    };
+  
+    fetchAvailableSlots();
+  }, [date, selectedPeerCounselor]);
 
   useEffect(() => {
     const fetchPeerCounselors = async () => {
@@ -93,6 +141,22 @@ const BookAppointment = () => {
     setIsLoading(true);
     setBookingSuccess(false);
 
+    const { currentDate, currentTime } = getCurrentDateTime();
+
+    // Check if selected date is in the past
+    if (date < currentDate) {
+      setAvailabilityError('Cannot book appointments in the past. Please select a future date.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if selected time is in the past for today's appointments
+    if (date === currentDate && time < currentTime) {
+      setAvailabilityError('Cannot book appointments in the past. Please select a future time.');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const isAvailable = await checkAvailability(selectedPeerCounselor, date, time);
 
@@ -129,6 +193,7 @@ const BookAppointment = () => {
     }
   };
 
+  
   return (
         <div className="h-auto bg-gray-100 flex justify-center items-center p-4 sm:p-6">
       <div className="max-w-screen-xl h-auto sm:h-[80vh] bg-white shadow-lg sm:rounded-lg flex flex-col sm:flex-row justify-center flex-1 animate-fade-up relative">
@@ -173,12 +238,18 @@ const BookAppointment = () => {
               onChange={(e) => setDate(e.target.value)}
               className="custom-input-date mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
-            <input
-              type="time"
+            <select
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="custom-input-time mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
+              className="mb-4 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            >
+              <option value="">Select Time</option>
+              {availableTimeSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
             <textarea
               placeholder="Description"
               value={description}
@@ -187,7 +258,10 @@ const BookAppointment = () => {
             />
             <select
               value={selectedPeerCounselor}
-              onChange={(e) => setSelectedPeerCounselor(e.target.value)}
+              onChange={(e) => {
+                console.log('Counselor selected:', e.target.value);
+                setSelectedPeerCounselor(e.target.value);
+              }}
               className="mb-6 w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               <option value="">Select a Peer Counselor</option>
