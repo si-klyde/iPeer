@@ -33,8 +33,7 @@ const createClientDocument = async (uid, userRecord) => {
     .collection('profile')
     .doc('details')
     .set({
-      photoURL: userRecord.photoURL || '',
-      college: ""
+      photoURL: userRecord.photoURL || ''
     });
 };
 
@@ -48,6 +47,7 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
     email: encryptedEmail, 
     fullName: encryptedFullName,
     school: userData.school,
+    college: userData.college,
     role: 'peer-counselor',
     createdAt: new Date(),
     lastLogin: new Date(),
@@ -72,7 +72,6 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
         .collection('profile')
         .doc('details')
         .set({
-            college: "",
             photoURL: ""
         });
 };

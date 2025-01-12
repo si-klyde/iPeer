@@ -10,6 +10,8 @@ const RegisterPeerCounselor = () => {
   const [middleInitial, setMiddleInitial] = useState('');
   const [schools, setSchools] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState('');
+  const [colleges, setColleges] = useState([]);
+  const [selectedCollege, setSelectedCollege] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -31,10 +33,21 @@ const RegisterPeerCounselor = () => {
     fetchSchools();
   }, []);
 
+  const handleSchoolChange = (e) => {
+    const schoolName = e.target.value;
+    setSelectedSchool(schoolName);
+    setSelectedCollege(''); // Reset college selection
+  
+    // Find selected school and update colleges
+    const selectedSchoolData = schools.find(school => school.name === schoolName);
+    setColleges(selectedSchoolData?.colleges || []);
+  };
+  
+
   const handleRegister = async (e) => {
     e.preventDefault();
   
-    if (!firstName || !lastName || !email || !password ||!selectedSchool) {
+    if (!firstName || !lastName || !email || !password ||!selectedSchool || !selectedCollege) {
       setErrorMessage('Required fields must be filled.');
       return;
     }
@@ -52,7 +65,8 @@ const RegisterPeerCounselor = () => {
           email, 
           password, 
           fullName,
-          school: selectedSchool
+          school: selectedSchool,
+          college: selectedCollege
         }
       );
       console.log('Registration successful:', response.data);
@@ -181,7 +195,7 @@ const RegisterPeerCounselor = () => {
           <select
             id="school"
             value={selectedSchool}
-            onChange={(e) => setSelectedSchool(e.target.value)}
+            onChange={handleSchoolChange}
             className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             disabled={loading}
             required
@@ -194,6 +208,31 @@ const RegisterPeerCounselor = () => {
             ))}
           </select>
         </div>
+
+        <div className="mb-6">
+          <label
+            htmlFor="college"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            College*
+          </label>
+          <select
+            id="college"
+            value={selectedCollege}
+            onChange={(e) => setSelectedCollege(e.target.value)}
+            className="w-full px-4 py-2 border bg-green-100 text-black border-gray-500 shadow-inner rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            disabled={!selectedSchool || loading}
+            required
+          >
+            <option value="">Select your college</option>
+            {colleges.map((college) => (
+              <option key={college} value={college}>
+                {college}
+              </option>
+            ))}
+          </select>
+        </div>
+
 
         {/* Register Button */}
         <button
