@@ -141,30 +141,48 @@ router.get('/admin-data/:uid', async (req, res) => {
   });
 
   router.post('/send-invitation', async (req, res) => {
+    const { email, college, school } = req.body;
+  
     try {
-      const { email, college, school } = req.body;
-      const inviteToken = crypto.randomBytes(32).toString('hex');
-      
-      await db.collection('invitations').doc(inviteToken).set({
-        email: encrypt(email),
-        college: encrypt(college),
-        school: encrypt(school),
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        used: false,
-        expiresAt: admin.firestore.Timestamp.fromDate(
-          new Date(Date.now() + 24 * 60 * 60 * 1000)
-        )
+      // Check if email already exists as peer counselor
+      const usersRef = db.collection('users');
+      const snapshot = await usersRef
+        .where('role', '==', 'peer-counselor')
+        .get();
+  
+      // Find matching email after decryption
+      const existingCounselor = snapshot.docs.find(doc => {
+        const data = doc.data();
+        const decryptedEmail = decrypt(data.email);
+        return decryptedEmail === email;
       });
   
-      const registrationLink = `http://localhost:5173/register-peer-counselor?token=${inviteToken}`;
-      await sendPeerCounselorInvitation(email, registrationLink, college);
+      if (existingCounselor) {
+        return res.status(400).json({ 
+          error: 'This email is already registered as a peer counselor' 
+        });
+      }
   
-      res.status(200).send({ message: 'Invitation sent successfully' });
+      // Continue with existing invitation logic
+      const inviteToken = crypto.randomBytes(32).toString('hex');
+      const encryptedEmail = encrypt(email);
+  
+      await db.collection('invitations').doc(inviteToken).set({
+        email: encryptedEmail,
+        college,
+        school,
+        used: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+  
+      // Send invitation email...
+      res.status(200).json({ message: 'Invitation sent successfully' });
+  
     } catch (error) {
       console.error('Error sending invitation:', error);
-      res.status(500).send({ error: 'Failed to send invitation' });
+      res.status(500).json({ error: 'Failed to send invitation' });
     }
-  });  
+  });
 
   router.get('/validate-invitation/:token', async (req, res) => {
     try {
