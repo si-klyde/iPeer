@@ -5,6 +5,7 @@ const { encrypt, decrypt } = require('../utils/encryption.utils');
 const { hashPassword, verifyPassword } = require('../utils/password.utils');
 const crypto = require('crypto');
 const SECURITY_CONFIG = require('../config/security.config.js');
+const { sendPeerCounselorInvitation } = require('../services/emailService');
 
 router.post('/login-admin', async (req, res) => {
     try {
@@ -76,6 +77,12 @@ router.post('/setup-account', async (req, res) => {
     try {
         const { uid, fullName, email, newPassword, profilePicture } = req.body;
 
+        await auth.updateUser(uid, {
+          email: email,
+          password: newPassword,
+          displayName: fullName
+        });
+
         // Update admin document with new information
         const adminRef = db.collection('admins').doc(uid);
         const updateData = {
@@ -124,6 +131,7 @@ router.get('/admin-data/:uid', async (req, res) => {
         uid: adminDoc.id,
         username: decrypt(adminData.username),
         college: decrypt(adminData.college),
+        school: decrypt(adminData.school),
         role: adminData.role
       });
     } catch (error) {
@@ -131,6 +139,61 @@ router.get('/admin-data/:uid', async (req, res) => {
       res.status(500).send({ error: 'Failed to fetch admin data' });
     }
   });
+
+  router.post('/send-invitation', async (req, res) => {
+    try {
+      const { email, college, school } = req.body;
+      const inviteToken = crypto.randomBytes(32).toString('hex');
+      
+      await db.collection('invitations').doc(inviteToken).set({
+        email: encrypt(email),
+        college: encrypt(college),
+        school: encrypt(school),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        used: false,
+        expiresAt: admin.firestore.Timestamp.fromDate(
+          new Date(Date.now() + 24 * 60 * 60 * 1000)
+        )
+      });
   
+      const registrationLink = `http://localhost:5173/register-peer-counselor?token=${inviteToken}`;
+      await sendPeerCounselorInvitation(email, registrationLink, college);
   
+      res.status(200).send({ message: 'Invitation sent successfully' });
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      res.status(500).send({ error: 'Failed to send invitation' });
+    }
+  });  
+
+  router.get('/validate-invitation/:token', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const inviteDoc = await db.collection('invitations').doc(token).get();
+
+      if (!inviteDoc.exists) {
+        return res.status(404).send({ error: 'Invalid invitation token' });
+      }
+
+      const invitation = inviteDoc.data();
+      
+      if (invitation.used) {
+        return res.status(400).send({ error: 'Invitation already used' });
+      }
+
+      if (invitation.expiresAt.toDate() < new Date()) {
+        return res.status(400).send({ error: 'Invitation has expired' });
+      }
+
+      res.status(200).send({
+        email: decrypt(invitation.email),
+        college: decrypt(invitation.college),
+        school: decrypt(invitation.school)
+
+      });
+    } catch (error) {
+      console.error('Error validating invitation:', error);
+      res.status(500).send({ error: 'Failed to validate invitation' });
+    }
+  });
 module.exports = router;

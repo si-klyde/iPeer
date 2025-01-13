@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { auth, authStateChanged } from '../firebase';
+import InvitePeerCounselor from '../components/InvitePeerCounselor';
 
 const AdminDashboard = () => {
   const [peerCounselors, setPeerCounselors] = useState([]);
@@ -104,6 +105,8 @@ const AdminDashboard = () => {
               ))}
             </div>
           </div>
+
+          <InvitePeerCounselor adminData={adminData} />
         </div>
       </div>
     </div>
