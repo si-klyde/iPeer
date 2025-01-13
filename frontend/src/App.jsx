@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Route, Routes } from 'react-router-dom';
+import AdminLogin from './pages/AdminLogin.jsx';
+import AdminSetupAccount from './pages/AdminSetupAccount.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import PeerCounselorProfile from './pages/PeerCounselorProfile.jsx';
 import Header from './components/Header.jsx';
-import ProtectedRoute from './context/ProtectedRoute.jsx';
+import ProtectedRoute, { ProtectedRegistrationRoute } from './context/ProtectedRoute.jsx';
 import Counseling from './pages/Counseling';
 import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx';
@@ -46,6 +50,19 @@ const App = () => {
     
         const setupUserListener = async (currentUser) => {
             if (!currentUser && !isInitialLoad && user) {
+                if (user.role === 'peer-counselor') {
+                    try {
+                        await axios.put(
+                            `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
+                            {
+                                status: 'offline',
+                                isAvailable: false
+                            }
+                        );
+                    } catch (error) {
+                        console.error('Error updating offline status:', error);
+                    }
+                }
                 clearLocalStorage();
                 setUser(null);
                 return;
@@ -53,6 +70,21 @@ const App = () => {
             
             if (currentUser) {
                 try {
+
+                    const adminDocRef = doc(firestore, 'admins', currentUser.uid);
+                    const adminDoc = await getDoc(adminDocRef);
+                    
+                    if (adminDoc.exists()) {
+                        // Handle admin user data
+                        const adminData = adminDoc.data();
+                        setUser({
+                        ...adminData,
+                        role: 'admin',
+                        uid: currentUser.uid
+                        });
+                        return;
+                    }
+                    
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
                     
@@ -198,12 +230,17 @@ const App = () => {
                     <Route path="/information" element={<Information />} />
                     <Route path="/onCampus" element={<OnCampus/>} />
                     <Route path="/offCampus" element={<OffCampus/>} />
-                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    <Route path="/register-peer-counselor" element={<ProtectedRegistrationRoute />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    {/* <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} /> */}
                     {/* <Route path="/viewevent" element={<ViewEvent />} />                            */}
                     <Route path="/event" element={<EventCatalog />} />
+
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/setup-account" element={<AdminSetupAccount />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/peer-counselor/:id" element={<PeerCounselorProfile />} />
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={

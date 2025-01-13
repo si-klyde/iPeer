@@ -3,7 +3,9 @@ import { auth, firestore, storage } from '../firebase';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
+import { toast } from 'react-toastify';
 import axios from 'axios';
+import { User } from 'lucide-react';
 
 const UserProfile = () => {
   const [userProfile, setUserProfile] = useState(null);
@@ -15,6 +17,9 @@ const UserProfile = () => {
     data: null,
     timestamp: null
   });
+  const [credentials, setCredentials] = useState([]);
+  const [uploadingCredential, setUploadingCredential] = useState(false);
+
 
   // Cache duration: 15 minutes
   const CACHE_DURATION = 15 * 60 * 1000;
@@ -76,17 +81,38 @@ const UserProfile = () => {
           const now = Date.now();
           if (now - profileCache.timestamp < CACHE_DURATION) {
             setUserProfile(profileCache.data);
+            if (profileCache.data.credentials) {
+              setCredentials(profileCache.data.credentials);
+            }
             return;
           }
         }
 
         // Fetch fresh data if cache invalid
         const idToken = await user.getIdToken();
-        const endpoint = `http://localhost:5000/api/${user.role === 'peer-counselor' ? 'peer-counselors' : 'client'}/${user.uid}`;
+
+        const roleResponse = await axios.post('http://localhost:5000/api/check-role', null, {
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+
+        const userRole = roleResponse.data.role;
+
+        console.log("USER ROLE: " + userRole);
+
+        const endpoint = userRole === 'peer-counselor' 
+          ? `http://localhost:5000/api/peer-counselors/${user.uid}`
+          : `http://localhost:5000/api/client/${user.uid}`;
+
         const response = await axios.get(endpoint, {
           headers: { Authorization: `Bearer ${idToken}` }
         });
         const decryptedData = response.data;
+
+        console.log('Received decrypted data from backend:', response.data);
+
+        if (decryptedData.credentials && userRole === 'peer-counselor') {
+          setCredentials(response.data.credentials);
+        }
 
         // Set up real-time listener for profile updates (photo)
         const profileDocRef = doc(firestore, 'users', user.uid, 'profile', 'details');
@@ -188,6 +214,50 @@ const UserProfile = () => {
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) throw new Error('File size must be less than 5MB');
     if (!file.type.startsWith('image/')) throw new Error('File must be an image');
+  };
+
+  const handleCredentialUpload = async (event) => {
+    try {
+      const files = Array.from(event.target.files);
+      setUploadingCredential(true);
+      
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user logged in');
+  
+      const uploadedCredentials = [];
+      for (const file of files) {
+        const fileExtension = file.name.split('.').pop();
+        const fileName = `credentials/${user.uid}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        const storageRef = ref(storage, fileName);
+        
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        
+        uploadedCredentials.push({
+          imageUrl: downloadURL,
+          uploadedAt: new Date().toISOString(),
+          fileName: file.name
+        });
+      }
+  
+      // Update credentials in Firestore
+      const token = await user.getIdToken();
+      await axios.post(
+        `http://localhost:5000/api/update-credentials/${user.uid}`,
+        { credentials: uploadedCredentials },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      setCredentials(prev => [...prev, ...uploadedCredentials]);
+      toast.success('Credentials uploaded successfully');
+    } catch (err) {
+      console.error('Error uploading credentials:', err);
+      toast.error('Failed to upload credentials');
+    } finally {
+      setUploadingCredential(false);
+    }
   };
 
   if (!userProfile) {
@@ -358,6 +428,50 @@ const UserProfile = () => {
             </div>
           </div>
         </div>
+
+        {userProfile?.role === 'peer-counselor' && (
+          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Professional Credentials</h2>
+            
+            <div className="mb-4">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleCredentialUpload}
+                className="hidden"
+                id="credential-upload"
+              />
+              <label
+                htmlFor="credential-upload"
+                className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Upload Credentials
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {credentials?.map((credential, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={credential.imageUrl}
+                    alt={credential.fileName}
+                    className="w-full h-48 object-cover rounded-lg shadow-md"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 rounded-lg flex items-center justify-center">
+                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {credential.fileName}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Upload Status */}

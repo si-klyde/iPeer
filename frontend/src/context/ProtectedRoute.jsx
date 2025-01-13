@@ -2,6 +2,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from '../firebase';
 import axios from 'axios';
+import { toast }from 'react-toastify';
+import RegisterPeerCounselor from '../pages/RegisterPeerCounselor';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [loading, setLoading] = useState(true);
@@ -59,4 +61,32 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-export default ProtectedRoute;
+const ProtectedRegistrationRoute = () => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  
+  useEffect(() => {
+    if (!token) {
+      toast.error('Only invited peer counselors can register. Please contact your administrator.', {
+        autoClose: 4000,
+        position: "top-right",
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+        style: {
+          fontWeight: 'bold'
+        }
+      });
+    }
+  }, [token]);
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <RegisterPeerCounselor />;
+};
+
+export { ProtectedRoute as default, ProtectedRegistrationRoute };
