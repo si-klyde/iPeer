@@ -4,6 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import AdminLogin from './pages/AdminLogin.jsx';
 import AdminSetupAccount from './pages/AdminSetupAccount.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import PeerCounselorProfile from './pages/PeerCounselorProfile.jsx';
 import Header from './components/Header.jsx';
 import ProtectedRoute, { ProtectedRegistrationRoute } from './context/ProtectedRoute.jsx';
 import Counseling from './pages/Counseling';
@@ -239,6 +240,7 @@ const App = () => {
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin/setup-account" element={<AdminSetupAccount />} />
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/peer-counselor/:id" element={<PeerCounselorProfile />} />
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={

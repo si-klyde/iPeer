@@ -172,9 +172,12 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="flex gap-3">
-                      <button className="bg-color-7 hover:bg-color-6 px-4 py-2 rounded-lg text-white font-medium transition-colors duration-200">
-                        Edit
-                      </button>
+                    <button 
+                      onClick={() => navigate(`/admin/peer-counselor/${counselor.id}`)}
+                      className="bg-color-7 hover:bg-color-6 px-4 py-2 rounded-lg text-white font-medium transition-colors duration-200"
+                    >
+                      View Profile
+                    </button>
                       <button className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white font-medium transition-colors duration-200">
                         Deactivate
                       </button>
