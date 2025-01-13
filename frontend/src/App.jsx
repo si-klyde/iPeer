@@ -49,6 +49,19 @@ const App = () => {
     
         const setupUserListener = async (currentUser) => {
             if (!currentUser && !isInitialLoad && user) {
+                if (user.role === 'peer-counselor') {
+                    try {
+                        await axios.put(
+                            `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
+                            {
+                                status: 'offline',
+                                isAvailable: false
+                            }
+                        );
+                    } catch (error) {
+                        console.error('Error updating offline status:', error);
+                    }
+                }
                 clearLocalStorage();
                 setUser(null);
                 return;
