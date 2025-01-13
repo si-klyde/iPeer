@@ -52,12 +52,13 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
     createdAt: new Date(),
     lastLogin: new Date(),
     isActive: true,
+    isVerified: false,
     currentStatus: {
       status: 'offline',
       lastStatusUpdate: new Date(),
       isAvailable: false
     }
-    
+
   });
 
   await db.collection('users').doc(uid)

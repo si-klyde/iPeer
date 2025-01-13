@@ -179,5 +179,25 @@ router.get('/peer-counselors/per-college/:college', async (req, res) => {
   }
 });
 
+router.post('/peer-counselors/:id/verify', async (req, res) => {
+  const { id } = req.params;
+  const { isVerified } = req.body;
+  
+  try {
+    const userRef = db.collection('users').doc(id);
+    await userRef.update({
+      isVerified: isVerified,
+      verificationStatus: isVerified ? 'verified' : 'unverified'
+    });
+    
+    res.status(200).json({ 
+      message: `Peer counselor ${isVerified ? 'verified' : 'unverified'} successfully`,
+      isVerified,
+    });
+  } catch (error) {
+    console.error('Verification update error:', error);
+    res.status(500).json({ error: 'Failed to update verification status' });
+  }
+});
 
 module.exports = router;
