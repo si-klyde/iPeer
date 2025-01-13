@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 
 const RegisterPeerCounselor = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +20,7 @@ const RegisterPeerCounselor = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [inviteToken, setInviteToken] = useState('');
   const [invitationData, setInvitationData] = useState(null);
+  const [credentials, setCredentials] = useState([]);
   const [passwordStrength, setPasswordStrength] = useState({
     minLength: false,
     hasUpperCase: false,
@@ -85,31 +88,30 @@ const RegisterPeerCounselor = () => {
     setErrorMessage('');
   
     try {
+      // First create the user account
       const response = await axios.post(
         'http://localhost:5000/api/register-peer-counselor',
-        { 
-          email, 
-          password, 
+        {
+          email,
+          password,
           fullName,
           school: selectedSchool,
           college: selectedCollege,
           inviteToken
         }
       );
+
       toast.success('Registration successful! Redirecting to login...', {
         position: "top-center",
         autoClose: 2000
       });
+      
       setTimeout(() => {
         navigate('/');
       }, 2000);
     } catch (error) {
       console.error('Registration error:', error);
-      if (error.response?.data?.error) {
-        setErrorMessage(error.response.data.error);
-      } else {
-        setErrorMessage('An unexpected error occurred. Please try again.');
-      }
+      setErrorMessage(error.response?.data?.error || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }

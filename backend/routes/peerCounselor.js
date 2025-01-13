@@ -1,7 +1,31 @@
 const express = require('express');
 const router = express.Router();
 const { db, admin } = require('../firebaseAdmin');
-const { decrypt } = require('../utils/encryption.utils');
+const { encrypt, decrypt } = require('../utils/encryption.utils');
+
+router.post('/update-credentials/:uid', async (req, res) => {
+  const { uid } = req.params;
+  const { credentials } = req.body;
+
+  try {
+    // Encrypt credentials
+    const encryptedCredentials = credentials.map(cred => ({
+      imageUrl: encrypt(cred.imageUrl),
+      fileName: encrypt(cred.fileName),
+      uploadedAt: cred.uploadedAt
+    }));
+
+    // Update user document with encrypted credentials
+    await db.collection('users').doc(uid).update({
+      credentials: encryptedCredentials
+    });
+
+    res.status(200).send({ message: 'Credentials updated successfully' });
+  } catch (error) {
+    console.error('Error updating credentials:', error);
+    res.status(500).send({ error: 'Failed to update credentials' });
+  }
+});
 
 // Route to get all peer counselors
 router.get('/peer-counselors', async (req, res) => {
@@ -17,7 +41,12 @@ router.get('/peer-counselors', async (req, res) => {
         ...data,
         // Check if data is encrypted (has iv, content, tag format)
         email: decrypt(data.email),
-        fullName: decrypt(data.fullName)
+        fullName: decrypt(data.fullName),
+        credentials: data.credentials ? data.credentials.map(cred => ({
+          imageUrl: decrypt(cred.imageUrl),
+          fileName: decrypt(cred.fileName),
+          uploadedAt: cred.uploadedAt
+        })) : []
       };
     });    res.status(200).send(peerCounselors);
   } catch (error) {
@@ -62,26 +91,30 @@ router.get('/peer-counselors/available', async (req, res) => {
 // Route to get a single peer counselor by ID
 router.get('/peer-counselors/:id', async (req, res) => {
   const peerCounselorId = req.params.id;
-  console.log(`Fetching peer counselor with ID: ${peerCounselorId}`);
   try {
     const peerCounselorDoc = await db.collection('users').doc(peerCounselorId).get();
     if (!peerCounselorDoc.exists) {
-      console.log(`Peer counselor with ID ${peerCounselorId} not found.`);
       return res.status(404).send({ error: 'Peer counselor not found' });
     }
     const data = peerCounselorDoc.data();
     const decryptedData = {
       ...data,
       email: decrypt(data.email),
-      fullName: decrypt(data.fullName)
+      fullName: decrypt(data.fullName),
+      credentials: data.credentials ? data.credentials.map(cred => ({
+        imageUrl: decrypt(cred.imageUrl),
+        fileName: decrypt(cred.fileName),
+        uploadedAt: cred.uploadedAt
+      })) : []
     };
-    console.log(`Peer counselor data:`, decryptedData);
+    console.log('Decrypted data:', decryptedData);
     res.status(200).send(decryptedData);
   } catch (error) {
     console.error('Error fetching peer counselor:', error);
     res.status(500).send({ error: 'Error fetching peer counselor' });
   }
 });
+
 
 router.put('/peer-counselor/status/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -129,7 +162,12 @@ router.get('/peer-counselors/per-college/:college', async (req, res) => {
         id: doc.id,
         ...data,
         email: decrypt(data.email),
-        fullName: decrypt(data.fullName)
+        fullName: decrypt(data.fullName),
+        credentials: data.credentials ? data.credentials.map(cred => ({
+          imageUrl: decrypt(cred.imageUrl),
+          fileName: decrypt(cred.fileName),
+          uploadedAt: cred.uploadedAt
+        })) : []
       };
     });
 

@@ -196,4 +196,25 @@ router.get('/admin-data/:uid', async (req, res) => {
       res.status(500).send({ error: 'Failed to validate invitation' });
     }
   });
+
+  router.get('admin/peer-counselor/:id', async (req, res) => {
+    try {
+      const counselorDoc = await db.collection('peer_counselors').doc(req.params.id).get();
+      
+      if (!counselorDoc.exists) {
+        return res.status(404).json({ message: 'Peer counselor not found' });
+      }
+  
+      const counselorData = {
+        id: counselorDoc.id,
+        ...counselorDoc.data()
+      };
+  
+      res.json(counselorData);
+    } catch (error) {
+      console.error('Error fetching peer counselor:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
 module.exports = router;
