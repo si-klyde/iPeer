@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth, db } = require('../firebaseAdmin.js');
+const { auth, db, admin } = require('../firebaseAdmin.js');
 const router = express.Router();
 const crypto = require('crypto');
 const {createClientDocument, createPeerCounselorDocument} = require('../models/userCreation');
@@ -7,6 +7,57 @@ const SECURITY_CONFIG = require('../config/security.config.js');
 const { decrypt } = require('../utils/encryption.utils');
 const { hashPassword, verifyPassword } = require('../utils/password.utils');
 require('dotenv').config();
+
+router.post('/register-peer-counselor', async (req, res) => {
+  const { email, password, fullName, school, college, inviteToken } = req.body;
+
+  if (!email || !password || !fullName || !school || !college || !inviteToken) {
+    return res.status(400).send({ error: 'All fields are required' });
+  }
+
+  try {
+    // Validate invitation token
+    const inviteDoc = await db.collection('invitations').doc(inviteToken).get();
+    if (!inviteDoc.exists) {
+      return res.status(400).send({ error: 'Invalid invitation token' });
+    }
+
+    const invitation = inviteDoc.data();
+    const decryptedEmail = decrypt(invitation.email);
+    if (invitation.used || decryptedEmail !== email) {
+      return res.status(400).send({ error: 'Invalid or expired invitation' });
+    }
+
+    // Generate salt and hash password
+    const salt = crypto.randomBytes(SECURITY_CONFIG.SALT_BYTES).toString('hex');
+    const hash = hashPassword(password, salt);
+
+    // Create user in Firebase Auth
+    const userRecord = await auth.createUser({
+      email,
+      password: hash,
+    });
+
+    // Create peer counselor document with encrypted data
+    await createPeerCounselorDocument(
+      userRecord.uid,
+      { email, fullName, school, college },
+      { salt, password: hash }
+    );
+
+    // Mark invitation as used
+    await db.collection('invitations').doc(inviteToken).update({
+      used: true,
+      usedAt: admin.firestore.FieldValue.serverTimestamp(),
+      registeredUserId: userRecord.uid
+    });
+
+    res.status(201).send({ message: 'Peer counselor registered successfully' });
+  } catch (error) {
+    console.error('Error registering peer counselor:', error);
+    res.status(500).send({ error: 'Error registering peer counselor' });
+  }
+});
 
 router.post('/google-signin', async (req, res) => {
   const { token } = req.body;
@@ -103,37 +154,6 @@ router.post('/google-signin', async (req, res) => {
 //     return false;
 //   }
 // };
-
-router.post('/register-peer-counselor', async (req, res) => {
-  const { email, password, fullName, school, college } = req.body;
-
-  try {
-    // Generate a salt
-    const salt = crypto.randomBytes(SECURITY_CONFIG.SALT_BYTES).toString('hex');
-    
-    // Hash the password with salt and iterations
-    const hash = hashPassword(password, salt);
-
-    // Create user in Firebase Auth
-    const userRecord = await auth.createUser({
-      email,
-      password: hash, // Use the hashed password
-      fullName,
-    });
-
-    // Add user to Firestore with role 'peer-counselor'
-    await createPeerCounselorDocument(
-      userRecord.uid,
-      { email, fullName, school, college },
-      { salt, password: hash }
-    );
-
-    res.status(201).send({ message: 'Peer counselor registered successfully' });
-  } catch (error) {
-    console.error('Error registering peer counselor:', error);
-    res.status(500).send({ error: 'Error registering peer counselor' });
-  }
-});
 
 router.post('/login-peer-counselor', async (req, res) => {
   try {

@@ -5,7 +5,7 @@ import AdminLogin from './pages/AdminLogin.jsx';
 import AdminSetupAccount from './pages/AdminSetupAccount.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import Header from './components/Header.jsx';
-import ProtectedRoute from './context/ProtectedRoute.jsx';
+import ProtectedRoute, { ProtectedRegistrationRoute } from './context/ProtectedRoute.jsx';
 import Counseling from './pages/Counseling';
 import WaitingRoom from './pages/WaitingRoom';
 import Hero from './components/Hero.jsx';
@@ -201,10 +201,10 @@ const App = () => {
                     <Route path="/information" element={<Information />} />
                     <Route path="/onCampus" element={<OnCampus/>} />
                     <Route path="/offCampus" element={<OffCampus/>} />
-                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    <Route path="/register-peer-counselor" element={<ProtectedRegistrationRoute />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
-                    <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} />
+                    {/* <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} /> */}
                     {/* <Route path="/viewevent" element={<ViewEvent />} />                            */}
                     <Route path="/event" element={<EventCatalog />} />
 

@@ -23,19 +23,22 @@ const initialAdmins = [
         username: "bucs_admin",
         password: "bucs_admin",
         college: "College of Science",
-        role: "admin"
+        role: "admin",
+        school: "Bicol University"
     },
     {
         username: "buce_admin",
         password: "buce_admin",
         college: "College of Education",
-        role: "admin"
+        role: "admin",
+        school: "Bicol University"
       },
       {
         username: "bucal_admin",
         password: "bucal_admin",
         college: "College of Arts and Letters",
-        role: "admin"
+        role: "admin",
+        school: "Bicol University"
       },
     //   {
     //     username: "ipesr_admin",
@@ -47,58 +50,67 @@ const initialAdmins = [
     username: "ipesr_admin",
     password: "ipesr_admin",
     college: "Institute of Physical Education Sports and Recreation",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
 
   {
     username: "bujmrigd_admin",
     password: "bujmrigd_admin",
     college: "Jesse M. Robredo Institute of Governance and Development",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
 
   {
     username: "bucn_admin",
     password: "bucn_admin",
     college: "College of Nursing",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
 
   {
     username: "buidea_admin",
     password: "buidea_admin",
     college: "Institute of Design and Architecture",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
   {
     username: "buceng_admin",
     password: "buceng_admin",
     college: "College of Engineering",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
   {
     username: "bucit_admin",
     password: "bucit_admin",
     college: "College of Industrial Technology",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
   {
     username: "bucssp_admin",
     password: "bucssp_admin",
     college: "College of Social Science and Philosophy",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
   {
     username: "bucbem_admin",
     password: "bucbem_admin",
     college: "College of Business Economics and Management",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
   {
     username: "bucm_admin",
     password: "bucm_admin",
     college: "College of Medicine",
-    role: "admin"
+    role: "admin",
+    school: "Bicol University"
   },
 ];
 
@@ -116,6 +128,7 @@ async function setupInitialAdmins() {
         username: encrypt(adminData.username),
         college: encrypt(adminData.college),
         role: adminData.role,
+        school: encrypt(adminData.school),
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
