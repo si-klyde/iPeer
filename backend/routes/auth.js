@@ -41,7 +41,12 @@ router.post('/register-peer-counselor', async (req, res) => {
     // Create peer counselor document with encrypted data
     await createPeerCounselorDocument(
       userRecord.uid,
-      { email, fullName, school, college },
+      { 
+        email, 
+        fullName, 
+        school, 
+        college
+      },
       { salt, password: hash }
     );
 
@@ -52,7 +57,7 @@ router.post('/register-peer-counselor', async (req, res) => {
       registeredUserId: userRecord.uid
     });
 
-    res.status(201).send({ message: 'Peer counselor registered successfully' });
+    res.status(201).send({ message: 'Peer counselor registered successfully', uid: userRecord.uid });
   } catch (error) {
     console.error('Error registering peer counselor:', error);
     res.status(500).send({ error: 'Error registering peer counselor' });
