@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { auth } from '../firebase';
+import { toast } from 'react-toastify';
 
 const InvitePeerCounselor = ({ adminData }) => {
   const [email, setEmail] = useState('');
@@ -21,8 +22,16 @@ const InvitePeerCounselor = ({ adminData }) => {
         }
       );
       setEmail('');
+      toast.success('Invitation sent successfully!', {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        theme: "colored"
+      });
     } catch (error) {
       console.error('Error sending invitation:', error);
+      toast.error('Failed to send invitation');
     }
   };
 

@@ -56,6 +56,21 @@ const App = () => {
             
             if (currentUser) {
                 try {
+
+                    const adminDocRef = doc(firestore, 'admins', currentUser.uid);
+                    const adminDoc = await getDoc(adminDocRef);
+                    
+                    if (adminDoc.exists()) {
+                        // Handle admin user data
+                        const adminData = adminDoc.data();
+                        setUser({
+                        ...adminData,
+                        role: 'admin',
+                        uid: currentUser.uid
+                        });
+                        return;
+                    }
+                    
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
                     
