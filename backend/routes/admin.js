@@ -75,21 +75,22 @@ router.post('/login-admin', async (req, res) => {
 
 router.post('/setup-account', async (req, res) => {
     try {
-        const { uid, fullName, email, newPassword, profilePicture } = req.body;
+        const { uid, fullName, email, newPassword, profilePicture, username } = req.body;
 
         await auth.updateUser(uid, {
           email: email,
           password: newPassword,
           displayName: fullName,
-          photoURL: profilePicture
         });
 
         // Update admin document with new information
         const adminRef = db.collection('admins').doc(uid);
         const updateData = {
-        fullName: encrypt(fullName),
-        email: encrypt(email),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          username: encrypt(username),
+          fullName: encrypt(fullName),
+          email: encrypt(email),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          photoURL: profilePicture || null
         };
 
         if (profilePicture) {
@@ -133,13 +134,39 @@ router.get('/admin-data/:uid', async (req, res) => {
         username: decrypt(adminData.username),
         college: decrypt(adminData.college),
         school: decrypt(adminData.school),
-        role: adminData.role
+        role: adminData.role,
+        fullName: decrypt(adminData.fullName),
+        photoURL: adminData.photoURL || null
       });
     } catch (error) {
       console.error('Error fetching admin data:', error);
       res.status(500).send({ error: 'Failed to fetch admin data' });
     }
   });
+
+  router.get('/admin-initial-data/:uid', async (req, res) => {
+    try {
+        const { uid } = req.params;
+        const adminDoc = await db.collection('admins').doc(uid).get();
+        
+        if (!adminDoc.exists) {
+            return res.status(404).send({ error: 'Admin not found' });
+        }
+
+        const adminData = adminDoc.data();
+        // Only send necessary initial data
+        res.status(200).send({
+            uid: adminDoc.id,
+            username: decrypt(adminData.username),
+            college: decrypt(adminData.college),
+            school: decrypt(adminData.school),
+            createdAtAt: adminData.createdAt
+        });
+    } catch (error) {
+        console.error('Error fetching initial admin data:', error);
+        res.status(500).send({ error: 'Failed to fetch initial admin data' });
+    }
+});
 
   router.post('/send-invitation', async (req, res) => {
     const { email, college, school } = req.body;

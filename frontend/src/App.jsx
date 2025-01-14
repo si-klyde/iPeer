@@ -49,6 +49,7 @@ const App = () => {
         let unsubscribeAuth;
         let unsubscribeUser;
         let unsubscribeProfile;
+        let unsubscribeAdmin;
     
         const setupUserListener = async (currentUser) => {
             if (!currentUser && !isInitialLoad && user) {
@@ -72,27 +73,79 @@ const App = () => {
             
             if (currentUser) {
                 try {
-                    const adminResponse = await axios.get(
-                        `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${await currentUser.getIdToken()}`
+                    try {
+                        // First check admin setup status through backend
+                        const adminInitialCheck = await axios.get(
+                            `http://localhost:5000/api/admin/admin-initial-data/${currentUser.uid}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${await currentUser.getIdToken()}`
+                                }
                             }
-                        }
-                    );
+                        );
                     
-                    if (adminResponse.data) {
+                        const isSetupComplete = adminInitialCheck.data.email && adminInitialCheck.data.fullName;
+                    
+                        if (!isSetupComplete) {
+                            // Admin hasn't completed setup
+                            setUser({
+                                role: 'admin',
+                                uid: currentUser.uid,
+                                isSetupComplete: false,
+                                username: adminInitialCheck.data.username,
+                                college: adminInitialCheck.data.college,
+                                photoURL: adminInitialCheck.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
+                            });
+
+                            // Add listener for admin doc changes
+                            unsubscribeAdmin = onSnapshot(doc(firestore, 'admins', currentUser.uid), async (docSnapshot) => {
+                                if (docSnapshot.exists()) {
+                                    const adminData = docSnapshot.data();
+                                    if (adminData.email && adminData.fullName) {
+                                        // Admin completed setup, fetch full decrypted data
+                                        const fullDataResponse = await axios.get(
+                                            `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
+                                            {
+                                                headers: {
+                                                    Authorization: `Bearer ${await currentUser.getIdToken()}`
+                                                }
+                                            }
+                                        );
+                                        setUser({
+                                            ...fullDataResponse.data,
+                                            role: 'admin',
+                                            uid: currentUser.uid,
+                                            photoURL: fullDataResponse.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
+                                        });
+                                    }
+                                }
+                            });
+                            return;
+                        }
+                    
+                        // Admin has completed setup, fetch full decrypted data
+                        const adminResponse = await axios.get(
+                            `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${await currentUser.getIdToken()}`
+                                }
+                            }
+                        );
+                    
                         setUser({
                             ...adminResponse.data,
                             role: 'admin',
                             uid: currentUser.uid,
+                            isSetupComplete: true,
                             photoURL: adminResponse.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
                         });
                         return;
-                    } else {
-                        console.log("Admin data not found for user:", currentUser.uid);
-                    }
-                    
+                    } catch (adminError) {
+                        if (adminError.response?.status !== 404) {
+                            console.error('Admin authentication error:', adminError);
+                        }
+                    }                    
                     
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
@@ -202,6 +255,7 @@ const App = () => {
             if (unsubscribeAuth) unsubscribeAuth();
             if (unsubscribeUser) unsubscribeUser();
             if (unsubscribeProfile) unsubscribeProfile();
+            if (unsubscribeAdmin) unsubscribeAdmin();
         };
     }, []);    
 

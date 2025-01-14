@@ -146,7 +146,7 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="border-b border-gray-100 pb-6">
             <h1 className="text-3xl font-bold text-color-7 mb-2 tracking-tight">
-              Welcome, {adminData?.username}
+              Welcome, {adminData?.fullName}
             </h1>
             <p className="text-lg text-gray-600 font-medium">
               {adminData?.college} Administrator Dashboard
