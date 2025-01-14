@@ -45,219 +45,14 @@ const App = () => {
     const location = useLocation();
     const hideHeaderFooterPaths = ['/login'];
 
-    useEffect(() => {
-        let unsubscribeAuth;
-        let unsubscribeUser;
-        let unsubscribeProfile;
-        let unsubscribeAdmin;
-    
-        const setupUserListener = async (currentUser) => {
-            if (!currentUser && !isInitialLoad && user) {
-                if (user.role === 'peer-counselor') {
-                    try {
-                        await axios.put(
-                            `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
-                            {
-                                status: 'offline',
-                                isAvailable: false
-                            }
-                        );
-                    } catch (error) {
-                        console.error('Error updating offline status:', error);
-                    }
-                }
-                clearLocalStorage();
-                setUser(null);
-                return;
-            }
-            
-            if (currentUser) {
-                try {
-                    try {
-                        // First check admin setup status through backend
-                        const adminInitialCheck = await axios.get(
-                            `http://localhost:5000/api/admin/admin-initial-data/${currentUser.uid}`,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${await currentUser.getIdToken()}`
-                                }
-                            }
-                        );
-                    
-                        const isSetupComplete = adminInitialCheck.data.email && adminInitialCheck.data.fullName;
-                    
-                        if (!isSetupComplete) {
-                            // Admin hasn't completed setup
-                            setUser({
-                                role: 'admin',
-                                uid: currentUser.uid,
-                                isSetupComplete: false,
-                                username: adminInitialCheck.data.username,
-                                college: adminInitialCheck.data.college,
-                                photoURL: adminInitialCheck.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
-                            });
-
-                            // Add listener for admin doc changes
-                            unsubscribeAdmin = onSnapshot(doc(firestore, 'admins', currentUser.uid), async (docSnapshot) => {
-                                if (docSnapshot.exists()) {
-                                    const adminData = docSnapshot.data();
-                                    if (adminData.email && adminData.fullName) {
-                                        // Admin completed setup, fetch full decrypted data
-                                        const fullDataResponse = await axios.get(
-                                            `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
-                                            {
-                                                headers: {
-                                                    Authorization: `Bearer ${await currentUser.getIdToken()}`
-                                                }
-                                            }
-                                        );
-                                        setUser({
-                                            ...fullDataResponse.data,
-                                            role: 'admin',
-                                            uid: currentUser.uid,
-                                            photoURL: fullDataResponse.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
-                                        });
-                                    }
-                                }
-                            });
-                            return;
-                        }
-                    
-                        // Admin has completed setup, fetch full decrypted data
-                        const adminResponse = await axios.get(
-                            `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
-                            {
-                                headers: {
-                                    Authorization: `Bearer ${await currentUser.getIdToken()}`
-                                }
-                            }
-                        );
-                    
-                        setUser({
-                            ...adminResponse.data,
-                            role: 'admin',
-                            uid: currentUser.uid,
-                            isSetupComplete: true,
-                            photoURL: adminResponse.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
-                        });
-                        return;
-                    } catch (adminError) {
-                        if (adminError.response?.status !== 404) {
-                            console.error('Admin authentication error:', adminError);
-                        }
-                    }                    
-                    
-                    // Get user role
-                    const userDocRef = doc(firestore, 'users', currentUser.uid);
-                    
-                    // Retry logic
-                    let retries = 3;
-                    let userDoc;
-                    
-                    while (retries > 0) {
-                        userDoc = await getDoc(userDocRef);
-                        if (userDoc.exists()) {
-                            break;
-                        }
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-                        retries--;
-                    }
-
-                    if (!userDoc?.exists()) {
-                        throw new Error('User document not found after retries');
-                    }
-
-                    const userRole = userDoc.data()?.role;
-    
-                    // Check cache first
-                    const cachedUserData = localStorage.getItem(`userData_${currentUser.uid}`);
-                    if (cachedUserData) {
-                        setUser(JSON.parse(cachedUserData));
-                    }
-    
-                    // Get decrypted data from backend
-                    const endpoint = userRole === 'peer-counselor'
-                        ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
-                        : `http://localhost:5000/api/client/${currentUser.uid}`;
-    
-                    const response = await axios.get(endpoint, {
-                        headers: {
-                            Authorization: `Bearer ${await currentUser.getIdToken()}`
-                        }
-                    });
-                    const decryptedData = response.data;
-    
-                    // Set up profile listener
-                    const profileDocRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
-                    unsubscribeProfile = onSnapshot(profileDocRef, (profileDoc) => {
-                        const profileData = profileDoc.exists() ? profileDoc.data() : {};
-                        const photoURL = currentUser.photoURL || 
-                            profileData.photoURL || 
-                            `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`;
-    
-                        const userData = {
-                            ...decryptedData,
-                            ...profileData,
-                            photoURL: photoURL
-                        };
-    
-                        setUser(prevUser => ({
-                            ...prevUser,
-                            ...userData
-                        }));
-    
-                        // Cache the updated user data
-                        localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(userData));
-                    });
-    
-                    // Listen for role changes
-                    unsubscribeUser = onSnapshot(userDocRef, async (doc) => {
-                        if (doc.exists()) {
-                            const newRole = doc.data()?.role;
-                            if (newRole !== decryptedData.role) {
-                                const newEndpoint = newRole === 'peer-counselor'
-                                    ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
-                                    : `http://localhost:5000/api/client/${currentUser.uid}`;
-    
-                                const newResponse = await axios.get(newEndpoint, {
-                                    headers: {
-                                        Authorization: `Bearer ${await currentUser.getIdToken()}`
-                                    }
-                                });
-                                
-                                const newUserData = {
-                                    ...prevUser,
-                                    ...newResponse.data
-                                };
-                                
-                                setUser(newUserData);
-                                localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(newUserData));
-                            }
-                        }
-                    });
-    
-                } catch (error) {
-                    console.error('Error setting up user data:', error);
-                    setUser(null);
-                    localStorage.removeItem(`userData_${currentUser.uid}`);
-                }
-            } 
-
-            //Mark initial load complete
-            if (isInitialLoad) {
-                setIsInitialLoad(false);
-            }
-        };
-    
-        unsubscribeAuth = authStateChanged(auth, setupUserListener);
-    
-        return () => {
-            if (unsubscribeAuth) unsubscribeAuth();
-            if (unsubscribeUser) unsubscribeUser();
-            if (unsubscribeProfile) unsubscribeProfile();
-            if (unsubscribeAdmin) unsubscribeAdmin();
-        };
-    }, []);    
+    // Helper function to get default photo URL
+    const getDefaultPhotoURL = (role) => {
+        const gradientColors = role === 'admin' 
+            ? ['#89d095', '#34d399']  // green gradient for admin
+            : ['#6474ff', '#64b3f4']; // blue gradient for users
+        
+        return `data:image/svg+xml;base64,${btoa(`<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad" gradientTransform="rotate(45)"><stop offset="0%" stop-color="${gradientColors[0]}"/><stop offset="100%" stop-color="${gradientColors[1]}"/></linearGradient></defs><circle cx="100" cy="100" r="100" fill="url(#grad)"/></svg>`)}`;
+    };
 
     // Helper function to clear localStorage
     const clearLocalStorage = () => {
@@ -271,6 +66,217 @@ const App = () => {
             }
         });
     };
+
+    // Helper function to handle user logout
+    const handleUserLogout = async (currentUser) => {
+        if (!isInitialLoad && user && user.role === 'peer-counselor') {
+            try {
+                await axios.put(
+                    `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
+                    { status: 'offline', isAvailable: false }
+                );
+            } catch (error) {
+                console.error('Error updating offline status:', error);
+            }
+        }
+        clearLocalStorage();
+        setUser(null);
+    };
+
+    // Helper function to fetch admin data
+    const fetchAdminData = async (currentUser) => {
+        return await axios.get(
+            `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${await currentUser.getIdToken()}`
+                }
+            }
+        );
+    };
+
+    // Helper function to fetch user data
+    const fetchUserData = async (currentUser, userRole) => {
+        const endpoint = userRole === 'peer-counselor'
+            ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
+            : `http://localhost:5000/api/client/${currentUser.uid}`;
+
+        const response = await axios.get(endpoint, {
+            headers: {
+                Authorization: `Bearer ${await currentUser.getIdToken()}`
+            }
+        });
+        return response.data;
+    };
+
+    // Helper function to setup admin listener
+    const setupAdminListener = async (currentUser) => {
+        try {
+            const adminInitialCheck = await axios.get(
+                `http://localhost:5000/api/admin/admin-initial-data/${currentUser.uid}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${await currentUser.getIdToken()}`
+                    }
+                }
+            );
+
+            const isSetupComplete = adminInitialCheck.data.email && adminInitialCheck.data.fullName;
+            const baseAdminData = {
+                role: 'admin',
+                uid: currentUser.uid,
+                username: adminInitialCheck.data.username,
+                college: adminInitialCheck.data.college,
+                photoURL: adminInitialCheck.data.photoURL || getDefaultPhotoURL('admin')
+            };
+
+            if (!isSetupComplete) {
+                setUser({ ...baseAdminData, isSetupComplete: false });
+                return onSnapshot(doc(firestore, 'admins', currentUser.uid), async (docSnapshot) => {
+                    if (docSnapshot.exists() && docSnapshot.data().email && docSnapshot.data().fullName) {
+                        const fullDataResponse = await fetchAdminData(currentUser);
+                        setUser({ ...fullDataResponse.data, ...baseAdminData, isSetupComplete: true });
+                    }
+                });
+            }
+
+            const adminResponse = await fetchAdminData(currentUser);
+            setUser({ ...adminResponse.data, ...baseAdminData, isSetupComplete: true });
+            return null;
+        } catch (error) {
+            if (error.response?.status !== 404) {
+                console.error('Admin authentication error:', error);
+            }
+            return null;
+        }
+    };
+
+    // Helper function to setup regular user listener
+    const setupRegularUserListener = async (currentUser, userRole) => {
+        const setupProfileListener = (profileRef, decryptedData) => {
+            return onSnapshot(profileRef, (profileDoc) => {
+                const profileData = profileDoc.exists() ? profileDoc.data() : {};
+                const photoURL = currentUser.photoURL || 
+                    profileData.photoURL || 
+                    getDefaultPhotoURL(userRole);
+
+                const userData = {
+                    ...decryptedData,
+                    ...profileData,
+                    photoURL
+                };
+
+                setUser(prevUser => ({ ...prevUser, ...userData }));
+                localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(userData));
+            });
+        };
+
+        const setupRoleListener = (userDocRef, decryptedData) => {
+            return onSnapshot(userDocRef, async (doc) => {
+                if (doc.exists()) {
+                    const newRole = doc.data()?.role;
+                    if (newRole !== decryptedData.role) {
+                        const newUserData = await fetchUserData(currentUser, newRole);
+                        setUser(newUserData);
+                        localStorage.setItem(`userData_${currentUser.uid}`, JSON.stringify(newUserData));
+                    }
+                }
+            });
+        };
+
+        try {
+            // Check cache first
+            const cachedUserData = localStorage.getItem(`userData_${currentUser.uid}`);
+            if (cachedUserData) {
+                setUser(JSON.parse(cachedUserData));
+            }
+
+            const decryptedData = await fetchUserData(currentUser, userRole);
+            
+            const profileRef = doc(firestore, 'users', currentUser.uid, 'profile', 'details');
+            const userDocRef = doc(firestore, 'users', currentUser.uid);
+
+            return {
+                profileUnsubscribe: setupProfileListener(profileRef, decryptedData),
+                roleUnsubscribe: setupRoleListener(userDocRef, decryptedData)
+            };
+        } catch (error) {
+            console.error('Error setting up user data:', error);
+            setUser(null);
+            localStorage.removeItem(`userData_${currentUser.uid}`);
+            return { profileUnsubscribe: null, roleUnsubscribe: null };
+        }
+    };
+
+    useEffect(() => {
+        const unsubscribers = {
+            auth: null,
+            user: null,
+            profile: null,
+            admin: null
+        };
+
+        const setupUserListener = async (currentUser) => {
+            if (!currentUser && !isInitialLoad && user) {
+                await handleUserLogout(currentUser);
+                return;
+            }
+            
+            if (currentUser) {
+                // Clean up any existing listeners before setting up new ones
+                if (unsubscribers.user) unsubscribers.user();
+                if (unsubscribers.profile) unsubscribers.profile();
+                if (unsubscribers.admin) unsubscribers.admin();
+        
+                // Only check for admin status if we're on an admin route
+                if (location.pathname.startsWith('/admin')) {
+                    // Setup admin listener
+                    const adminUnsubscribe = await setupAdminListener(currentUser);
+                    if (adminUnsubscribe) {
+                        unsubscribers.admin = adminUnsubscribe;
+                        return;
+                    }
+                }
+        
+                const userDocRef = doc(firestore, 'users', currentUser.uid);
+                let retries = 3;
+                let userDoc;
+                
+                while (retries > 0) {
+                    userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) break;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    retries--;
+                }
+        
+                if (!userDoc?.exists()) {
+                    throw new Error('User document not found after retries');
+                }
+        
+                const userRole = userDoc.data()?.role;
+                const { profileUnsubscribe, roleUnsubscribe } = await setupRegularUserListener(currentUser, userRole);
+                
+                unsubscribers.profile = profileUnsubscribe;
+                unsubscribers.user = roleUnsubscribe;
+            }
+        
+            if (isInitialLoad) {
+                setIsInitialLoad(false);
+            }
+        };
+
+        // Set up the auth state listener
+        unsubscribers.auth = authStateChanged(auth, setupUserListener);
+
+        // Cleanup function
+        return () => {
+            Object.values(unsubscribers).forEach(unsubscribe => {
+                if (typeof unsubscribe === 'function') {
+                    unsubscribe();
+                }
+            });
+        };
+    }, []);
 
     return (
         <>
@@ -306,7 +312,7 @@ const App = () => {
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
                     {/* <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} /> */}
                     {/* <Route path="/viewevent" element={<ViewEvent />} />                            */}
-                    <Route path="/event" element={<EventCatalog />} />
+                    
 
                     <Route path="/admin/login" element={
                         auth.currentUser && user?.role === 'admin' ? 
@@ -374,6 +380,11 @@ const App = () => {
                     <Route path="/peer-dashboard" element={
                         <ProtectedRoute allowedRoles={['peer-counselor']}>
                             <PeerDashboard />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/event" element={
+                        <ProtectedRoute allowedRoles={['peer-counselor']}>
+                            <EventCatalog />
                         </ProtectedRoute>
                     } />
 
