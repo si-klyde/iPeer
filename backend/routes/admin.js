@@ -80,7 +80,8 @@ router.post('/setup-account', async (req, res) => {
         await auth.updateUser(uid, {
           email: email,
           password: newPassword,
-          displayName: fullName
+          displayName: fullName,
+          photoURL: profilePicture
         });
 
         // Update admin document with new information
@@ -92,7 +93,7 @@ router.post('/setup-account', async (req, res) => {
         };
 
         if (profilePicture) {
-        updateData.profilePicture = profilePicture;
+          updateData.profilePicture = profilePicture;
         }
 
         // Update password if provided

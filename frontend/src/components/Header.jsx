@@ -31,7 +31,7 @@ const Header = ({ user, setUser }) => {
   const navigate = useNavigate();
 
   // Define paths where Header should not appear
-  const hideHeaderPaths = ['/login'];
+  const hideHeaderPaths = ['/login', '/admin/login', '/peer-counselor/login', '/reset-password', '/register-peer-counselor'];
 
   // Define limited navigation for peer-counselors
   const peerCounselorNavigation = navigation.filter(item =>
@@ -42,6 +42,11 @@ const Header = ({ user, setUser }) => {
   const clientNavigation = navigation.filter(item =>
     ['Home', 'Therapy', 'Calendar', 'Information', 'Counseling'].includes(item.title)
   );
+
+  // Define navigation for admins
+  const adminNavigation = [
+    { id: 1, title: 'Dashboard', url: '/admin/dashboard' }
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -113,7 +118,9 @@ const Header = ({ user, setUser }) => {
           } lg:opacity-100 lg:scale-y-100 lg:translate-y-0 lg:pointer-events-auto`}
         >
           <div className="relative z-10 flex flex-col w-full py-2 lg:flex-row">
-            {(user?.role === 'peer-counselor' ? peerCounselorNavigation : clientNavigation).map((item) => (
+          {(user?.role === 'admin' ? adminNavigation : 
+            user?.role === 'peer-counselor' ? peerCounselorNavigation : 
+            clientNavigation).map((item) => (
               <a
                 key={item.id}
                 href={item.url}

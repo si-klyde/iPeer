@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import AdminLogin from './pages/AdminLogin.jsx';
 import AdminSetupAccount from './pages/AdminSetupAccount.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
@@ -72,20 +72,27 @@ const App = () => {
             
             if (currentUser) {
                 try {
-
-                    const adminDocRef = doc(firestore, 'admins', currentUser.uid);
-                    const adminDoc = await getDoc(adminDocRef);
+                    const adminResponse = await axios.get(
+                        `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${await currentUser.getIdToken()}`
+                            }
+                        }
+                    );
                     
-                    if (adminDoc.exists()) {
-                        // Handle admin user data
-                        const adminData = adminDoc.data();
+                    if (adminResponse.data) {
                         setUser({
-                        ...adminData,
-                        role: 'admin',
-                        uid: currentUser.uid
+                            ...adminResponse.data,
+                            role: 'admin',
+                            uid: currentUser.uid,
+                            photoURL: adminResponse.data.photoURL || `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg5ZDA5NSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzM0ZDM5OSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+`
                         });
                         return;
+                    } else {
+                        console.log("Admin data not found for user:", currentUser.uid);
                     }
+                    
                     
                     // Get user role
                     const userDocRef = doc(firestore, 'users', currentUser.uid);
@@ -228,23 +235,45 @@ const App = () => {
                     {/* Public Routes - No authentication required */}
                     <Route path="/" element={<Hero />} />
                     <Route path="/home" element={<Hero />} />
-                    <Route path="/login" element={<Login />} />
                     <Route path="/information" element={<Information />} />
                     <Route path="/onCampus" element={<OnCampus/>} />
                     <Route path="/offCampus" element={<OffCampus/>} />
                     <Route path="/register-peer-counselor" element={<ProtectedRegistrationRoute />} />
-                    <Route path="/login-client" element={<LoginClient />} />
-                    <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
+                    <Route path="/login" element={
+                        auth.currentUser ? <Navigate to="/home" replace /> : <Login />
+                    } />
+                    <Route path="/login-client" element={
+                        auth.currentUser ? <Navigate to="/home" replace /> : <LoginClient />
+                    } />
+                    <Route path="/login-peer-counselor" element={
+                        auth.currentUser ? <Navigate to="/home" replace /> : <LoginPeerCounselor />
+                    } />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
                     {/* <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} /> */}
                     {/* <Route path="/viewevent" element={<ViewEvent />} />                            */}
                     <Route path="/event" element={<EventCatalog />} />
 
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/setup-account" element={<AdminSetupAccount />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/admin/peer-counselor/:id" element={<PeerCounselorProfile />} />
+                    <Route path="/admin/login" element={
+                        auth.currentUser && user?.role === 'admin' ? 
+                            <Navigate to="/admin/dashboard" replace /> : 
+                            <AdminLogin />
+                    } />
+                    <Route path="/admin/setup-account" element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                            <AdminSetupAccount />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin/dashboard" element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin/peer-counselor/:id" element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                            <PeerCounselorProfile />
+                        </ProtectedRoute>
+                    } />
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={
