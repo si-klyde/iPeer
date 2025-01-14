@@ -17,6 +17,8 @@ import { GameRoom, MusicRoom, ArtRoom } from './components/Rooms';
 import RegisterPeerCounselor from './pages/RegisterPeerCounselor.jsx';
 import LoginPeerCounselor from './pages/LoginPeerCounselor.jsx';
 import LoginClient from './pages/LoginClient.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import BookAppointment from './pages/BookAppointment.jsx';
 import ViewAppointments from './pages/ViewAppointments.jsx';
 import ViewAppointmentsPeer from './pages/ViewAppointmentsPeer.jsx';
@@ -233,6 +235,8 @@ const App = () => {
                     <Route path="/register-peer-counselor" element={<ProtectedRegistrationRoute />} />
                     <Route path="/login-client" element={<LoginClient />} />
                     <Route path="/login-peer-counselor" element={<LoginPeerCounselor />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
                     {/* <Route path="/register-peer-counselor" element={<RegisterPeerCounselor />} /> */}
                     {/* <Route path="/viewevent" element={<ViewEvent />} />                            */}
                     <Route path="/event" element={<EventCatalog />} />
