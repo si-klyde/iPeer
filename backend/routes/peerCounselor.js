@@ -115,6 +115,33 @@ router.get('/peer-counselors/:id', async (req, res) => {
   }
 });
 
+router.delete('/peer-counselors/:id', async (req, res) => {
+  const token = req.headers.authorization?.split('Bearer ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    await admin.auth().verifyIdToken(token);
+    const { id } = req.params;
+
+    // Delete user from Firebase Authentication
+    await admin.auth().deleteUser(id);
+
+    // Delete user document from Firestore
+    await db.collection('users').doc(id).delete();
+
+    // Delete profile subcollection
+    const profileRef = db.collection('users').doc(id).collection('profile').doc('details');
+    await profileRef.delete();
+
+    res.status(200).json({ message: 'Peer counselor deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting peer counselor:', error);
+    res.status(500).json({ error: 'Failed to delete peer counselor' });
+  }
+});
+
 
 router.put('/peer-counselor/status/:userId', async (req, res) => {
   const { userId } = req.params;

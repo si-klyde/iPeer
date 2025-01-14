@@ -16,6 +16,16 @@ const PeerCounselorProfile = () => {
 
 
   useEffect(() => {
+        document.querySelector('header')?.classList.add('hidden');
+        document.querySelector('footer')?.classList.add('hidden');
+    
+        return () => {
+          document.querySelector('header')?.classList.remove('hidden');
+          document.querySelector('footer')?.classList.remove('hidden');
+        };
+  }, []);
+  
+  useEffect(() => {
     const unsubscribe = authStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -91,149 +101,164 @@ const PeerCounselorProfile = () => {
   }
 
   return (
-    <>
-    <div className="min-h-screen bg-gradient-to-br from-color-3 to-color-2 py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Back Button */}
         <button
           onClick={() => window.history.back()}
-          className="flex items-center mb-6 bg-white px-4 py-2 rounded-lg text-gray-600 hover:text-gray-800 transition-all duration-300
-            shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]
-            transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_1px_4px_rgba(0,0,0,0.1)]"
+          className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl text-gray-600 
+            shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Back
+          Back to Dashboard
         </button>
   
-        {/* Main Profile Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {/* Profile Image Section */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-48 h-48 rounded-full bg-gray-200 mb-6 overflow-hidden ring-4 ring-green-100">
-                 <img
-                   src={counselor?.photoURL}
-                   alt={counselor?.fullName}
-                   className="w-full h-full rounded-full object-cover"
-                   referrerPolicy="no-referrer"
-                />
-              </div>
-            
-              <div className={`inline-flex items-center px-4 py-2 rounded-full ${
-                  counselor?.currentStatus?.status === 'online'
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-gray-100 text-gray-600'
-               }`}>
-                <div className={`w-2.5 h-2.5 rounded-full mr-2 ${
-                   counselor?.currentStatus?.status === 'online'
-                      ? 'bg-green-500'
-                      : 'bg-gray-400'
-                }`}></div>
-                <span className="font-medium">{counselor?.currentStatus?.status || 'Offline'}</span>
-              </div>
-            </div>
-
-  
-            {/* Profile Details Section */}
-            <div className="md:col-span-2">
-              <div className="flex justify-between items-start mb-6">
-                <h1 className="text-3xl font-bold text-gray-800">{counselor?.fullName}</h1>
-                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isVerified}
-                      onChange={handleVerificationChange}
-                      className="sr-only peer"
+        {/* Main Profile Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-6 sm:p-8 md:p-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column - Profile Image & Status */}
+              <div className="flex flex-col items-center space-y-6">
+                <div className="relative">
+                  <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden ring-4 ring-emerald-100">
+                    <img
+                      src={counselor?.photoURL}
+                      alt={counselor?.fullName}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                  </label>
-                  <span className="text-sm font-medium text-gray-900">
-                    {isVerified ? 'Verified for Counseling' : 'Not Verified'}
+                  </div>
+                  <div className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-white 
+                    ${counselor?.currentStatus?.status === 'online' ? 'bg-emerald-500' : 'bg-gray-400'}`}
+                  />
+                </div>
+                
+                <div className={`inline-flex items-center px-4 py-2 rounded-full 
+                  ${counselor?.currentStatus?.status === 'online' 
+                    ? 'bg-emerald-100 text-emerald-700' 
+                    : 'bg-gray-100 text-gray-600'}`}
+                >
+                  <span className="font-medium">
+                    {counselor?.currentStatus?.status === 'online' ? 'Online' : 'Offline'}
                   </span>
                 </div>
               </div>
   
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-3">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500 block mb-1">Email</label>
-                    <p className="text-lg text-gray-800">{counselor?.email}</p>
+              {/* Right Column - Profile Details */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{counselor?.fullName}</h1>
+                    <p className="text-emerald-600 mt-1">{counselor?.email}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isVerified}
+                        onChange={handleVerificationChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-emerald-300 
+                        rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white 
+                        after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white 
+                        after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 
+                        after:transition-all peer-checked:bg-emerald-600">
+                      </div>
+                    </label>
+                    <span className="text-sm font-medium text-gray-900">
+                      {isVerified ? 'Verified' : 'Not Verified'}
+                    </span>
+                  </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500 block mb-1">School</label>
-                    <p className="text-lg text-gray-800">{counselor?.school}</p>
+  
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <span className="text-sm text-gray-500">School</span>
+                    <p className="text-gray-900 font-medium mt-1">{counselor?.school}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <span className="text-sm text-gray-500">College</span>
+                    <p className="text-gray-900 font-medium mt-1">{counselor?.college}</p>
+                  </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500 block mb-1">College</label>
-                    <p className="text-lg text-gray-800">{counselor?.college}</p>
-                </div>
-                </div>
+              </div>
             </div>
           </div>
         </div>
   
         {/* Credentials Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-8">Peer-Counselor's Credentials</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Credentials</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {counselor?.credentials?.length > 0 ? (
               counselor.credentials.map((credential, index) => (
-                <div key={index} className="relative group rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
+                <div key={index} className="group relative aspect-[4/3] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
                   <img
                     src={credential.imageUrl}
                     alt={credential.fileName}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center p-4">
-                    <span className="text-white text-sm font-medium truncate">
-                      {credential.fileName}
-                    </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm font-medium truncate">{credential.fileName}</p>
+                    </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                <p className="text-gray-500 font-medium">No credentials uploaded yet</p>
+              <div className="col-span-full flex items-center justify-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                <p className="text-gray-500 text-center">No credentials uploaded yet</p>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
-
-    {showConfirmModal && (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all">
-          <div className="flex flex-col items-center text-center">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Confirm Verification Change
-            </h3>
-            <p className="text-gray-600 mb-8">
-              Are you sure you want to {pendingVerificationStatus ? 'verify' : 'unverify'} this peer counselor?
-            </p>
-            <div className="flex gap-4 w-full">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-medium transition-all duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmVerification}
-                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 font-medium transition-all duration-200"
-              >
-                Confirm
-              </button>
+  
+      {/* Verification Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 transform transition-all">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                Confirm Verification Change
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to {pendingVerificationStatus ? 'verify' : 'unverify'} this peer counselor?
+              </p>
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 
+                    font-medium transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmVerification}
+                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 
+                    font-medium transition-all duration-200"
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
-  </>
-);
+      )}
+    </div>
+  );
 };
 
 export default PeerCounselorProfile;

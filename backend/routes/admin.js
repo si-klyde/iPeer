@@ -74,49 +74,68 @@ router.post('/login-admin', async (req, res) => {
 });
 
 router.post('/setup-account', async (req, res) => {
-    try {
-        const { uid, fullName, email, newPassword, profilePicture, username } = req.body;
+  try {
+    const { uid, fullName, email, newPassword, profilePicture, username } = req.body;
 
-        await auth.updateUser(uid, {
-          email: email,
-          password: newPassword,
-          displayName: fullName,
-        });
-
-        // Update admin document with new information
-        const adminRef = db.collection('admins').doc(uid);
-        const updateData = {
-          username: encrypt(username),
-          fullName: encrypt(fullName),
-          email: encrypt(email),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          photoURL: profilePicture || null
-        };
-
-        if (profilePicture) {
-          updateData.profilePicture = profilePicture;
-        }
-
-        // Update password if provided
-        if (newPassword) {
-        const salt = crypto.randomBytes(SECURITY_CONFIG.SALT_BYTES).toString('hex');
-        const hashedPassword = hashPassword(newPassword, salt);
-        
-        await adminRef.collection('auth')
-            .doc('credentials')
-            .update({
-            salt,
-            password: hashedPassword
-            });
-        }
-
-        await adminRef.update(updateData);
-
-        res.status(200).send({ message: 'Account setup completed successfully' });
-    } catch (error) {
-        console.error('Account setup error:', error);
-        res.status(500).send({ error: 'Failed to setup account' });
+    // Validate required fields
+    if (!uid || !fullName || !email || !newPassword || !username) {
+      return res.status(400).send({ error: 'Missing required fields' });
     }
+
+    // Check profile picture size
+    if (profilePicture && profilePicture.length > 50 * 1024 * 1024) {
+      return res.status(413).send({ error: 'Profile picture too large' });
+    }
+
+    // Create auth update object
+    const authUpdateData = {
+      email: email,
+      password: newPassword,
+      displayName: fullName,
+    };
+
+    // Update Firebase Auth
+    await auth.updateUser(uid, authUpdateData);
+
+    // Create admin document update data
+    const updateData = {
+      username: encrypt(username),
+      fullName: encrypt(fullName),
+      email: encrypt(email),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    // Add encrypted photoURL if exists
+    if (profilePicture) {
+      updateData.photoURL = encrypt(profilePicture);
+    }
+
+    const adminRef = db.collection('admins').doc(uid);
+
+    // Update password with salt
+    if (newPassword) {
+      const salt = crypto.randomBytes(SECURITY_CONFIG.SALT_BYTES).toString('hex');
+      const hashedPassword = hashPassword(newPassword, salt);
+      
+      await adminRef.collection('auth')
+        .doc('credentials')
+        .update({
+          salt,
+          password: hashedPassword
+        });
+    }
+
+    // Update admin document
+    await adminRef.update(updateData);
+
+    res.status(200).send({ message: 'Account setup completed successfully' });
+  } catch (error) {
+    console.error('Account setup error:', error);
+    if (error.code === 'auth/email-already-in-use') {
+      return res.status(400).send({ error: 'Email already in use' });
+    }
+    res.status(500).send({ error: 'Failed to setup account' });
+  }
 });
 
 router.get('/admin-data/:uid', async (req, res) => {
@@ -136,7 +155,7 @@ router.get('/admin-data/:uid', async (req, res) => {
         school: decrypt(adminData.school),
         role: adminData.role,
         fullName: decrypt(adminData.fullName),
-        photoURL: adminData.photoURL || null
+        photoURL: adminData.photoURL ? decrypt(adminData.photoURL) : null
       });
     } catch (error) {
       console.error('Error fetching admin data:', error);
