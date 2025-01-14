@@ -196,14 +196,19 @@ router.get('/admin-data/:uid', async (req, res) => {
       const encryptedEmail = encrypt(email);
   
       await db.collection('invitations').doc(inviteToken).set({
-        email: encryptedEmail,
-        college,
-        school,
+        email: encrypt(email),
+        college: encrypt(college),
+        school: encrypt(school),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
         used: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        expiresAt: admin.firestore.Timestamp.fromDate(
+          new Date(Date.now() + 24 * 60 * 60 * 1000)
+        )
       });
   
-      // Send invitation email...
+      const registrationLink = `http://localhost:5173/register-peer-counselor?token=${inviteToken}`;
+      await sendPeerCounselorInvitation(email, registrationLink, college);
+
       res.status(200).json({ message: 'Invitation sent successfully' });
   
     } catch (error) {
