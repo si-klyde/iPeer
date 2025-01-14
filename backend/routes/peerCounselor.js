@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { db, admin } = require('../firebaseAdmin');
 const { encrypt, decrypt } = require('../utils/encryption.utils');
+const generateVerificationCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+const { sendVerificationEmail } = require('../services/emailService');
 
 router.post('/update-credentials/:uid', async (req, res) => {
   const { uid } = req.params;
@@ -115,33 +117,70 @@ router.get('/peer-counselors/:id', async (req, res) => {
   }
 });
 
-router.delete('/peer-counselors/:id', async (req, res) => {
-  const token = req.headers.authorization?.split('Bearer ')[1];
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
-
+router.post('/admin/send-delete-verification', async (req, res) => {
+  const { counselorId, counselorName, adminEmail } = req.body;
+  const verificationCode = generateVerificationCode();
+  
+  console.log('Starting verification process:', {
+    counselorId,
+    counselorName,
+    adminEmail,
+    verificationCode
+  });
+  
   try {
-    await admin.auth().verifyIdToken(token);
-    const { id } = req.params;
+    // Store verification code in Firestore
+    await db.collection('deleteVerifications').doc(counselorId).set({
+      code: verificationCode,
+      expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000)),
+      adminEmail
+    });
+    //console.log('Verification code stored in Firestore');
 
-    // Delete user from Firebase Authentication
-    await admin.auth().deleteUser(id);
-
-    // Delete user document from Firestore
-    await db.collection('users').doc(id).delete();
-
-    // Delete profile subcollection
-    const profileRef = db.collection('users').doc(id).collection('profile').doc('details');
-    await profileRef.delete();
-
-    res.status(200).json({ message: 'Peer counselor deleted successfully' });
+    // Send email
+    await sendVerificationEmail(adminEmail, verificationCode, counselorName);
+    //console.log('Verification email sent successfully');
+    
+    res.status(200).json({ message: 'Verification code sent' });
   } catch (error) {
-    console.error('Error deleting peer counselor:', error);
-    res.status(500).json({ error: 'Failed to delete peer counselor' });
+    console.error('Detailed error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
+
+router.delete('/peer-counselors/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { verificationCode } = req.body;
+
+    // Verify the code
+    const verificationDoc = await db.collection('deleteVerifications').doc(id).get();
+    if (!verificationDoc.exists) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    const verification = verificationDoc.data();
+    if (verification.code !== verificationCode) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    if (verification.expiresAt.toDate() < new Date()) {
+      return res.status(400).json({ message: 'Verification code expired' });
+    }
+
+    // Proceed with deletion
+    await admin.auth().deleteUser(id);
+    
+    await db.collection('users').doc(id).delete();
+    
+    await db.collection('deleteVerifications').doc(id).delete();
+
+    res.status(200).json({ message: 'Peer counselor deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete peer counselor' });
+  }
+});
 
 router.put('/peer-counselor/status/:userId', async (req, res) => {
   const { userId } = req.params;

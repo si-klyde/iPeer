@@ -17,6 +17,9 @@ const AdminDashboard = () => {
   const [PeerCounselorsPerPage] = useState(6);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [counselorToDelete, setCounselorToDelete] = useState(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerificationSent, setIsVerificationSent] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -103,26 +106,55 @@ const AdminDashboard = () => {
     );
   }
 
-  const handleDelete = async (counselorId) => {
+  const sendVerificationCode = async () => {
+    const currentUser = auth.currentUser;
+    
+    console.log('Sending verification for:', {
+      counselorId: counselorToDelete.id,
+      counselorName: counselorToDelete.fullName,
+      adminEmail: currentUser.email
+    });
+  
+    try {
+      const token = await auth.currentUser.getIdToken();
+      await axios.post(
+        `http://localhost:5000/api/admin/send-delete-verification`,
+        { 
+          counselorId: counselorToDelete.id,
+          counselorName: counselorToDelete.fullName,
+          adminEmail: currentUser.email 
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsVerificationSent(true);
+      toast.success('Verification code sent to your email');
+    } catch (error) {
+      console.log('Error details:', error.response?.data);
+      toast.error('Failed to send verification code');
+    }
+  };
+
+  const handleDelete = async (counselorId, code) => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.delete(
         `http://localhost:5000/api/peer-counselors/${counselorId}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          data: { verificationCode: code }
         }
       );
       
       setPeerCounselors(prev => prev.filter(c => c.id !== counselorId));
       toast.success('Peer counselor deleted successfully');
     } catch (error) {
-      console.error('Error deleting peer counselor:', error);
-      toast.error('Failed to delete peer counselor');
+      toast.error(error.response?.data?.message || 'Failed to delete peer counselor');
     }
     setShowDeleteModal(false);
     setCounselorToDelete(null);
+    setVerificationCode('');
+    setIsVerificationSent(false);
   };
-  
 
   const formatLastOnline = (timestamp) => {
     if (!timestamp || !timestamp._seconds) return 'Unknown';
@@ -409,6 +441,7 @@ const AdminDashboard = () => {
           <InvitePeerCounselor adminData={adminData} />
         </div>
       </div>
+
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4">
@@ -423,27 +456,53 @@ const AdminDashboard = () => {
                 Delete Peer Counselor
               </h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete {counselorToDelete?.fullName}? This action cannot be undone.
+                You are about to delete <span className="font-semibold">{counselorToDelete?.fullName}</span>
               </p>
-              <div className="flex gap-4 w-full">
+
+              {!isVerificationSent ? (
                 <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setCounselorToDelete(null);
-                  }}
-                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 
+                  onClick={sendVerificationCode}
+                  className="w-full px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 
                     font-medium transition-all duration-200"
                 >
-                  Cancel
+                  Send Verification Code
                 </button>
-                <button
-                  onClick={() => handleDelete(counselorToDelete.id)}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 
-                    font-medium transition-all duration-200"
-                >
-                  Delete
-                </button>
-              </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    placeholder="Enter verification code"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 mb-6
+                      focus:ring-2 focus:ring-red-500 focus:border-transparent
+                      transition-all duration-200"
+                  />
+                  <div className="flex gap-4 w-full">
+                    <button
+                      onClick={() => {
+                        setShowDeleteModal(false);
+                        setCounselorToDelete(null);
+                        setVerificationCode('');
+                        setIsVerificationSent(false);
+                      }}
+                      className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 
+                        font-medium transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleDelete(counselorToDelete.id, verificationCode)}
+                      disabled={!verificationCode}
+                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 
+                        font-medium transition-all duration-200
+                        disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

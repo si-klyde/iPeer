@@ -333,10 +333,45 @@ const sendPasswordResetEmail = async (email, resetToken) => {
   await transporter.sendMail(mailOptions);
 };
 
+const sendVerificationEmail = async (adminEmail, verificationCode, counselorName) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: adminEmail,
+    subject: 'Delete Verification Code - iPeer',
+    html: `
+      ${emailStyles}
+      <div class="email-container">
+        <div class="header">
+          <h2>Delete Verification Code</h2>
+        </div>
+        <div class="content">
+          <p>Dear Admin,</p>
+          <p>You have requested to delete peer counselor: <strong>${counselorName}</strong></p>
+          
+          <div class="appointment-details">
+            <p><strong>Your verification code is:</strong></p>
+            <h2 style="font-size: 32px; letter-spacing: 5px; color: #dc2626;">${verificationCode}</h2>
+            <p>This code will expire in 10 minutes.</p>
+          </div>
+          
+          <p>If you did not request this deletion, please ignore this email.</p>
+          <p>Best regards,<br>The iPeer Team</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   sendAppointmentConfirmation,
   sendAppointmentReminder,
   sendAppointmentRejection,
   sendPeerCounselorInvitation,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendVerificationEmail
 };
