@@ -6,6 +6,7 @@ const {createClientDocument, createPeerCounselorDocument} = require('../models/u
 const SECURITY_CONFIG = require('../config/security.config.js');
 const { decrypt } = require('../utils/encryption.utils');
 const { hashPassword, verifyPassword } = require('../utils/password.utils');
+const { sendPasswordResetEmail } = require('../services/emailService.js');;
 require('dotenv').config();
 
 router.post('/register-peer-counselor', async (req, res) => {
@@ -279,5 +280,84 @@ router.post('/check-role', async (req, res) => {
   }
 });
 
+router.post('/reset-password-request', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef
+      .where('role', '==', 'peer-counselor')
+      .get();
+      
+    const userDoc = snapshot.docs.find(doc => {
+      const data = doc.data();
+      const decryptedEmail = decrypt(data.email);
+      return decryptedEmail === email;
+    });
+
+    if (!userDoc) {
+      return res.status(404).send({ error: 'Email not found' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpiry = new Date(Date.now() + 3600000); // 1 hour validity
+
+    await userDoc.ref.update({
+      resetPasswordToken: resetToken,
+      resetPasswordExpiry: resetExpiry
+    });
+
+    // Send reset password email using your email service
+    await sendPasswordResetEmail(email, resetToken);
+
+    res.status(200).send({ message: 'Password reset link sent to email' });
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to process reset request' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  
+  try {
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef
+      .where('resetPasswordToken', '==', token)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(400).send({ error: 'Invalid reset token' });
+    }
+
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+    
+    // Generate new password hash
+    const salt = crypto.randomBytes(SECURITY_CONFIG.SALT_BYTES).toString('hex');
+    const hash = hashPassword(newPassword, salt);
+
+    // Update Firebase Auth password
+    await auth.updateUser(userDoc.id, {
+      password: newPassword // Firebase Auth needs plain password
+    });
+
+    // Update auth credentials in Firestore
+    await userDoc.ref.collection('auth').doc('credentials').update({
+      salt,
+      password: hash
+    });
+
+    // Clear reset token fields
+    await userDoc.ref.update({
+      resetPasswordToken: admin.firestore.FieldValue.delete(),
+      resetPasswordExpiry: admin.firestore.FieldValue.delete()
+    });
+
+    res.status(200).send({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).send({ error: 'Failed to reset password' });
+  }
+});
 
 module.exports = router;

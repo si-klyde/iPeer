@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { auth } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, firestore } from '../firebase';
 import axios from 'axios';
 import { toast }from 'react-toastify';
 import RegisterPeerCounselor from '../pages/RegisterPeerCounselor';
@@ -15,6 +16,15 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       const unsubscribe = auth.onAuthStateChanged(async (user) => {
         if (user) {
           try {
+            // First check if user is an admin
+            const adminDocRef = doc(firestore, 'admins', user.uid);
+            const adminDoc = await getDoc(adminDocRef);
+            
+            if (adminDoc.exists()) {
+              setUserRole('admin');
+              setLoading(false);
+              return;
+            }
             const idToken = await user.getIdToken();
             
             const response = await axios.post('http://localhost:5000/api/check-role', {}, {
@@ -55,6 +65,20 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!allowedRoles.includes(userRole)) {
     console.log('Access denied. User role:', userRole, 'Allowed roles:', allowedRoles);
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  if (isAdminRoute && userRole !== 'admin') {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (!isAdminRoute && userRole === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  if (!allowedRoles.includes(userRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
