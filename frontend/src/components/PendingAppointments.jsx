@@ -1,7 +1,37 @@
 import React from 'react';
 
 const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppointmentStatus, role }) => {
-  const pendingAppointments = appointments.filter(apt => apt.status === 'pending');
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  const currentTime = now.toLocaleTimeString('en-US', { 
+      hour12: false, 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hourCycle: 'h23' 
+  });
+
+  // Convert appointment time to 24-hour format for comparison
+  const formatTo24Hour = (time) => {
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${minutes}`;
+  };
+
+  const pendingAppointments = appointments.filter(apt => {
+      console.log('Comparing times:', {
+          current: currentTime,
+          appointment: formatTo24Hour(apt.time)
+      });
+      
+      if (apt.status !== 'pending') return false;
+      
+      if (apt.date > today) return true;
+      
+      if (apt.date === today) {
+          return formatTo24Hour(apt.time) > currentTime;
+      }
+      
+      return false;
+  });
 
   const getUserName = (appointment) => {
     if (role === 'client') {
