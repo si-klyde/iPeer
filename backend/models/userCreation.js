@@ -51,7 +51,6 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
     role: 'peer-counselor',
     createdAt: new Date(),
     lastLogin: new Date(),
-    isActive: true,
     isVerified: false,
     currentStatus: {
       status: 'offline',

@@ -387,10 +387,13 @@ const AdminDashboard = () => {
 
               <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <p className="text-xs sm:text-sm text-gray-600">
-                  {counselor.currentStatus.status === 'online' 
-                    ? 'Currently Online'
-                    : `Last seen ${formatLastOnline(counselor.currentStatus.lastStatusUpdate)}`
-                  }
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {counselor.currentStatus?.status?.toLowerCase() === 'online' 
+                      ? 'Currently Online'
+                      : `Last seen ${formatLastOnline(counselor.currentStatus.lastStatusUpdate)}`
+                    }
+                  </p>
+
                 </p>
                 <div className="flex flex-col xs:flex-row gap-2">
                   <button
@@ -460,13 +463,25 @@ const AdminDashboard = () => {
               </p>
 
               {!isVerificationSent ? (
-                <button
-                  onClick={sendVerificationCode}
-                  className="w-full px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 
-                    font-medium transition-all duration-200"
-                >
-                  Send Verification Code
-                </button>
+                <div className="flex flex-col gap-3 w-full">
+                  <button
+                    onClick={sendVerificationCode}
+                    className="w-full px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700
+                      font-medium transition-all duration-200"
+                  >
+                    Send Verification Code
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setCounselorToDelete(null);
+                    }}
+                    className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200
+                      font-medium transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
               ) : (
                 <>
                   <input
