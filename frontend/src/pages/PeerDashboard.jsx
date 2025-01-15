@@ -45,10 +45,20 @@ const ViewEventModal = ({ isOpen, onClose, event }) => {
           <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 hover:bg-red-100 rounded-full transition-colors duration-200"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg 
+              className="w-6 h-6 text-red-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M6 18L18 6M6 6l12 12" 
+              />
             </svg>
           </button>
         </div>
@@ -246,10 +256,12 @@ const PeerDashboard = () => {
   // Fetch Events
   const fetchEvents = useCallback(async () => {
     try {
+      const token = await auth.currentUser.getIdToken();
       const response = await axios.get('http://localhost:5000/api/events', {
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -322,8 +334,8 @@ const PeerDashboard = () => {
     };
   
     return (
-      <div className="lg:flex items-center sm:grid-flow-row md:grid-flow-row space-x-4  space-y-3 mb-6 bg-white p-4 rounded-lg shadow">
-        <span className="font-medium">Status:</span>
+      <div className="flex items-center space-x-4 mb-6 bg-white p-4 rounded-lg shadow">
+        <span className="font-semibold text-gray-700">Status:</span>
         <div className="flex space-x-2">
           {statusOptions.map((status) => (
             <button
@@ -389,38 +401,39 @@ const PeerDashboard = () => {
     );
   }
 
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 h-full">
-        <div className="mb-8">
-          <StatusToggle />
-        </div>
-        
-        {/* Main Container */}
-        <div className="bg-white rounded-xl shadow-xl overflow-hidden min-h-[80vh]">
-          {/* Tab Buttons */}
-          <div className="flex border-b">
-            <button
-              onClick={() => setActiveTab('today')}
-              className={`flex-1 px-8 py-6 text-center text-lg font-semibold transition-all duration-200 
-                ${activeTab === 'today' 
-                  ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
-                  : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
-            >
-              Today's Schedule
-            </button>
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className={`flex-1 px-8 py-6 text-center text-lg font-semibold transition-all duration-200
-                ${activeTab === 'upcoming' 
-                  ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
-                  : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
-            >
-              Upcoming Appointments
-            </button>
-            <button
-              onClick={() => setActiveTab('events')}
-              className={`flex-1 px-8 py-6 text-center text-lg font-semibold transition-all duration-200
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8 h-full">
+          <div className="mb-8">
+            <StatusToggle />
+          </div>
+          
+          {/* Main Container */}
+          <div className="bg-white rounded-xl shadow-xl overflow-hidden min-h-[80vh]">
+            {/* Tab Buttons */}
+            <div className="flex flex-col sm:flex-row border-b">
+              <button
+                onClick={() => setActiveTab('today')}
+                className={`flex-1 px-4 sm:px-8 py-4 sm:py-6 text-center text-base sm:text-lg font-semibold transition-all duration-200 
+                  ${activeTab === 'today' 
+                    ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
+                    : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
+              >
+                Today's Schedule
+              </button>
+              <button
+                onClick={() => setActiveTab('upcoming')}
+                className={`flex-1 px-4 sm:px-8 py-4 sm:py-6 text-center text-base sm:text-lg font-semibold transition-all duration-200
+                  ${activeTab === 'upcoming' 
+                    ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
+                    : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
+              >
+                Upcoming Appointments
+              </button>
+              <button
+                onClick={() => setActiveTab('events')}
+                className={`flex-1 px-4 sm:px-8 py-4 sm:py-6 text-center text-base sm:text-lg font-semibold transition-all duration-200
                 ${activeTab === 'events' 
                   ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
                   : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
@@ -430,12 +443,12 @@ const PeerDashboard = () => {
           </div>
 
           {/* Content Area */}
-          <div className="p-8 min-h-[calc(80vh-4rem)]">
+          <div className="p-4 sm:p-8 min-h-[calc(80vh-4rem)]">
             {/* Today's Schedule Content */}
             {activeTab === 'today' && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800">Today's Schedule</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Today's Schedule</h2>
                   <button 
                     onClick={() => navigate('/appointments/peer-counselor')}
                     className="text-base text-green-500 hover:text-green-600 flex items-center"
@@ -447,9 +460,9 @@ const PeerDashboard = () => {
                   todayFormattedAppointments.map((appointment) => (
                     <div 
                       key={appointment.id} 
-                      className="flex items-center justify-between p-6 rounded-xl border border-gray-100 hover:border-green-100 hover:bg-green-50 transition-all duration-200"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 rounded-xl border border-gray-100 hover:border-green-100 hover:bg-green-50 transition-all duration-200 space-y-4 sm:space-y-0"
                     >
-                      <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-4 sm:space-x-6">
                         <div className="p-4 bg-green-100 rounded-full">
                           <Calendar className="h-6 w-6 text-green-600" />
                         </div>
@@ -460,13 +473,12 @@ const PeerDashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <button 
+                      {/* <button 
                         onClick={() => navigate(`/counseling/${appointment.roomId}`)}
-                        className="px-6 py-3 text-base bg-green-600 text-white rounded-lg
-                                hover:bg-green-700 transition-colors duration-200"
+                        className="w-full sm:w-auto px-6 py-3 text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                       >
                         Join Session
-                      </button>
+                      </button> */}
                     </div>
                   ))
                 ) : (
@@ -482,8 +494,8 @@ const PeerDashboard = () => {
             {/* Upcoming Appointments Content */}
             {activeTab === 'upcoming' && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800">Upcoming Appointments</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Upcoming Appointments</h2>
                   <button 
                     onClick={() => navigate('/appointments/peer-counselor')}
                     className="text-base text-green-500 hover:text-green-600 flex items-center"
@@ -495,9 +507,9 @@ const PeerDashboard = () => {
                   upcomingFormattedAppointments.map((appointment) => (
                     <div 
                       key={appointment.id} 
-                      className="flex items-center justify-between p-6 rounded-xl border border-gray-100 hover:border-green-100 hover:bg-green-50 transition-all duration-200"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 rounded-xl border border-gray-100 hover:border-green-100 hover:bg-green-50 transition-all duration-200 space-y-4 sm:space-y-0"
                     >
-                      <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-4 sm:space-x-6">
                         <div className="p-4 bg-green-100 rounded-full">
                           <Calendar className="h-6 w-6 text-green-600" />
                         </div>
@@ -508,13 +520,12 @@ const PeerDashboard = () => {
                           </p>
                         </div>
                       </div>
-                      <button 
+                      {/* <button 
                         onClick={() => navigate(`/counseling/${appointment.roomId}`)}
-                        className="px-6 py-3 text-base bg-green-600 text-white rounded-lg
-                                hover:bg-green-700 transition-colors duration-200"
+                        className="w-full sm:w-auto px-6 py-3 text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                       >
                         Join Session
-                      </button>
+                      </button> */}
                     </div>
                   ))
                 ) : (
@@ -530,8 +541,8 @@ const PeerDashboard = () => {
             {/* Events Management Content */}
             {activeTab === 'events' && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800">Events Management</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Events Management</h2>
                   <button 
                     onClick={() => navigate('/event')}
                     className="text-base text-green-500 hover:text-green-600 flex items-center"
@@ -543,10 +554,10 @@ const PeerDashboard = () => {
                   events.map((event) => (
                     <div 
                       key={event.id} 
-                      className="flex items-center justify-between p-6 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 space-y-4 sm:space-y-0"
                     >
-                      <div className="flex items-center space-x-6">
-                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                      <div className="flex items-start sm:items-center space-x-4 sm:space-x-6">
+                        <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                           {event.imageUrl ? (
                             <img
                               src={event.imageUrl}
@@ -555,7 +566,7 @@ const PeerDashboard = () => {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-purple-100">
-                              <Calendar className="h-10 w-10 text-purple-600" />
+                              <Calendar className="h-8 sm:h-10 w-8 sm:w-10 text-purple-600" />
                             </div>
                           )}
                         </div>
@@ -571,8 +582,7 @@ const PeerDashboard = () => {
                       </div>
                       <button 
                         onClick={() => handleViewEvent(event)}
-                        className="px-6 py-3 text-base bg-purple-600 text-white rounded-lg
-                                hover:bg-purple-700 transition-colors duration-200"
+                        className="w-full sm:w-auto px-6 py-3 text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
                       >
                         View Details
                       </button>
