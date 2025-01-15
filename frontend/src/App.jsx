@@ -222,27 +222,28 @@ const App = () => {
                 await handleUserLogout(currentUser);
                 return;
             }
-            
+                    
             if (currentUser) {
-                // Clean up any existing listeners before setting up new ones
+                // Clean up existing listeners
                 if (unsubscribers.user) unsubscribers.user();
                 if (unsubscribers.profile) unsubscribers.profile();
                 if (unsubscribers.admin) unsubscribers.admin();
         
-                // Only check for admin status if we're on an admin route
+                // Check for admin route first
                 if (location.pathname.startsWith('/admin')) {
-                    // Setup admin listener
                     const adminUnsubscribe = await setupAdminListener(currentUser);
                     if (adminUnsubscribe) {
                         unsubscribers.admin = adminUnsubscribe;
-                        return;
+                        setIsInitialLoad(false);
+                        return;  // Exit early for admin users
                     }
                 }
         
+                // Only check user document for non-admin users
                 const userDocRef = doc(firestore, 'users', currentUser.uid);
                 let retries = 3;
                 let userDoc;
-                
+                        
                 while (retries > 0) {
                     userDoc = await getDoc(userDocRef);
                     if (userDoc.exists()) break;
@@ -251,14 +252,18 @@ const App = () => {
                 }
         
                 if (!userDoc?.exists()) {
-                    throw new Error('User document not found after retries');
+                    // Instead of throwing error, check if user is already set as admin
+                    if (!user?.role === 'admin') {
+                        throw new Error('User document not found after retries');
+                    }
                 }
         
-                const userRole = userDoc.data()?.role;
-                const { profileUnsubscribe, roleUnsubscribe } = await setupRegularUserListener(currentUser, userRole);
-                
-                unsubscribers.profile = profileUnsubscribe;
-                unsubscribers.user = roleUnsubscribe;
+                if (userDoc?.exists()) {
+                    const userRole = userDoc.data()?.role;
+                    const { profileUnsubscribe, roleUnsubscribe } = await setupRegularUserListener(currentUser, userRole);
+                    unsubscribers.profile = profileUnsubscribe;
+                    unsubscribers.user = roleUnsubscribe;
+                }
             }
         
             if (isInitialLoad) {
