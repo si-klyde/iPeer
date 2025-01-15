@@ -5,7 +5,34 @@ const { encrypt, decrypt } = require('../utils/encryption.utils');
 const { hashPassword, verifyPassword } = require('../utils/password.utils');
 const crypto = require('crypto');
 const SECURITY_CONFIG = require('../config/security.config.js');
-const { sendPeerCounselorInvitation } = require('../services/emailService');
+const { sendPeerCounselorInvitation, sendAdminPasswordResetEmail } = require('../services/emailService');
+
+const authenticateAdmin = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split('Bearer ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    // Verify if the user is an admin
+    const adminDoc = await db.collection('admins').doc(decodedToken.uid).get();
+    if (!adminDoc.exists) {
+      return res.status(403).json({ message: 'Unauthorized access' });
+    }
+
+    req.user = {
+      ...decodedToken,
+      adminData: adminDoc.data()
+    };
+    
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: 'Invalid token or unauthorized access' });
+  }
+};
+
 
 router.post('/login-admin', async (req, res) => {
     try {
@@ -151,6 +178,7 @@ router.get('/admin-data/:uid', async (req, res) => {
       res.status(200).send({
         uid: adminDoc.id,
         username: decrypt(adminData.username),
+        email: decrypt(adminData.email),
         college: decrypt(adminData.college),
         school: decrypt(adminData.school),
         role: adminData.role,
@@ -286,5 +314,130 @@ router.get('/admin-data/:uid', async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+
+  router.put('/update-profile/:uid', async (req, res) => {
+    try {
+      const { uid } = req.params;
+      const { fullName, username, photoURL } = req.body;
+  
+      const adminRef = db.collection('admins').doc(uid);
+      const adminDoc = await adminRef.get();
+  
+      if (!adminDoc.exists) {
+        return res.status(404).send({ error: 'Admin not found' });
+      }
+  
+      const updateData = {
+        username: encrypt(username),
+        fullName: encrypt(fullName),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+  
+      if (photoURL) {
+        updateData.photoURL = encrypt(photoURL);
+      }
+  
+      await adminRef.update(updateData);
+  
+      // Update Firebase Auth display name
+      await auth.updateUser(uid, {
+        displayName: fullName,
+        photoURL: photoURL || null
+      });
+  
+      res.status(200).send({ message: 'Profile updated successfully' });
+    } catch (error) {
+      console.error('Profile update error:', error);
+      res.status(500).send({ error: 'Failed to update profile' });
+    }
+  });
+
+  // Initiate password change and send verification code
+router.post('/initiate-password-change', authenticateAdmin, async (req, res) => {
+  const { uid } = req.body;
+  const verificationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  try {
+    const adminDoc = await db.collection('admins').doc(uid).get();
+    const adminData = adminDoc.data();
+    const email = decrypt(adminData.email);
+
+    // Store verification code with expiration
+    await db.collection('adminVerifications').doc(uid).set({
+      code: verificationCode,
+      expiresAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000)), // 10 minutes
+      type: 'password-change'
+    });
+
+    // Send verification email
+    await sendAdminPasswordResetEmail(email, verificationCode);
+    res.status(200).json({ message: 'Verification code sent successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to send verification code' });
+  }
+});
+
+// Verify the code
+router.post('/verify-code', authenticateAdmin, async (req, res) => {
+  const { uid, code } = req.body;
+
+  try {
+    const verificationRef = db.collection('adminVerifications').doc(uid);
+    const verificationDoc = await verificationRef.get();
+
+    if (!verificationDoc.exists) {
+      return res.status(400).json({ message: 'No verification code found' });
+    }
+
+    const verification = verificationDoc.data();
+    if (verification.expiresAt.toDate() < new Date()) {
+      await verificationRef.delete();
+      return res.status(400).json({ message: 'Verification code expired' });
+    }
+
+    if (verification.code !== code) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    res.status(200).json({ message: 'Code verified successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// Complete password change
+router.post('/complete-password-change', authenticateAdmin, async (req, res) => {
+  const { uid, code, newPassword } = req.body;
+
+  try {
+    // Verify code one final time
+    const verificationRef = db.collection('adminVerifications').doc(uid);
+    const verificationDoc = await verificationRef.get();
+
+    if (!verificationDoc.exists || 
+        verificationDoc.data().code !== code || 
+        verificationDoc.data().expiresAt.toDate() < new Date()) {
+      return res.status(400).json({ message: 'Invalid or expired verification' });
+    }
+
+    // Update password
+    const salt = crypto.randomBytes(32).toString('hex');
+    const hashedPassword = hashPassword(newPassword, salt);
+    
+    await db.collection('admins').doc(uid).collection('auth').doc('credentials').update({
+      salt,
+      password: hashedPassword,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Clean up verification document
+    await verificationRef.delete();
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
   
 module.exports = router;

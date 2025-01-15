@@ -367,11 +367,46 @@ const sendVerificationEmail = async (adminEmail, verificationCode, counselorName
   await transporter.sendMail(mailOptions);
 };
 
+const sendAdminPasswordResetEmail = async (email, verificationCode) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Password Reset Code - iPeer Admin',
+    html: `
+      ${emailStyles}
+      <div class="email-container">
+        <div class="header">
+          <h2>Password Reset Verification</h2>
+        </div>
+        <div class="content">
+          <p>Dear Admin,</p>
+          <p>You have requested to reset your password.</p>
+          
+          <div class="appointment-details">
+            <p><strong>Your verification code is:</strong></p>
+            <h2 style="font-size: 32px; letter-spacing: 5px; text-align: center; color: #059669;">${verificationCode}</h2>
+            <p>⚠️ This code will expire in 10 minutes.</p>
+          </div>
+          
+          <p>If you did not request this password reset, please ignore this email.</p>
+          <p>Best regards,<br>The iPeer Team</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   sendAppointmentConfirmation,
   sendAppointmentReminder,
   sendAppointmentRejection,
   sendPeerCounselorInvitation,
   sendPasswordResetEmail,
-  sendVerificationEmail
+  sendVerificationEmail,
+  sendAdminPasswordResetEmail
 };

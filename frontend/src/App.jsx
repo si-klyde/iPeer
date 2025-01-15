@@ -4,6 +4,7 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import AdminLogin from './pages/AdminLogin.jsx';
 import AdminSetupAccount from './pages/AdminSetupAccount.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import AdminProfile from './pages/AdminProfile.jsx';
 import PeerCounselorProfile from './pages/PeerCounselorProfile.jsx';
 import Header from './components/Header.jsx';
 import ProtectedRoute, { ProtectedRegistrationRoute } from './context/ProtectedRoute.jsx';
@@ -334,6 +335,12 @@ const App = () => {
                             <PeerCounselorProfile />
                         </ProtectedRoute>
                     } />
+                    <Route path="/admin/profile" element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                            <AdminProfile />
+                        </ProtectedRoute>
+                    } />
+
 
                     {/* Client-Only Routes */}
                     <Route path="/book-appointment" element={
