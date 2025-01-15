@@ -21,6 +21,7 @@ const AdminSetupAccount = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const navigate = useNavigate();
+  const [isInitializing, setIsInitializing] = useState(true);
   
   useEffect(() => {
       document.querySelector('header')?.classList.add('hidden');
@@ -31,6 +32,37 @@ const AdminSetupAccount = () => {
         document.querySelector('footer')?.classList.remove('hidden');
       };
     }, []);
+
+    useEffect(() => {
+      const checkSetupStatus = async () => {
+        if (!auth.currentUser) {
+          setIsInitializing(false);
+          return;
+        }
+    
+        try {
+          const token = await auth.currentUser.getIdToken();
+          const response = await axios.get(
+            `http://localhost:5000/api/admin/admin-initial-data/${auth.currentUser.uid}`,
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
+          
+          // Check if setup is completed
+          if (response.data.email && response.data.fullName) {
+            navigate('/admin/dashboard', { replace: true });
+          }
+        } catch (error) {
+          // Ignore error for first time login
+          console.log('First time login setup required');
+        } finally {
+          setIsInitializing(false);
+        }
+      };
+    
+      checkSetupStatus();
+    }, [navigate]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -121,6 +153,14 @@ const AdminSetupAccount = () => {
     }
   };
   
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-color-5"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-color-3 to-color-5 py-12 px-4 sm:px-6 lg:px-8">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md space-y-8">

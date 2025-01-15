@@ -327,17 +327,23 @@ const App = () => {
                     } />
                     <Route path="/admin/dashboard" element={
                         <ProtectedRoute allowedRoles={['admin']}>
-                            <AdminDashboard />
+                        {user?.isSetupComplete ? 
+                            <AdminDashboard /> : 
+                            <Navigate to="/admin/setup-account" replace />}
                         </ProtectedRoute>
                     } />
                     <Route path="/admin/peer-counselor/:id" element={
                         <ProtectedRoute allowedRoles={['admin']}>
-                            <PeerCounselorProfile />
+                        {user?.isSetupComplete ? 
+                            <AdminProfile /> : 
+                            <Navigate to="/admin/setup-account" replace />}
                         </ProtectedRoute>
                     } />
                     <Route path="/admin/profile" element={
                         <ProtectedRoute allowedRoles={['admin']}>
-                            <AdminProfile />
+                        {user?.isSetupComplete ? 
+                            <AdminProfile /> : 
+                            <Navigate to="/admin/setup-account" replace />}
                         </ProtectedRoute>
                     } />
 
