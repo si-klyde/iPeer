@@ -1,7 +1,10 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { auth } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, firestore } from '../firebase';
 import axios from 'axios';
+import { toast }from 'react-toastify';
+import RegisterPeerCounselor from '../pages/RegisterPeerCounselor';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [loading, setLoading] = useState(true);
@@ -13,6 +16,15 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       const unsubscribe = auth.onAuthStateChanged(async (user) => {
         if (user) {
           try {
+            // First check if user is an admin
+            const adminDocRef = doc(firestore, 'admins', user.uid);
+            const adminDoc = await getDoc(adminDocRef);
+            
+            if (adminDoc.exists()) {
+              setUserRole('admin');
+              setLoading(false);
+              return;
+            }
             const idToken = await user.getIdToken();
             
             const response = await axios.post('http://localhost:5000/api/check-role', {}, {
@@ -56,7 +68,49 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/unauthorized" replace />;
   }
 
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  if (isAdminRoute && userRole !== 'admin') {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (!isAdminRoute && userRole === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  if (!allowedRoles.includes(userRole)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   return children;
 };
 
-export default ProtectedRoute;
+const ProtectedRegistrationRoute = () => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  
+  useEffect(() => {
+    if (!token) {
+      toast.error('Only invited peer counselors can register. Please contact your administrator.', {
+        autoClose: 4000,
+        position: "top-right",
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+        style: {
+          fontWeight: 'bold'
+        }
+      });
+    }
+  }, [token]);
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <RegisterPeerCounselor />;
+};
+
+export { ProtectedRoute as default, ProtectedRegistrationRoute };

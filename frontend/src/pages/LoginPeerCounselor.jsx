@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { auth, signInWithCustomToken } from '../firebase';
 
 const LoginPeerCounselor = () => {
@@ -9,6 +9,16 @@ const LoginPeerCounselor = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.querySelector('header')?.classList.add('hidden');
+    document.querySelector('footer')?.classList.add('hidden');
+  
+    return () => {
+      document.querySelector('header')?.classList.remove('hidden');
+      document.querySelector('footer')?.classList.remove('hidden');
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -86,6 +96,12 @@ const LoginPeerCounselor = () => {
             className="w-full px-4 bg-green-100 text-black py-2 border shadow-inner border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             disabled={loading}
           />
+        </div>
+
+        <div className="mb-4 text-right">
+          <Link to="/forgot-password" className="text-green-600 hover:text-green-700 text-sm">
+            Forgot Password?
+          </Link>
         </div>
 
         {/* Login Button */}

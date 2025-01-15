@@ -61,12 +61,12 @@ const Login = () => {
               >
                 Login as Client
               </button>
-              <button
+              {/* <button
                 onClick={() => setActiveModal('register')}
                 className="w-full sm:w-2/3 bg-green-400 hover:bg-green-600/80 text-white font-bold shadow-inner py-3 px-4 rounded-2xl mb-4 sm:mb-6 transition duration-200"
               >
                 Register as Peer Counselor
-              </button>
+              </button> */}
               <button
                 onClick={() => setActiveModal('peer')}
                 className="w-full sm:w-2/3 bg-green-400 hover:bg-green-600/80 text-white font-bold shadow-inner py-3 px-4 rounded-2xl transition duration-200"
@@ -78,7 +78,7 @@ const Login = () => {
 
           {/* Modals */}
           {activeModal === 'client' && <LoginClient />}
-          {activeModal === 'register' && <RegisterPeerCounselor />}
+          {/* {activeModal === 'register' && <RegisterPeerCounselor />} */}
           {activeModal === 'peer' && <LoginPeerCounselor />}
         </div>
 
