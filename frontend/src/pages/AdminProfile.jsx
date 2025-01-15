@@ -58,7 +58,7 @@ const AdminProfile = () => {
 
       if (photoFile) {
         const storage = getStorage();
-        const storageRef = ref(storage, `admin-photos/${auth.currentUser.uid}`);
+        const storageRef = ref(storage, `profile-photos/${auth.currentUser.uid}`);
         await uploadBytes(storageRef, photoFile);
         photoURL = await getDownloadURL(storageRef);
       }
@@ -168,7 +168,7 @@ const AdminProfile = () => {
                       type="text"
                       value={adminData?.fullName}
                       onChange={(e) => setAdminData({...adminData, fullName: e.target.value})}
-                      className="w-full px-6 py-4 bg-gray-50 rounded-xl border-2 border-emerald-100
+                      className="w-full px-6 py-4 bg-gray-50 rounded-xl border-2 border-emerald-400
                         focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 
                         text-gray-900 text-base sm:text-lg transition-all duration-300
                         placeholder-gray-400 pr-12"
@@ -199,7 +199,7 @@ const AdminProfile = () => {
                       type="text"
                       value={adminData?.username}
                       onChange={(e) => setAdminData({...adminData, username: e.target.value})}
-                      className="w-full px-6 py-4 bg-gray-50 rounded-xl border-2 border-emerald-100
+                      className="w-full px-6 py-4 bg-gray-50 rounded-xl border-2 border-emerald-400
                         focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 
                         text-gray-900 text-base sm:text-lg transition-all duration-300
                         placeholder-gray-400 pr-12"

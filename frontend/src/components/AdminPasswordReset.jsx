@@ -12,6 +12,24 @@ const AdminPasswordReset = () => {
     confirmPassword: ''
   });
 
+  const [passwordStrength, setPasswordStrength] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
+  
+  const checkPasswordStrength = (password) => {
+    setPasswordStrength({
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    });
+  };
+
   const requestCode = async () => {
     try {
       const token = await auth.currentUser.getIdToken();
@@ -149,39 +167,69 @@ const AdminPasswordReset = () => {
       )}
   
       {step === 3 && (
-        <form onSubmit={updatePassword} className="space-y-6">
-          <p className="text-center text-sm sm:text-base text-gray-600">
-            Create a new password for your account
-          </p>
-          <div className="space-y-4">
+      <form onSubmit={updatePassword} className="space-y-6">
+        <p className="text-center text-sm sm:text-base text-gray-600">
+          Create a new password for your account
+        </p>
+        <div className="space-y-4">
+          <div>
             <input
               type="password"
               placeholder="New Password"
               value={passwords.newPassword}
-              onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
+              onChange={(e) => {
+                setPasswords({...passwords, newPassword: e.target.value});
+                checkPasswordStrength(e.target.value);
+              }}
               className="w-full px-6 py-3 sm:py-4 rounded-lg border-2 border-emerald-200 
                 focus:ring-2 focus:ring-emerald-500 focus:border-transparent 
                 text-sm sm:text-base"
             />
-            <input
-              type="password"
-              placeholder="Confirm New Password"
-              value={passwords.confirmPassword}
-              onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
-              className="w-full px-6 py-3 sm:py-4 rounded-lg border-2 border-emerald-200 
-                focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-                text-sm sm:text-base"
-            />
+            <div className="flex flex-col -space-y-1 mt-1">
+              {Object.entries(passwordStrength)
+                .filter(([_, isValid]) => !isValid)
+                .map(([rule, _]) => (
+                  <div key={rule} className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-gray-300" />
+                    <span className="text-[10px] text-gray-500">
+                      {rule === 'minLength' && '8+ characters'}
+                      {rule === 'hasUpperCase' && 'Uppercase letter'}
+                      {rule === 'hasLowerCase' && 'Lowercase letter'}
+                      {rule === 'hasNumber' && 'Number'}
+                      {rule === 'hasSpecialChar' && 'Special character'}
+                    </span>
+                  </div>
+                ))}
+            </div>
           </div>
-          <button
-            type="submit"
-            className="w-full px-6 py-3 sm:py-4 bg-emerald-600 text-white rounded-xl 
-              hover:bg-emerald-700 transition-all duration-300 text-sm sm:text-base"
-          >
-            Update Password
-          </button>
-        </form>
-      )}
+          <input
+            type="password"
+            placeholder="Confirm New Password"
+            value={passwords.confirmPassword}
+            onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
+            className={`w-full px-6 py-3 sm:py-4 rounded-lg border-2 border-emerald-200 
+              focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+              text-sm sm:text-base ${
+                passwords.confirmPassword && 
+                (passwords.confirmPassword === passwords.newPassword ? 'border-green-500' : 'border-red-500')
+              }`}
+          />
+          {passwords.confirmPassword && passwords.confirmPassword !== passwords.newPassword && (
+            <p className="text-red-500 text-sm mt-1">Passwords do not match</p>
+          )}
+        </div>
+        <button
+          type="submit"
+          disabled={!Object.values(passwordStrength).every(Boolean) || 
+            passwords.newPassword !== passwords.confirmPassword}
+          className="w-full px-6 py-3 sm:py-4 bg-emerald-600 text-white rounded-xl 
+            hover:bg-emerald-700 transition-all duration-300 text-sm sm:text-base
+            disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Update Password
+        </button>
+      </form>
+    )}
     </div>
   );
 };
