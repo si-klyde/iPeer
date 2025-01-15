@@ -186,9 +186,6 @@ router.put('/peer-counselor/status/:userId', async (req, res) => {
   const { userId } = req.params;
   const { status, isAvailable } = req.body;
   
-  console.log('Updating status for user:', userId);
-  console.log('New status data:', { status, isAvailable });
-  
   try {
     const userRef = db.collection('users').doc(userId);
     await userRef.update({
@@ -198,6 +195,7 @@ router.put('/peer-counselor/status/:userId', async (req, res) => {
         lastStatusUpdate: new Date()
       }
     });
+    console.log('Successfully updated status in database for user:', userId);
     
     res.status(200).json({ message: 'Status updated successfully' });
   } catch (error) {
@@ -205,6 +203,7 @@ router.put('/peer-counselor/status/:userId', async (req, res) => {
     res.status(500).json({ error: 'Failed to update status' });
   }
 });
+
 
 router.get('/peer-counselors/per-college/:college', async (req, res) => {
   const token = req.headers.authorization?.split('Bearer ')[1];

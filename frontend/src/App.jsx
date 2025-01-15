@@ -71,11 +71,20 @@ const App = () => {
     // Helper function to handle user logout
     const handleUserLogout = async (currentUser) => {
         if (!isInitialLoad && user && user.role === 'peer-counselor') {
+            console.log('Peer counselor logging out:', user.uid);
+            const token = await currentUser.getIdToken();
             try {
+                console.log('Updating peer counselor status to offline...');
                 await axios.put(
                     `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
-                    { status: 'offline', isAvailable: false }
+                    { status: 'offline', isAvailable: false },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
                 );
+                console.log('Successfully updated peer counselor status to offline');
             } catch (error) {
                 console.error('Error updating offline status:', error);
             }
@@ -83,6 +92,7 @@ const App = () => {
         clearLocalStorage();
         setUser(null);
     };
+    
 
     // Helper function to fetch admin data
     const fetchAdminData = async (currentUser) => {
@@ -218,8 +228,12 @@ const App = () => {
         };
 
         const setupUserListener = async (currentUser) => {
+            console.log('Auth state changed:', currentUser ? 'User logged in' : 'User logged out');
+        
             if (!currentUser && !isInitialLoad && user) {
+                console.log('Starting logout process for user:', user);
                 await handleUserLogout(currentUser);
+                console.log('Logout process completed');
                 return;
             }
                     
@@ -271,11 +285,11 @@ const App = () => {
             }
         };
 
-        // Set up the auth state listener
+        // Cleanup function
         unsubscribers.auth = authStateChanged(auth, setupUserListener);
 
-        // Cleanup function
         return () => {
+            console.log('Cleaning up auth listeners');
             Object.values(unsubscribers).forEach(unsubscribe => {
                 if (typeof unsubscribe === 'function') {
                     unsubscribe();

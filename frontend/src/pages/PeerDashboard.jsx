@@ -305,7 +305,7 @@ const PeerDashboard = () => {
 
   // Status Toggle Component
   const StatusToggle = () => {
-    const statusOptions = ['online', 'away', 'busy', 'offline'];
+    const statusOptions = ['online', 'busy'];
     
     const handleStatusChange = async (newStatus) => {
       try {
