@@ -111,7 +111,7 @@ const EventModal = ({
       <div className="bg-white rounded-lg p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-            {isEditing ? 'Edit Event' : 'Create New Event'}
+            {isEditing ? 'Edit Event' : 'Add New Event'}
           </h2>
           <button
             onClick={onClose}
