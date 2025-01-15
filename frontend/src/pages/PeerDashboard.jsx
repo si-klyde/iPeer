@@ -123,6 +123,7 @@ const PeerDashboard = () => {
   const [eventToDelete, setEventToDelete] = useState(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedViewEvent, setSelectedViewEvent] = useState(null);
+  const [activeTab, setActiveTab] = useState('today');
 
   // Authentication Effect
   useEffect(() => {
@@ -389,178 +390,201 @@ const PeerDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6 text-black sm:p-4 md:p-5 sm:w-auto md:w-auto">
-      <StatusToggle />
-      
-      {/* Today's Schedule */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-black">Today's Schedule</h2>
-            <button 
-              onClick={() => navigate('/appointments/peer-counselor')}
-              className="text-sm text-blue-500 hover:text-blue-600 flex items-center"
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8 h-full">
+        <div className="mb-8">
+          <StatusToggle />
+        </div>
+        
+        {/* Main Container */}
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden min-h-[80vh]">
+          {/* Tab Buttons */}
+          <div className="flex border-b">
+            <button
+              onClick={() => setActiveTab('today')}
+              className={`flex-1 px-8 py-6 text-center text-lg font-semibold transition-all duration-200 
+                ${activeTab === 'today' 
+                  ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
+                  : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
             >
-              View All <ChevronRight className="ml-1 h-4 w-4" />
+              Today's Schedule
+            </button>
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`flex-1 px-8 py-6 text-center text-lg font-semibold transition-all duration-200
+                ${activeTab === 'upcoming' 
+                  ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
+                  : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
+            >
+              Upcoming Appointments
+            </button>
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`flex-1 px-8 py-6 text-center text-lg font-semibold transition-all duration-200
+                ${activeTab === 'events' 
+                  ? 'text-green-600 border-b-2 border-green-600 bg-green-50' 
+                  : 'text-gray-600 hover:text-green-600 hover:bg-green-50'}`}
+            >
+              Events Management
             </button>
           </div>
-        </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            {todayFormattedAppointments.length > 0 ? (
-              todayFormattedAppointments.map((appointment) => (
-                <div 
-                  key={appointment.id} 
-                  className="flex items-center justify-between border-b pb-4 last:border-0"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <div>
-                      <p className="font-medium text-black">{appointment.studentName}</p>
-                      <p className="text-sm text-black">
-                        {appointment.time} - {appointment.date}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => navigate(`/counseling/${appointment.roomId}`)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md
-                              hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      Join Session
-                    </button>
-                    {/* <button 
-                      onClick={() => navigate(`/peer/client-history/${appointment.id}`)}
-                      className="px-3 py-1 text-sm text-black hover:text-gray-900
-                              transition-colors duration-200"
-                    >
-                      View History
-                    </button> */}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <p className="text-lg text-black">Your schedule is clear today! 🌟</p>
-                <p className="text-sm text-black">Time for a coffee break?</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Upcoming Appointments */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-black">Upcoming Appointments</h2>
-            <button 
-              onClick={() => navigate('/appointments/peer-counselor')}
-              className="text-sm text-blue-500 hover:text-blue-600 flex items-center"
-            >
-              View All <ChevronRight className="ml-1 h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            {upcomingFormattedAppointments.length > 0 ? (
-              upcomingFormattedAppointments.map((appointment) => (
-                <div 
-                  key={appointment.id} 
-                  className="flex items-center justify-between border-b pb-4 last:border-0"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <div>
-                      <p className="font-medium text-black">{appointment.studentName}</p>
-                      <p className="text-sm text-black">
-                        {appointment.time} - {appointment.date}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => navigate(`/counseling/${appointment.roomId}`)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md
-                              hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      Join Session
-                    </button>
-                  </div>
+          {/* Content Area */}
+          <div className="p-8 min-h-[calc(80vh-4rem)]">
+            {/* Today's Schedule Content */}
+            {activeTab === 'today' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-bold text-gray-800">Today's Schedule</h2>
+                  <button 
+                    onClick={() => navigate('/appointments/peer-counselor')}
+                    className="text-base text-green-500 hover:text-green-600 flex items-center"
+                  >
+                    View All <ChevronRight className="ml-2 h-5 w-5" />
+                  </button>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <p className="text-lg text-black">No upcoming appointments yet! ✨</p>
-                <p className="text-sm text-black">Your future schedule is wide open</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Events Management */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-black">Events Management</h2>
-            <button 
-              onClick={() => navigate('/event')}
-              className="text-sm text-blue-500 hover:text-blue-600 flex items-center"
-            >
-              View All <ChevronRight className="ml-1 h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            {events.length > 0 ? (
-              events.map((event) => (
-                <div 
-                  key={event.id} 
-                  className="flex items-center justify-between border-b pb-4 last:border-0"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                      {event.imageUrl ? (
-                        <img
-                          src={event.imageUrl}
-                          alt={event.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Calendar className="h-6 w-6 text-gray-400" />
+                {todayFormattedAppointments.length > 0 ? (
+                  todayFormattedAppointments.map((appointment) => (
+                    <div 
+                      key={appointment.id} 
+                      className="flex items-center justify-between p-6 rounded-xl border border-gray-100 hover:border-green-100 hover:bg-green-50 transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-6">
+                        <div className="p-4 bg-green-100 rounded-full">
+                          <Calendar className="h-6 w-6 text-green-600" />
                         </div>
-                      )}
+                        <div>
+                          <p className="text-lg font-medium text-gray-800">{appointment.studentName}</p>
+                          <p className="text-base text-gray-600">
+                            {appointment.time} - {appointment.date}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => navigate(`/counseling/${appointment.roomId}`)}
+                        className="px-6 py-3 text-base bg-green-600 text-white rounded-lg
+                                hover:bg-green-700 transition-colors duration-200"
+                      >
+                        Join Session
+                      </button>
                     </div>
-                    <div>
-                      <p className="font-medium text-black">{event.title}</p>
-                      <p className="text-sm text-black">
-                        {event.time} - {event.date} at {event.location}
-                      </p>
-                      <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full mt-1">
-                        {event.category}
-                      </span>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-16 bg-gray-50 rounded-xl">
+                    <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                    <p className="text-xl font-medium text-gray-800">Your schedule is clear today! 🌟</p>
+                    <p className="text-base text-gray-600 mt-3">Time for a coffee break?</p>
                   </div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleViewEvent(event)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md
-                              hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      View
-                    </button>
-                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Upcoming Appointments Content */}
+            {activeTab === 'upcoming' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-bold text-gray-800">Upcoming Appointments</h2>
+                  <button 
+                    onClick={() => navigate('/appointments/peer-counselor')}
+                    className="text-base text-green-500 hover:text-green-600 flex items-center"
+                  >
+                    View All <ChevronRight className="ml-2 h-5 w-5" />
+                  </button>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <p className="text-lg text-black">No events scheduled yet! ✨</p>
-                <p className="text-sm text-black">Check back later for upcoming events</p>
+                {upcomingFormattedAppointments.length > 0 ? (
+                  upcomingFormattedAppointments.map((appointment) => (
+                    <div 
+                      key={appointment.id} 
+                      className="flex items-center justify-between p-6 rounded-xl border border-gray-100 hover:border-green-100 hover:bg-green-50 transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-6">
+                        <div className="p-4 bg-green-100 rounded-full">
+                          <Calendar className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-medium text-gray-800">{appointment.studentName}</p>
+                          <p className="text-base text-gray-600">
+                            {appointment.time} - {appointment.date}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => navigate(`/counseling/${appointment.roomId}`)}
+                        className="px-6 py-3 text-base bg-green-600 text-white rounded-lg
+                                hover:bg-green-700 transition-colors duration-200"
+                      >
+                        Join Session
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-16 bg-gray-50 rounded-xl">
+                    <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                    <p className="text-xl font-medium text-gray-800">No upcoming appointments yet! ✨</p>
+                    <p className="text-base text-gray-600 mt-3">Your future schedule is wide open</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Events Management Content */}
+            {activeTab === 'events' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-bold text-gray-800">Events Management</h2>
+                  <button 
+                    onClick={() => navigate('/event')}
+                    className="text-base text-green-500 hover:text-green-600 flex items-center"
+                  >
+                    View All <ChevronRight className="ml-2 h-5 w-5" />
+                  </button>
+                </div>
+                {events.length > 0 ? (
+                  events.map((event) => (
+                    <div 
+                      key={event.id} 
+                      className="flex items-center justify-between p-6 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200"
+                    >
+                      <div className="flex items-center space-x-6">
+                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                          {event.imageUrl ? (
+                            <img
+                              src={event.imageUrl}
+                              alt={event.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-purple-100">
+                              <Calendar className="h-10 w-10 text-purple-600" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-lg font-medium text-gray-800">{event.title}</p>
+                          <p className="text-base text-gray-600">
+                            {event.time} - {event.date} at {event.location}
+                          </p>
+                          <span className="inline-block px-4 py-1.5 text-sm bg-purple-100 text-purple-800 rounded-full mt-2">
+                            {event.category}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleViewEvent(event)}
+                        className="px-6 py-3 text-base bg-purple-600 text-white rounded-lg
+                                hover:bg-purple-700 transition-colors duration-200"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-16 bg-gray-50 rounded-xl">
+                    <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                    <p className="text-xl font-medium text-gray-800">No events scheduled yet! ✨</p>
+                    <p className="text-base text-gray-600 mt-3">Check back later for upcoming events</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

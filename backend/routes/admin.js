@@ -207,7 +207,9 @@ router.get('/admin-data/:uid', async (req, res) => {
             username: decrypt(adminData.username),
             college: decrypt(adminData.college),
             school: decrypt(adminData.school),
-            createdAtAt: adminData.createdAt
+            createdAtAt: adminData.createdAt,
+            email: adminData.email ? decrypt(adminData.email) : null,
+            fullName: adminData.fullName ? decrypt(adminData.fullName) : null,
         });
     } catch (error) {
         console.error('Error fetching initial admin data:', error);
