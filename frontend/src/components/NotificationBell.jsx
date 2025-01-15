@@ -9,7 +9,7 @@ const NotificationBell = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const audioRef = useRef(new Audio(notification)); // Add audio file to public folder
+  const audioRef = useRef(new Audio(notification));
   const [previousCount, setPreviousCount] = useState(0);
   const navigate = useNavigate();
 
@@ -78,6 +78,11 @@ const NotificationBell = ({ user }) => {
       await markAsRead(notification.id);
       setIsOpen(false); // Close the notification dropdown
 
+      if (notification.type === 'APPOINTMENT_REMINDER' && notification.roomId) {
+        navigate(`/counseling/${notification.roomId}`);
+        return;
+      }
+
       // Navigate based on notification type and user role
       if (notification.type.includes('APPOINTMENT')) {
         if (user?.role === 'peer-counselor') {
@@ -92,7 +97,7 @@ const NotificationBell = ({ user }) => {
                 appointmentId: notification.appointmentId 
               }
             });
-          } else if (notification.type === 'APPOINTMENT_ACCEPTED' || notification.type === 'APPOINTMENT_REMINDER') {
+          } else if (notification.type === 'APPOINTMENT_ACCEPTED') {
             navigate('/appointments/peer-counselor', { 
               state: { 
                 notificationId: notification.id,
@@ -101,7 +106,7 @@ const NotificationBell = ({ user }) => {
             });
           } 
         } else {
-          if (notification.type === 'APPOINTMENT_REQUEST' || notification.type === 'APPOINTMENT_REMINDER') {
+          if (notification.type === 'APPOINTMENT_REQUEST') {
             navigate('/appointments/client', { 
               state: { 
                 notificationId: notification.id,
