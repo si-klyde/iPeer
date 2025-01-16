@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { auth } from '../firebase';
-import { ClipboardList, Calendar, Clock, User } from 'lucide-react';
+import { ClipboardList, Calendar, Clock, User, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 
 const SessionHistory = ({ role, peerCounselors }) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userNames, setUserNames] = useState({});
+  const [expandedSessions, setExpandedSessions] = useState({});
 
   useEffect(() => {
     const fetchSessionHistory = async () => {
@@ -22,7 +23,6 @@ const SessionHistory = ({ role, peerCounselors }) => {
         );
         setSessions(response.data);
 
-        // Fetch names for each session
         const fetchNames = response.data.map(async (session) => {
           const userId = role === 'client' ? session.counselorId : session.clientId;
           if (userId && !userNames[userId]) {
@@ -60,9 +60,45 @@ const SessionHistory = ({ role, peerCounselors }) => {
     return userNames[userId] || 'Loading...';
   };
 
+  const toggleNotes = (sessionId) => {
+    setExpandedSessions(prev => ({
+      ...prev,
+      [sessionId]: !prev[sessionId]
+    }));
+  };
+
+  const renderNotesSection = (session) => {
+    if (role !== 'peer-counselor' || !session.notes) return null;
+    
+    return (
+      <div className="mt-4">
+        <button
+          onClick={() => toggleNotes(session.id)}
+          className="flex items-center text-[#50B498] hover:text-[#3d8b74] transition-colors duration-200"
+        >
+          <span className="mr-2">Session Notes</span>
+          {expandedSessions[session.id] ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+        
+        {expandedSessions[session.id] && (
+          <div className="mt-2 bg-[#E6F4EA] p-4 rounded-lg">
+            <div className="flex items-start text-[#4A5568]">
+              <ClipboardList className="w-5 h-5 mr-3 text-[#50B498] mt-1" />
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{session.notes}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) return <div className="text-center text-gray-600 py-4">Loading sessions...</div>;
   if (error) return <div className="text-center text-red-500 py-4">{error}</div>;
-
+  
   return (
     <div className="bg-transparent">
       <h2 className="text-xl font-semibold text-[#2D3748] mb-6">Session History</h2>
@@ -81,6 +117,10 @@ const SessionHistory = ({ role, peerCounselors }) => {
                   <span className="font-medium">{new Date(session.startTime).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center text-[#4A5568]">
+                  <Tag className="w-5 h-5 mr-3 text-[#50B498]" />
+                  <span className="font-medium">Session Type: {session.type || 'General Counseling'}</span>
+                </div>
+                <div className="flex items-center text-[#4A5568]">
                   <Clock className="w-5 h-5 mr-3 text-[#50B498]" />
                   <span className="font-medium">
                     {new Date(session.startTime).toLocaleTimeString()} - 
@@ -91,14 +131,7 @@ const SessionHistory = ({ role, peerCounselors }) => {
                   <User className="w-5 h-5 mr-3 text-[#50B498]" />
                   <span className="font-medium">{getUserLabel()}: {getUserName(session)}</span>
                 </div>
-                {role === 'peer-counselor' && session.notes && (
-                  <div className="mt-2 bg-[#E6F4EA] p-4 rounded-lg">
-                    <div className="flex items-start text-[#4A5568]">
-                      <ClipboardList className="w-5 h-5 mr-3 text-[#50B498] mt-1" />
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{session.notes}</p>
-                    </div>
-                  </div>
-                )}
+                {renderNotesSection(session)}
               </div>
             </div>
           ))}
