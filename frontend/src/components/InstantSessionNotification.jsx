@@ -20,7 +20,8 @@ const InstantSessionNotification = () => {
         
         // Clear existing notifications and listener if counselor is offline/unavailable
         if (!counselorData?.currentStatus?.isAvailable || 
-            counselorData?.currentStatus?.status !== 'online') {
+            counselorData?.currentStatus?.status !== 'online' ||
+            counselorData?.verificationStatus !== 'verified' ) {
             if (callsUnsubscribe) {
                 callsUnsubscribe();
                 callsUnsubscribe = null;

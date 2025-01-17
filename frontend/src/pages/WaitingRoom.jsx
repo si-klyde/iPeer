@@ -75,42 +75,41 @@ const WaitingRoom = () => {
 
     const requestInstantSession = async () => {
         try {
-            console.log('Initiating instant session request...');
-            setIsRequesting(true);
-            const currentUser = auth.currentUser;
-            const token = await currentUser.getIdToken();
-
-            // Get client data from backend
-            // const clientResponse = await axios.get(
-            //     `http://localhost:5000/api/client/${currentUser.uid}`,
-            //     {
-            //         headers: { Authorization: `Bearer ${token}` }
-            //     }
-            // );
-            // const userData = clientResponse.data;
-
-            // Check for available counselors through backend
-            console.log('Checking for available counselors...');
-            const counselorsResponse = await axios.get(
-                'http://localhost:5000/api/peer-counselors/available',
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
-            
-            const availableCounselors = counselorsResponse.data;
-            console.log('Available counselors:', availableCounselors);
-
-            if (!availableCounselors.length) {
-                console.log('No counselors available');
-                toast.error('No peer counselors are available right now. Please try again later.');
-                setIsRequesting(false);
-                return;
+          console.log('Initiating instant session request...');
+          setIsRequesting(true);
+          const currentUser = auth.currentUser;
+          const token = await currentUser.getIdToken();
+      
+          // Check for available counselors through backend
+          console.log('Checking for available counselors...');
+          const counselorsResponse = await axios.get(
+            'http://localhost:5000/api/peer-counselors/available',
+            {
+              headers: { Authorization: `Bearer ${token}` }
             }
-
-            // Create room
-            const roomId = Math.random().toString(36).substring(2, 15);
-            setCurrentRoomId(roomId);
+          );
+          
+          const allAvailableCounselors = counselorsResponse.data;
+          console.log('All available counselors:', allAvailableCounselors);
+      
+          // Filter counselors by school and verification status
+          const availableCounselors = allAvailableCounselors.filter(counselor => 
+            counselor.school === clientSchool && 
+            counselor.verificationStatus === 'verified'
+          );
+          
+          console.log('Filtered counselors:', availableCounselors);
+      
+          if (!availableCounselors.length) {
+            console.log('No eligible counselors available');
+            toast.error('No verified peer counselors from your school are available. Please try again later.');
+            setIsRequesting(false);
+            return;
+          }
+      
+          // Create room
+          const roomId = Math.random().toString(36).substring(2, 15);
+          setCurrentRoomId(roomId);
             const roomData = {
                 clientId: currentUser.uid,
                 //clientName: userData.fullName || 'Anonymous Client',
@@ -219,7 +218,7 @@ const WaitingRoom = () => {
                 setIsRequesting(false);
                 setCurrentRoomId(null);
                 setShowCancelModal(false);
-                navigate('/');
+                navigate('/waitingroom');
             }
         } catch (error) {
             toast.error('Failed to cancel request');
