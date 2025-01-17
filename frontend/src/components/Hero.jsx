@@ -440,7 +440,7 @@ const Hero = () => {
       {/* Get in Touch Section */}
       <motion.section
         id="touch"
-        className="relative w-full h-[50vh] flex items-center justify-center px-10 bg-[#E6F4EA]"
+        className="relative w-full h-[50vh] flex items-center justify-center px-10 bg-[#FFF9F9]"
         variants={fadeUpVariants}
         initial="hidden"
         animate={isVisible.touch ? "visible" : "hidden"}
