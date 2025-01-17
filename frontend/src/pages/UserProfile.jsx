@@ -431,7 +431,7 @@ const UserProfile = () => {
 
         {userProfile?.role === 'peer-counselor' && (
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Professional Credentials</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Peer-Counselor's Credentials</h2>
             
             <div className="mb-4">
               <input

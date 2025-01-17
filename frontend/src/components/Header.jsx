@@ -10,6 +10,7 @@ import logo from '../assets/ipeer-icon.png';
 import ProfileDropdown from './ProfileDropdown';
 import NotificationBell from './NotificationBell';
 import { HiHome, HiCalendar, HiInformationCircle, HiClipboardList, HiUserGroup, HiAcademicCap, HiLogout, HiLogin } from 'react-icons/hi';
+import axios from 'axios';
 
 const getIcon = (title) => {
   switch (title) {
@@ -75,17 +76,29 @@ const Header = ({ user, setUser }) => {
 
   const handleSignOut = async () => {
     try {
+      if (user?.role === 'peer-counselor') {
+        console.log('Peer counselor signing out:', user.uid);
+        const token = await auth.currentUser.getIdToken();
+        
+        await axios.put(
+          `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
+          { status: 'offline', isAvailable: false },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log('Status updated to offline successfully');
+      }
+  
       await signOut(auth);
-      // Clear localStorage
       localStorage.clear();
-      
-      // Reset user context/state if using context
       setUser(null);
-
       navigate('/home');
-      // window.location.reload();
+      
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Error during sign out:', error);
     }
   };
 

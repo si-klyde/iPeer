@@ -63,14 +63,14 @@ const AcceptedAppointments = ({ appointments, clients, peerCounselors, role }) =
             {(() => {
               const now = new Date();
               const appointmentDateTime = new Date(`${appointment.date} ${appointment.time}`);
-              const earliestJoinTime = new Date(appointmentDateTime.getTime() - 30 * 60000);
-              const latestJoinTime = new Date(appointmentDateTime.getTime() + 30 * 60000);
+              const earliestJoinTime = new Date(appointmentDateTime.getTime() - 10 * 60000);
+              const latestJoinTime = new Date(appointmentDateTime.getTime() + 10 * 60000);
               const isTimeToJoin = now >= earliestJoinTime && now <= latestJoinTime;
               const getCallMessage = (role, appointment) => {
                 if (role === 'client') {
-                  return `The call will be available 30 minutes before and after your scheduled time: ${appointment.date} ${appointment.time}. Don't be late—we're excited to connect with you! 😊`;
+                  return `The call will be available 10 minutes before and after your scheduled time: ${appointment.date} ${appointment.time}. Don't be late—we're excited to connect with you! 😊`;
                 }
-                return `The call will be accessible 30 minutes before and after the scheduled time: ${appointment.date} ${appointment.time}. Please be ready to assist your client! 😊`;
+                return `The call will be accessible 10 minutes before and after the scheduled time: ${appointment.date} ${appointment.time}. Please be ready to assist your client! 😊`;
               };
 
               return isTimeToJoin ? (

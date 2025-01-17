@@ -159,6 +159,9 @@ const Carousel = () => {
                   <p className="text-gray-500 text-sm mt-2">
                     {counselor.school}
                   </p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    {counselor.college}
+                  </p>
                   <p className="text-gray-500 text-sm mt-2">{counselor.email}</p>
                 </div>
               </div>

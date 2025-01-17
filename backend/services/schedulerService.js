@@ -6,8 +6,8 @@ const moment = require('moment-timezone');
 const { decrypt } = require('../utils/encryption.utils');
 
 const APP_TIMEZONE = 'Asia/Manila';
-const REMINDER_MINUTES_BEFORE = 30;
-const WINDOW_PADDING_MINUTES = 7;
+const REMINDER_MINUTES_BEFORE = 10;
+const WINDOW_PADDING_MINUTES = 2;
 const CRON_SCHEDULE = '*/1 * * * *';
 
 console.log('Scheduler service initialized');
