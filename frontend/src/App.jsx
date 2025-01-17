@@ -354,7 +354,7 @@ const App = () => {
                     <Route path="/admin/peer-counselor/:id" element={
                         <ProtectedRoute allowedRoles={['admin']}>
                         {user?.isSetupComplete ? 
-                            <AdminProfile /> : 
+                            <PeerCounselorProfile /> : 
                             <Navigate to="/admin/setup-account" replace />}
                         </ProtectedRoute>
                     } />
