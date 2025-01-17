@@ -101,7 +101,8 @@ const BookAppointment = () => {
         
         // Filter counselors by school
         const filteredCounselors = counselorsResponse.data.filter(counselor => 
-          counselor.school === userSchool
+          counselor.school === userSchool &&
+          counselor.verificationStatus === 'verified'
         );
 
         setPeerCounselors(filteredCounselors);
