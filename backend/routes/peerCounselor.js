@@ -74,11 +74,25 @@ router.get('/peer-counselors/available', async (req, res) => {
 
     const counselors = await Promise.all(counselorsSnapshot.docs.map(async doc => {
       const data = doc.data();
+      
+      // Fetch profile details from subcollection
+      const profileDoc = await db.collection('users')
+        .doc(doc.id)
+        .collection('profile')
+        .doc('details')
+        .get();
+      
+      const profileData = profileDoc.exists ? profileDoc.data() : {};
+      
       return {
         id: doc.id,
         fullName: await decrypt(data.fullName),
         status: data.currentStatus?.status,
-        isAvailable: data.currentStatus?.isAvailable
+        isAvailable: data.currentStatus?.isAvailable,
+        school: data.school,
+        college: data.college,
+        verificationStatus: data.verificationStatus,
+        profilePicture: profileData.photoURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzY0NzRmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzY0YjNmNCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PC9zdmc+'
       };
     }));
 

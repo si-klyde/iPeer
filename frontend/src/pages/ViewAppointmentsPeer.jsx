@@ -153,43 +153,35 @@ const ViewAppointmentsPeer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#E6F4EA] py-8 sm:py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#E6F4EA] py-4 md:py-8 lg:py-16 px-4 md:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl sm:text-[32px] font-bold text-center text-[#2D3748] mb-8 sm:mb-12">
+        <h1 className="text-xl md:text-2xl lg:text-[32px] font-bold text-center text-[#2D3748] mb-4 md:mb-8 lg:mb-12">
           Appointment Management
         </h1>
 
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:space-x-6 mb-8">
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
-              activeTab === 'pending'
-                ? 'bg-[#9CDBA6] text-[#2D3748] shadow-lg shadow-green-200'
-                : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
-            }`}
-          >
-            Pending Confirmations
-          </button>
-          <button
-            onClick={() => setActiveTab('accepted')}
-            className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
-              activeTab === 'accepted'
-                ? 'bg-[#9CDBA6] text-[#2D3748] shadow-lg shadow-green-200'
-                : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
-            }`}
-          >
-            Accepted Appointments
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
-              activeTab === 'history'
-                ? 'bg-[#9CDBA6] text-[#2D3748] shadow-lg shadow-green-200'
-                : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
-            }`}
-          >
-            Session History
-          </button>
+        <div className="flex flex-col md:flex-row justify-center items-stretch md:items-center gap-3 md:gap-6 mb-4 md:mb-6 lg:mb-8">
+          {['pending', 'accepted', 'history'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`
+                w-full md:w-auto px-3 md:px-4 lg:px-6 
+                py-2 md:py-2.5 lg:py-3 
+                rounded-lg md:rounded-full 
+                text-sm md:text-base 
+                font-medium 
+                transition-all duration-200
+                ${activeTab === tab
+                  ? 'bg-[#9CDBA6] text-[#2D3748] shadow-md md:shadow-lg shadow-green-200'
+                  : 'bg-white/50 text-[#4A5568] hover:bg-[#9CDBA6]/50'
+                }
+              `}
+            >
+              {tab === 'pending' && 'Pending Confirmations'}
+              {tab === 'accepted' && 'Accepted Appointments'}
+              {tab === 'history' && 'Session History'}
+            </button>
+          ))}
         </div>
 
         <style>{`
@@ -202,7 +194,7 @@ const ViewAppointmentsPeer = () => {
           }
         `}</style>
 
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-8">
+        <div className="bg-white rounded-lg md:rounded-xl lg:rounded-2xl shadow-sm md:shadow p-3 md:p-6 lg:p-8">
           {activeTab === 'pending' && (
             <PendingAppointments 
               appointments={appointments}

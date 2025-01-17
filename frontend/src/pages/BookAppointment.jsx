@@ -6,6 +6,7 @@ import logo from '../assets/ipeer-icon.png'; // Assuming you want to use the sam
 import { appointmentImage } from '../assets';4
 import { Tooltip } from 'react-tooltip'; // Add this package
 import { motion } from 'framer-motion';
+import BookingCalendar from '../components/BookingCalendar';
 
 const getCurrentDateTime = () => {
   const now = new Date();
@@ -100,7 +101,8 @@ const BookAppointment = () => {
         
         // Filter counselors by school
         const filteredCounselors = counselorsResponse.data.filter(counselor => 
-          counselor.school === userSchool
+          counselor.school === userSchool &&
+          counselor.verificationStatus === 'verified'
         );
 
         setPeerCounselors(filteredCounselors);
@@ -204,22 +206,21 @@ const BookAppointment = () => {
   ];
 
   return (
-    
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gray-100 flex justify-center items-center p-4 sm:p-6"
+      className="min-h-screen bg-gray-100 flex justify-center items-center p-2 sm:p-4 md:p-6"
     >
-      <div className="max-w-screen-xl w-full bg-white shadow-lg rounded-lg flex flex-col sm:flex-row justify-center">
+      <div className="max-w-4xl w-full bg-white shadow-lg rounded-lg">
         {/* Progress Steps */}
-        <div className="w-full px-4 py-6">
-          <div className="flex justify-between items-center mb-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+          <div className="flex justify-between items-center mb-6 sm:mb-8">
             {steps.map((s, i) => (
               <div key={s.number} className="flex items-center">
                 <div className={`
-                  w-8 h-8 rounded-full 
+                  w-6 h-6 sm:w-8 sm:h-8 rounded-full 
                   flex items-center justify-center
-                  text-base font-medium
+                  text-sm sm:text-base font-medium
                   transition-colors duration-200
                   ${step >= s.number 
                     ? 'bg-green-600 text-white' 
@@ -230,7 +231,7 @@ const BookAppointment = () => {
                 </div>
                 <div className={`
                   hidden sm:block ml-2 
-                  text-sm font-medium
+                  text-xs sm:text-sm font-medium
                   transition-colors duration-200
                   ${step >= s.number 
                     ? 'text-green-600' 
@@ -241,7 +242,7 @@ const BookAppointment = () => {
                 </div>
                 {i < steps.length - 1 && (
                   <div className={`
-                    flex-1 h-1 w-20 mx-2
+                    h-1 w-8 sm:w-16 md:w-20 mx-1 sm:mx-2
                     transition-colors duration-200
                     ${step > s.number 
                       ? 'bg-green-500' 
@@ -253,7 +254,7 @@ const BookAppointment = () => {
             ))}
           </div>
 
-          <form onSubmit={handleBookAppointment} className="max-w-2xl mx-auto p-6 space-y-8">
+          <form onSubmit={handleBookAppointment} className="space-y-6">
             {/* Step 1: Counselor Selection */}
             {step === 1 && (
               <motion.div
@@ -261,7 +262,7 @@ const BookAppointment = () => {
                 animate={{ x: 0, opacity: 1 }}
                 className="space-y-4"
               >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
                   Choose Your Counselor
                 </h2>
                 <select
@@ -270,7 +271,7 @@ const BookAppointment = () => {
                     setSelectedPeerCounselor(e.target.value);
                     if (e.target.value) setStep(2);
                   }}
-                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:text-gray-900 transition-all duration-200 bg-white shadow-sm hover:border-green-400"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-4 text-base sm:text-lg rounded-xl border-2 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-white shadow-sm hover:border-green-400"
                 >
                   <option value="">Select a counselor...</option>
                   {peerCounselors.map((counselor) => (
@@ -289,45 +290,54 @@ const BookAppointment = () => {
                 animate={{ x: 0, opacity: 1 }}
                 className="space-y-6"
               >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
                   Schedule Your Session
                 </h2>
                 
-                <div className="space-y-4">
-                  <label className="text-lg font-medium text-gray-700">
-                    Select Date
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    min={getCurrentDateTime().currentDate}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-4 text-lg text-gray-800 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:text-gray-900 placeholder-gray-400 transition-all duration-200 bg-white shadow-sm hover:border-green-400"
-                  />
-                </div>
+                <BookingCalendar 
+                  date={date}
+                  onDateChange={(newDate) => {
+                    setDate(newDate.toISOString().split('T')[0]);
+                  }}
+                />
 
                 <div className="space-y-4">
-                  <label className="text-lg font-medium text-gray-700">
+                  <label className="text-base sm:text-lg font-medium text-gray-700">
                     Select Time
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {availableTimeSlots.map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => {
-                          setTime(slot);
-                          setStep(3);
-                        }}
-                        className={`py-4 px-6 rounded-xl text-lg font-medium transition-all duration-200 ${
-                          time === slot
-                            ? 'bg-green-500 text-white shadow-lg transform scale-105'
-                            : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
-                        }`}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                    {availableTimeSlots.length > 0 ? (
+                      availableTimeSlots.map((slot) => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => {
+                            setTime(slot);
+                            setStep(3);
+                          }}
+                          className={`py-3 sm:py-4 px-4 sm:px-6 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 ${
+                            time === slot
+                              ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                              : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="col-span-full text-center p-4 sm:p-8 bg-gray-50 rounded-xl border-2 border-gray-200"
                       >
-                        {slot}
-                      </button>
-                    ))}
+                        <div className="text-sm sm:text-base text-gray-600 font-medium">
+                          No available time slots for this date
+                        </div>
+                        <div className="mt-2 text-xs sm:text-sm text-gray-500">
+                          Please select a different date to view other available slots
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -340,26 +350,36 @@ const BookAppointment = () => {
                 animate={{ x: 0, opacity: 1 }}
                 className="space-y-6"
               >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
                   Add Session Details
                 </h2>
                 
                 <div className="space-y-4">
-                  <label className="text-lg font-medium text-gray-700">
+                  <label className="text-base sm:text-lg font-medium text-gray-700">
                     Description
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="What would you like to discuss in this session?"
-                    className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 min-h-[150px] resize-none shadow-sm hover:border-green-400"
+                    className="w-full px-3 sm:px-4 py-3 sm:py-4 text-base sm:text-lg rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 min-h-[120px] sm:min-h-[150px] resize-none shadow-sm hover:border-green-400"
                   />
                 </div>
+
+                {availabilityError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-50 border-l-4 border-red-500 rounded-md"
+                  >
+                    <p className="text-sm text-red-700">{availabilityError}</p>
+                  </motion.div>
+                )}
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-4 px-6 text-lg font-semibold rounded-xl bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:shadow-none"
+                  className="w-full py-3 sm:py-4 px-6 text-base sm:text-lg font-semibold rounded-xl bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:shadow-none"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center space-x-2">
@@ -384,7 +404,7 @@ const BookAppointment = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setStep(step - 1)}
-                className="px-6 py-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors flex items-center space-x-2"
+                className="px-4 sm:px-6 py-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors flex items-center space-x-2 text-sm sm:text-base"
               >
                 <svg 
                   className="w-4 h-4" 
@@ -404,29 +424,15 @@ const BookAppointment = () => {
             )}
           </div>
         </div>
-
-        {/* Right Section */}
-        <div className="hidden lg:block lg:w-1/2 xl:w-2/5">
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="h-full bg-green-50 rounded-r-lg p-8 flex items-center justify-center"
-          >
-            <img
-              src={appointmentImage}
-              alt="Appointment Illustration"
-              className="max-w-md w-full h-auto"
-            />
-          </motion.div>
-        </div>
       </div>
 
+      {/* Loading Overlay */}
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full"
+            className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-green-500 border-t-transparent rounded-full"
           />
         </div>
       )}
@@ -438,11 +444,11 @@ const BookAppointment = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 100 }}
-          className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-white shadow-2xl rounded-xl p-6 flex items-center space-x-4 min-w-[320px] z-50"
+          className="fixed top-4 sm:top-8 left-1/2 transform -translate-x-1/2 bg-white shadow-2xl rounded-xl p-4 sm:p-6 flex items-center space-x-4 w-[90%] max-w-md z-50"
         >
-          <div className="bg-green-100 rounded-full p-3">
+          <div className="bg-green-100 rounded-full p-2 sm:p-3">
             <svg 
-              className="w-8 h-8 text-green-600" 
+              className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -456,10 +462,10 @@ const BookAppointment = () => {
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg text-gray-800 mb-1">
+            <h3 className="font-semibold text-base sm:text-lg text-gray-800 mb-1">
               Booking Confirmed!
             </h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-xs sm:text-sm text-gray-600">
               Your appointment has been successfully scheduled
             </p>
           </div>
@@ -467,7 +473,7 @@ const BookAppointment = () => {
             onClick={() => setBookingSuccess(false)}
             className="text-gray-400 hover:text-gray-600"
           >
-            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>

@@ -1,18 +1,24 @@
 const { db } = require('../firebaseAdmin');
+const { encrypt, decrypt } = require('../utils/encryption.utils');
+
 const createAppointment = async (appointmentData) => {
   const appointmentRef = db.collection('appointments').doc();
   const roomId = Math.random().toString(36).substring(2, 15);
 
-  //Create the appointment document
+  // Encrypt the description before storing
+  const encryptedData = {
+    ...appointmentData,
+    description: appointmentData.description ? encrypt(appointmentData.description) : null
+  };
+
   await appointmentRef.set(
-    Object.assign({}, appointmentData, {
-      reminderSent: false, 
-      createdAt: new Date(), 
+    Object.assign({}, encryptedData, {
+      reminderSent: false,
+      createdAt: new Date(),
       roomId,
     })
   );
 
-  // Create a call document in the 'calls' document
   const roomRef = db.collection('calls').doc(roomId);
   await roomRef.set({
     createdAt: new Date(),
@@ -24,17 +30,26 @@ const createAppointment = async (appointmentData) => {
 
 const getAppointmentsClient = async (userId) => {
   const appointmentsSnapshot = await db.collection('appointments').where('clientId', '==', userId).get();
-  return appointmentsSnapshot.docs.map(doc => 
-    Object.assign({}, { id: doc.id }, doc.data())
-  );
-  
+  return appointmentsSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return Object.assign({}, { 
+      id: doc.id,
+      ...data,
+      description: data.description ? decrypt(data.description) : null
+    });
+  });
 };
+
 const getAppointmentsPeer = async (peerCounselorId) => {
   const appointmentsSnapshot = await db.collection('appointments').where('peerCounselorId', '==', peerCounselorId).get();
-  return appointmentsSnapshot.docs.map(doc => 
-    Object.assign({}, { id: doc.id }, doc.data())
-  );
-  
+  return appointmentsSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return Object.assign({}, { 
+      id: doc.id,
+      ...data,
+      description: data.description ? decrypt(data.description) : null
+    });
+  });
 };
 
 const getUpcomingAppointments = async () => {

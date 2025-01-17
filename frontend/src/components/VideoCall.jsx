@@ -659,7 +659,8 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     endTime,
                     status: 'completed',
                     duration: new Date(endTime) - new Date(callData.startTime),
-                    notes: sessionNotes
+                    notes: sessionNotes,
+                    type: callData.appointmentId ? 'Appointment' : 'Instant'
                 };
     
                 try {

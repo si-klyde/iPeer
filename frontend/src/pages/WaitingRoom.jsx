@@ -3,13 +3,64 @@ import { useNavigate } from 'react-router-dom';
 import { firestore, auth } from '../firebase';
 import { doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import { User } from 'lucide-react';
 import axios from 'axios';
 
 const WaitingRoom = () => {
     const [isRequesting, setIsRequesting] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [currentRoomId, setCurrentRoomId] = useState(null);
+    const [showOnlineCounselors, setShowOnlineCounselors] = useState(false);
+    const [onlineCounselors, setOnlineCounselors] = useState([]);
+    const [clientSchool, setClientSchool] = useState('');
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchOnlineCounselors = async () => {
+          try {
+            const currentUser = auth.currentUser;
+            const token = await currentUser.getIdToken();
+            
+            // Get client's school first
+            const clientResponse = await axios.get(
+              `http://localhost:5000/api/client/${currentUser.uid}`,
+              {
+                headers: { Authorization: `Bearer ${token}` }
+              }
+            );
+            console.log('Client school data:', clientResponse.data);
+            setClientSchool(clientResponse.data.school);
+      
+            // Get online counselors
+            const counselorsResponse = await axios.get(
+              'http://localhost:5000/api/peer-counselors/available',
+              {
+                headers: { Authorization: `Bearer ${token}` }
+              }
+            );
+
+            console.log('=== Debug Info ===');
+            console.log('1. Client School:', clientResponse.data.school);
+            console.log('2. Raw Counselors Data:', counselorsResponse.data);
+            console.log('3. Schools in counselor data:', counselorsResponse.data.map(c => c.school));
+      
+            // Filter counselors by school
+            const filteredCounselors = counselorsResponse.data.filter(
+              counselor => counselor.school === clientResponse.data.school
+            );
+            console.log('Filtered counselors from same school:', filteredCounselors);
+            setOnlineCounselors(filteredCounselors);
+          } catch (error) {
+            console.error('Error fetching online counselors:', error);
+          }
+        };
+      
+        fetchOnlineCounselors();
+        // Set up polling every 30 seconds
+        const interval = setInterval(fetchOnlineCounselors, 30000);
+        return () => clearInterval(interval);
+      }, []);
 
     useEffect(() => {
         // Hide Header and Footer
@@ -24,42 +75,41 @@ const WaitingRoom = () => {
 
     const requestInstantSession = async () => {
         try {
-            console.log('Initiating instant session request...');
-            setIsRequesting(true);
-            const currentUser = auth.currentUser;
-            const token = await currentUser.getIdToken();
-
-            // Get client data from backend
-            // const clientResponse = await axios.get(
-            //     `http://localhost:5000/api/client/${currentUser.uid}`,
-            //     {
-            //         headers: { Authorization: `Bearer ${token}` }
-            //     }
-            // );
-            // const userData = clientResponse.data;
-
-            // Check for available counselors through backend
-            console.log('Checking for available counselors...');
-            const counselorsResponse = await axios.get(
-                'http://localhost:5000/api/peer-counselors/available',
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
-            
-            const availableCounselors = counselorsResponse.data;
-            console.log('Available counselors:', availableCounselors);
-
-            if (!availableCounselors.length) {
-                console.log('No counselors available');
-                toast.error('No peer counselors are available right now. Please try again later.');
-                setIsRequesting(false);
-                return;
+          console.log('Initiating instant session request...');
+          setIsRequesting(true);
+          const currentUser = auth.currentUser;
+          const token = await currentUser.getIdToken();
+      
+          // Check for available counselors through backend
+          console.log('Checking for available counselors...');
+          const counselorsResponse = await axios.get(
+            'http://localhost:5000/api/peer-counselors/available',
+            {
+              headers: { Authorization: `Bearer ${token}` }
             }
-
-            // Create room
-            const roomId = Math.random().toString(36).substring(2, 15);
-            setCurrentRoomId(roomId);
+          );
+          
+          const allAvailableCounselors = counselorsResponse.data;
+          console.log('All available counselors:', allAvailableCounselors);
+      
+          // Filter counselors by school and verification status
+          const availableCounselors = allAvailableCounselors.filter(counselor => 
+            counselor.school === clientSchool && 
+            counselor.verificationStatus === 'verified'
+          );
+          
+          console.log('Filtered counselors:', availableCounselors);
+      
+          if (!availableCounselors.length) {
+            console.log('No eligible counselors available');
+            toast.error('No verified peer counselors from your school are available. Please try again later.');
+            setIsRequesting(false);
+            return;
+          }
+      
+          // Create room
+          const roomId = Math.random().toString(36).substring(2, 15);
+          setCurrentRoomId(roomId);
             const roomData = {
                 clientId: currentUser.uid,
                 //clientName: userData.fullName || 'Anonymous Client',
@@ -168,7 +218,7 @@ const WaitingRoom = () => {
                 setIsRequesting(false);
                 setCurrentRoomId(null);
                 setShowCancelModal(false);
-                navigate('/');
+                navigate('/waitingroom');
             }
         } catch (error) {
             toast.error('Failed to cancel request');
@@ -353,6 +403,154 @@ const WaitingRoom = () => {
                     </div>
                 </div>
             )}
+            <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50">
+                {/* Background glow effect */}
+                <div className="absolute inset-0 rounded-full animate-ping bg-green-400/30"></div>
+                
+                {/* Main button */}
+                <button
+                    onClick={() => setShowOnlineCounselors(true)}
+                    className="relative p-3 md:p-4 bg-green-500 text-white rounded-full 
+                            shadow-lg hover:bg-green-600 hover:scale-105
+                            transition-all duration-300 ease-in-out
+                            animate-pulse
+                            flex items-center gap-0 md:gap-2"
+                >
+                    <User className="h-5 w-5 md:h-6 md:w-6" />
+                    <span className="hidden md:inline font-medium">
+                        Online Peer-Counselors
+                    </span>
+                    
+                    {/* Counter badge */}
+                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 
+                                w-5 h-5 md:w-6 md:h-6
+                                bg-red-500 rounded-full 
+                                flex items-center justify-center 
+                                text-[10px] md:text-xs font-bold animate-bounce">
+                        {onlineCounselors.length}
+                    </div>
+                </button>
+            </div>
+
+            {/* Online Counselors Modal */}
+            {showOnlineCounselors && (
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full 
+                            border border-white/20 overflow-hidden">
+                    {/* Header */}
+                    <div className="p-6 border-b border-gray-100 bg-white/50">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-2xl font-semibold text-gray-900">
+                                    Available Peer Counselors
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {clientSchool} • {onlineCounselors.length} Online
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowOnlineCounselors(false)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6 max-h-[70vh] overflow-y-auto">
+                        {onlineCounselors.length > 0 ? (
+                            <div className="space-y-6">
+                                {/* Group by college */}
+                                {Object.entries(
+                                    onlineCounselors.reduce((acc, counselor) => {
+                                        const college = counselor.college || 'Other';
+                                        acc[college] = [...(acc[college] || []), counselor];
+                                        return acc;
+                                    }, {})
+                                ).map(([college, counselors]) => (
+                                    <div key={college} className="space-y-3">
+                                        <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+                                            {college}
+                                        </h4>
+                                        <div className="grid gap-3">
+                                            {counselors.map((counselor) => (
+                                                <div 
+                                                    key={counselor.id}
+                                                    className="group relative bg-white rounded-xl p-4 hover:shadow-lg 
+                                                            transition-all duration-300 border border-gray-100
+                                                            hover:border-green-200 hover:-translate-y-0.5"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        {/* Avatar */}
+                                                        <div className="relative">
+                                                            {counselor.profilePicture ? (
+                                                                <img 
+                                                                    src={counselor.profilePicture}
+                                                                    alt={counselor.fullName}
+                                                                    className="w-12 h-12 rounded-full object-cover ring-2 
+                                                                            ring-white shadow-sm"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br 
+                                                                            from-green-100 to-green-200 flex items-center 
+                                                                            justify-center ring-2 ring-white shadow-sm">
+                                                                    <User className="w-6 h-6 text-green-600" />
+                                                                </div>
+                                                            )}
+                                                            <span className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 
+                                                                        rounded-full ring-2 ring-white" />
+                                                        </div>
+
+                                                        {/* Info */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <h4 className="text-base font-medium text-gray-900 truncate">
+                                                                    {counselor.fullName}
+                                                                </h4>
+                                                                {counselor.verificationStatus === 'verified' && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 rounded-full">
+                                                                        <svg 
+                                                                            className="w-3 h-3" 
+                                                                            fill="currentColor" 
+                                                                            viewBox="0 0 20 20"
+                                                                        >
+                                                                            <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                                                                        </svg>
+                                                                        Verified for Counseling
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {/* <p className="text-sm text-gray-500 truncate">
+                                                                {counselor.specialty || 'General Counseling'}
+                                                            </p> */}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-4">
+                                    <User className="w-8 h-8 text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                    No Counselors Available
+                                </h3>
+                                <p className="text-gray-500">
+                                    Check back later or schedule an appointment
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
         </div>
     );
 };
