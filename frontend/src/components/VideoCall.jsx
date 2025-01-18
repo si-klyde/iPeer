@@ -6,11 +6,74 @@ import { MessageCircle, ClipboardEdit, Mic, MicOff, Video, VideoOff, PhoneOff } 
 import Chat from './Chat';
 import SessionNotes from './SessionNotes';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const servers = {
     iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' }
-    ]
+        {
+            urls: [
+                'stun:stun.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun3.l.google.com:19302',
+                'stun:stun4.l.google.com:19302'
+            ]
+        },
+        {
+            urls:[
+                'turn:relay1.expressturn.com:3478'
+            ],
+            username: 'efBIJ3TTF7VTJLEOWE',
+            credential: 'MR5rbgese4SYmAEF'        
+        }
+    ],
+    iceCandidatePoolSize: 10,
+    iceTransportPolicy: 'all',
+    bundlePolicy: 'max-bundle',
+    rtcpMuxPolicy: 'require'
+};
+
+// Error handling utility function
+const handleCallError = async (error, pc, roomId, userRole) => {
+    console.error('Video call error:', error);
+    
+    if (auth.currentUser && userRole === 'peer-counselor') {
+        try {
+            const token = await auth.currentUser.getIdToken();
+            // Update peer counselor status to available
+            await axios.put(
+                `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
+                {
+                    status: 'online',
+                    isAvailable: true
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            // Update call status if room exists
+            if (roomId) {
+                const callDoc = doc(firestore, 'calls', roomId);
+                await updateDoc(callDoc, {
+                    status: 'error',
+                    errorDetails: {
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            }
+        } catch (statusError) {
+            console.error('Error updating status after call error:', statusError);
+        }
+    }
+
+    // Close peer connection if it exists
+    if (pc) {
+        pc.close();
+    }
+
+    // Show error to user
+    alert('Video call encountered an error. Please try again.');
 };
 
 const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
@@ -34,73 +97,113 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     const [sessionNotes, setSessionNotes] = useState('');
 
     const setupPeerConnection = useCallback(async (id) => {
-        const callDoc = doc(collection(firestore, 'calls'), id);
-        const offerCandidates = collection(callDoc, 'offerCandidates');
-        const answerCandidates = collection(callDoc, 'answerCandidates');
-        const callData = (await getDoc(callDoc)).data();
+        try {
+            const callDoc = doc(collection(firestore, 'calls'), id);
+            const offerCandidates = collection(callDoc, 'offerCandidates');
+            const answerCandidates = collection(callDoc, 'answerCandidates');
+            const callData = (await getDoc(callDoc)).data();
 
-        // Check if session is ended
-        if (callData?.status === 'ended') {
-            cleanup();
-            alert('This session has ended');
-            navigate('/');
-            return;
-        }
-    
-        const pc = new RTCPeerConnection(servers);
-        setPeerConnection(pc);
-    
-        // Set up data channel
-        if (userRole === 'peer-counselor') {
-            const channel = pc.createDataChannel('endMeeting');
-            setDataChannel(channel);
-        } else {
-            pc.ondatachannel = (event) => {
-                const channel = event.channel;
-                setDataChannel(channel);
-                
-                channel.onmessage = (event) => {
-                    if (event.data === 'endMeeting') {
-                        cleanup();
-                        //alert('The counselor has ended the session');
-                        navigate('/');
-                    }
-                };
+            // Check if session is ended
+            if (callData?.status === 'ended') {
+                cleanup();
+                alert('This session has ended');
+                navigate('/');
+                return;
+            }
+        
+            const pc = new RTCPeerConnection(servers);
+            setPeerConnection(pc);
+
+            // Handle connection failures
+            pc.oniceconnectionstatechange = async () => {
+                console.log('ICE Connection State:', pc.iceConnectionState);
+                console.log('Connection State:', pc.connectionState);
+                console.log('Signaling State:', pc.signalingState);
+                console.log('Current ICE candidates:', pc.localDescription?.sdp);
+                if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                    await handleCallError(
+                        new Error(`ICE connection ${pc.iceConnectionState}`),
+                        pc,
+                        id,
+                        userRole
+                    );
+                    navigate('/');
+                }
             };
-        }
-    
-        // Add tracks to connection
-        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    
-        // Handle remote tracks
-        pc.ontrack = event => {
-            console.log('Track received:', event.track.kind, event.track.enabled);
-            const [remoteStream] = event.streams;
-            
-            if (remoteVideoRef.current && remoteStream) {
-                console.log('Setting remote stream');
-                remoteVideoRef.current.srcObject = remoteStream;
-                
-                // Check for video tracks
-                const videoTracks = remoteStream.getVideoTracks();
-                setHasRemoteVideo(videoTracks.length > 0);
-                
-                // Monitor track enabled state
-                if (videoTracks.length > 0) {
-                    const videoTrack = videoTracks[0];
-                    setRemoteVideoEnabled(videoTrack.enabled);
+
+            pc.onconnectionstatechange = async () => {
+                console.log('Connection State:', pc.connectionState);
+                if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+                    await handleCallError(
+                        new Error(`Peer connection ${pc.connectionState}`),
+                        pc,
+                        id,
+                        userRole
+                    );
+                    navigate('/');
+                }
+            };
+
+            // Set up data channel
+            if (userRole === 'peer-counselor') {
+                const channel = pc.createDataChannel('endMeeting');
+                setDataChannel(channel);
+            } else {
+                pc.ondatachannel = (event) => {
+                    const channel = event.channel;
+                    setDataChannel(channel);
                     
-                    videoTrack.onmute = () => {
-                        console.log('Remote video track muted');
-                        setRemoteVideoEnabled(false);
+                    channel.onmessage = (event) => {
+                        if (event.data === 'endMeeting') {
+                            cleanup();
+                            //alert('The counselor has ended the session');
+                            navigate('/');
+                        }
                     };
+                };
+            }
+        
+            // Add tracks to connection
+            localStream.getTracks().forEach(track => {
+                console.log('Adding track to peer connection:', track.kind, track.enabled);
+                const sender = pc.addTrack(track, localStream);
+                if (track.kind === 'video') {
+                    sender.setParameters({
+                        ...sender.getParameters(),
+                        degradationPreference: 'maintain-framerate'
+                    });
+                }
+            });
+        
+            // Handle remote tracks
+            pc.ontrack = event => {
+                console.log('Track received:', event.track.kind, event.track.enabled);
+                const [remoteStream] = event.streams;
+                
+                if (remoteVideoRef.current && remoteStream) {
+                    console.log('Setting remote stream');
+                    remoteVideoRef.current.srcObject = remoteStream;
                     
-                    videoTrack.onunmute = () => {
-                        console.log('Remote video track unmuted');
-                        setRemoteVideoEnabled(true);
-                    };
+                    // Check for video tracks
+                    const videoTracks = remoteStream.getVideoTracks();
+                    setHasRemoteVideo(videoTracks.length > 0);
                     
-                    // Monitor enabled state changes
+                    // Monitor track enabled state
+                    if (videoTracks.length > 0) {
+                        const videoTrack = videoTracks[0];
+                        setRemoteVideoEnabled(videoTrack.enabled);
+                        
+                        videoTrack.onmute = () => {
+                            console.log('Remote video track muted');
+                            setRemoteVideoEnabled(false);
+                        };
+                        
+                        videoTrack.onunmute = () => {
+                            console.log('Remote video track unmuted');
+                            setRemoteVideoEnabled(true);
+                        };
+                        
+                        // Monitor enabled state changes
                     const observer = new MutationObserver(() => {
                         setRemoteVideoEnabled(videoTrack.enabled);
                     });
@@ -113,80 +216,97 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
 
                     // Return cleanup function
                     return () => observer.disconnect();
+                    }
                 }
-            }
-        };
-    
-        pc.oniceconnectionstatechange = () => {
-            console.log('ICE Connection State:', pc.iceConnectionState);
-        };
-    
-        pc.onicecandidate = event => {
-            if (event.candidate) {
-                addDoc(offerCandidates, event.candidate.toJSON());
-            }
-        };
-    
-        pc.onconnectionstatechange = async () => {
-            if (pc.connectionState === 'connected') {
-                // If client and counselor are both present, set start time
-                if (callData.clientId && callData.counselorId) {
-                    await updateDoc(callDoc, {
-                        startTime: new Date().toISOString(),
-                        status: 'active'
+            };
+        
+            pc.onicecandidate = event => {
+                console.log('New ICE candidate:', event.candidate?.type);
+                if (event.candidate) {
+                    console.log('ICE candidate details:', {
+                        type: event.candidate.type,
+                        protocol: event.candidate.protocol,
+                        address: event.candidate.address,
+                        port: event.candidate.port
                     });
+                    addDoc(offerCandidates, event.candidate.toJSON());
                 }
-            }
-        };
-    
-        if (!callData?.offer) {
-            const offerDescription = await pc.createOffer();
-            await pc.setLocalDescription(offerDescription);
-    
-            await updateDoc(callDoc, {
-                offer: {
-                    type: offerDescription.type,
-                    sdp: offerDescription.sdp,
+            };
+
+            pc.onicegatheringstatechange = () => {
+                console.log('ICE gathering state:', pc.iceGatheringState);
+                if (pc.iceGatheringState === 'complete') {
+                    console.log('Final ICE candidates:', pc.localDescription?.sdp);
                 }
-            });
-    
-            onSnapshot(callDoc, (snapshot) => {
-                const data = snapshot.data();
-                if (!pc.currentRemoteDescription && data?.answer) {
-                    pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-                }
-            });
-    
-            onSnapshot(answerCandidates, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-                    }
-                });
-            });
-        } else {
-            await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+            };
+
+            // Force TURN usage for testing
+            pc.iceTransportPolicy = 'relay';
             
-            const answerDescription = await pc.createAnswer();
-            await pc.setLocalDescription(answerDescription);
-    
-            await updateDoc(callDoc, {
-                answer: {
-                    type: answerDescription.type,
-                    sdp: answerDescription.sdp,
+            pc.onconnectionstatechange = async () => {
+                if (pc.connectionState === 'connected') {
+                    // If client and counselor are both present, set start time
+                    if (callData.clientId && callData.counselorId) {
+                        await updateDoc(callDoc, {
+                            startTime: new Date().toISOString(),
+                            status: 'active'
+                        });
+                    }
                 }
-            });
-    
-            onSnapshot(offerCandidates, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+            };
+        
+            if (!callData?.offer) {
+                const offerDescription = await pc.createOffer();
+                await pc.setLocalDescription(offerDescription);
+        
+                await updateDoc(callDoc, {
+                    offer: {
+                        type: offerDescription.type,
+                        sdp: offerDescription.sdp,
                     }
                 });
-            });
+        
+                onSnapshot(callDoc, (snapshot) => {
+                    const data = snapshot.data();
+                    if (!pc.currentRemoteDescription && data?.answer) {
+                        pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    }
+                });
+        
+                onSnapshot(answerCandidates, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                        }
+                    });
+                });
+            } else {
+                await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+                
+                const answerDescription = await pc.createAnswer();
+                await pc.setLocalDescription(answerDescription);
+        
+                await updateDoc(callDoc, {
+                    answer: {
+                        type: answerDescription.type,
+                        sdp: answerDescription.sdp,
+                    }
+                });
+        
+                onSnapshot(offerCandidates, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                        }
+                    });
+                });
+            }
+        
+            return pc;
+        } catch (error) {
+            await handleCallError(error, null, id, userRole);
+            navigate('/');
         }
-    
-        return pc;
     }, [localStream, navigate, userRole]);
 
     const handleLocalVideoMetadata = (e) => {
@@ -319,19 +439,27 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     useEffect(() => {
         const init = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: true
+                });
+
+                console.log('Local Stream:', stream);
                 setLocalStream(stream);
                 if (localVideoRef.current) {
                     localVideoRef.current.srcObject = stream;
                 }
             } catch (error) {
                 console.error('Error accessing media devices.', error);
-                alert('Error accessing media devices: ' + error.message);
+                await handleCallError(error, peerConnection, roomId, userRole);
+                navigate('/');
             }
         };
 
         init();
-
         return () => cleanup();
     }, []);
 
@@ -556,66 +684,40 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
 
     // Helper function to clean up media and connections
-    const cleanup = () => {
-        console.log('Starting cleanup...');
-        
-        // Stop all tracks in local stream
-        if (localStream) {
-            console.log('Stopping all local stream tracks...');
-            localStream.getTracks().forEach(track => {
-                console.log(`Stopping track: ${track.kind} - ${track.label}`);
-                track.enabled = false;
-                track.stop();
-            });
-            setLocalStream(null);
+    const cleanup = async () => {
+        try {
+            console.log('Starting cleanup...');
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    track.stop();
+                });
+                setLocalStream(null);
+            }
+
+            if (peerConnection) {
+                peerConnection.close();
+                setPeerConnection(null);
+            }
+
+            // Update peer counselor status if applicable
+            if (userRole === 'peer-counselor' && auth.currentUser) {
+                const token = await auth.currentUser.getIdToken();
+                await axios.put(
+                    `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
+                    {
+                        status: 'online',
+                        isAvailable: true
+                    },
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+            }
+
+        } catch (error) {
+            console.error('Error during cleanup:', error);
         }
-    
-        // Clear video elements
-        if (localVideoRef.current) {
-            const currentTracks = localVideoRef.current.srcObject?.getTracks() || [];
-            currentTracks.forEach(track => {
-                console.log(`Stopping video element track: ${track.kind} - ${track.label}`);
-                track.enabled = false;
-                track.stop();
-            });
-            localVideoRef.current.srcObject = null;
-        }
-        if (remoteVideoRef.current) {
-            const currentTracks = remoteVideoRef.current.srcObject?.getTracks() || [];
-            currentTracks.forEach(track => {
-                console.log(`Stopping remote video element track: ${track.kind} - ${track.label}`);
-                track.enabled = false;
-                track.stop();
-            });
-            remoteVideoRef.current.srcObject = null;
-        }
-    
-        // Close peer connection
-        if (peerConnection) {
-            console.log('Cleaning up peer connection...');
-            // Stop all tracks from peer connection senders
-            peerConnection.getSenders().forEach(sender => {
-                if (sender.track) {
-                    console.log(`Stopping sender track: ${sender.track.kind} - ${sender.track.label}`);
-                    sender.track.enabled = false;
-                    sender.track.stop();
-                }
-            });
-            peerConnection.close();
-            setPeerConnection(null);
-        }
-    
-        // Clear data channel
-        if (dataChannel) {
-            console.log('Closing data channel...');
-            dataChannel.close();
-            setDataChannel(null);
-        }
-    
-        if (setRoomId) {
-            setRoomId('');
-        }
-        console.log('Cleanup completed');
     };
 
     async function endCall() {
@@ -640,7 +742,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
 
                 // Update peer counselor status to available
                 await axios.put(
-                    `http://localhost:5000/api/peer-counselor/status/${auth.currentUser.uid}`,
+                    `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
                     {
                         status: 'online',
                         isAvailable: true
@@ -665,7 +767,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
     
                 try {
                     const response = await axios.post(
-                        'http://localhost:5000/api/sessions', 
+                        `${API_CONFIG.BASE_URL}/api/sessions`, 
                         { sessionData, token },
                         { 
                             headers: { 

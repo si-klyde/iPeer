@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, del
 import { toast } from 'react-toastify';
 import { User } from 'lucide-react';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const WaitingRoom = () => {
     const [isRequesting, setIsRequesting] = useState(false);
@@ -24,7 +25,7 @@ const WaitingRoom = () => {
             
             // Get client's school first
             const clientResponse = await axios.get(
-              `http://localhost:5000/api/client/${currentUser.uid}`,
+              `${API_CONFIG.BASE_URL}/api/client/${currentUser.uid}`,
               {
                 headers: { Authorization: `Bearer ${token}` }
               }
@@ -34,7 +35,7 @@ const WaitingRoom = () => {
       
             // Get online counselors
             const counselorsResponse = await axios.get(
-              'http://localhost:5000/api/peer-counselors/available',
+              `${API_CONFIG.BASE_URL}/api/peer-counselors/available`,
               {
                 headers: { Authorization: `Bearer ${token}` }
               }
@@ -83,7 +84,7 @@ const WaitingRoom = () => {
           // Check for available counselors through backend
           console.log('Checking for available counselors...');
           const counselorsResponse = await axios.get(
-            'http://localhost:5000/api/peer-counselors/available',
+            `${API_CONFIG.BASE_URL}/api/peer-counselors/available`,
             {
               headers: { Authorization: `Bearer ${token}` }
             }

@@ -3,6 +3,7 @@ import { BellIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import API_CONFIG from '../config/api.js';
 
 const Notifications = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
@@ -74,7 +75,7 @@ const Notifications = ({ user }) => {
       const auth = getAuth();
       const token = await auth.currentUser.getIdToken();
       
-      const response = await axios.get('http://localhost:5000/api/notifications', {
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -98,7 +99,7 @@ const Notifications = ({ user }) => {
       const auth = getAuth();
       const token = await auth.currentUser.getIdToken();
 
-      await axios.put(`http://localhost:5000/api/notifications/${notificationId}`, {}, {
+      await axios.put(`${API_CONFIG.BASE_URL}/notifications/${notificationId}`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

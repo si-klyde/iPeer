@@ -7,6 +7,7 @@ import { appointmentImage } from '../assets';4
 import { Tooltip } from 'react-tooltip'; // Add this package
 import { motion } from 'framer-motion';
 import BookingCalendar from '../components/BookingCalendar';
+import API_CONFIG from '../config/api.js';
 
 const getCurrentDateTime = () => {
   const now = new Date();
@@ -60,7 +61,7 @@ const BookAppointment = () => {
         
         try {
           const response = await axios.get(
-            `http://localhost:5000/api/available-slots/${selectedPeerCounselor}`,
+            `${API_CONFIG.BASE_URL}/api/available-slots/${selectedPeerCounselor}`,
             { params: { date } }
           );
           
@@ -92,12 +93,12 @@ const BookAppointment = () => {
 
       try {
         //Fetch Client data 
-        const clientResponse = await axios.get(`http://localhost:5000/api/client/${currentUserId}`);
+        const clientResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/client/${currentUserId}`);
         const userSchool = clientResponse.data.school;
         setClientSchool(userSchool);
 
         // Fetch peer counselors
-        const counselorsResponse = await axios.get('http://localhost:5000/api/peer-counselors');
+        const counselorsResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/peer-counselors`);
         
         // Filter counselors by school
         const filteredCounselors = counselorsResponse.data.filter(counselor => 
@@ -131,7 +132,7 @@ const BookAppointment = () => {
   const checkAvailability = async (peerCounselorId, date, time) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/check-availability/${peerCounselorId}`,
+        `${API_CONFIG.BASE_URL}/api/check-availability/${peerCounselorId}`,
         { params: { date, time } }
       );
       return response.data.available;
@@ -172,7 +173,7 @@ const BookAppointment = () => {
         return;
       }
 
-      const response = await axios.post('http://localhost:5000/api/create-appointment', {
+      const response = await axios.post(`${API_CONFIG.BASE_URL}/api/create-appointment`, {
         date,
         time,
         description,

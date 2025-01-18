@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { auth } from '../firebase';
 import { toast } from 'react-toastify';
+import API_CONFIG from '../config/api.js';
 
 const InvitePeerCounselor = ({ adminData }) => {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ const InvitePeerCounselor = ({ adminData }) => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.post(
-        'http://localhost:5000/api/admin/send-invitation',
+        `${API_CONFIG.BASE_URL}/api/admin/send-invitation`,
         { 
           email,
           college: adminData.college,

@@ -7,6 +7,10 @@ const crypto = require('crypto');
 const SECURITY_CONFIG = require('../config/security.config.js');
 const { sendPeerCounselorInvitation, sendAdminPasswordResetEmail } = require('../services/emailService');
 
+const APP_URL = process.env.NODE_ENV === 'production'
+  ? process.env.PROD_APP_URL
+  : process.env.APP_URL;
+
 const authenticateAdmin = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split('Bearer ')[1];
@@ -255,7 +259,7 @@ router.get('/admin-data/:uid', async (req, res) => {
         )
       });
   
-      const registrationLink = `http://localhost:5173/register-peer-counselor?token=${inviteToken}`;
+      const registrationLink = `${process.env.PROD_APP_URL}/register-peer-counselor?token=${inviteToken}`;
       await sendPeerCounselorInvitation(email, registrationLink, college);
 
       res.status(200).json({ message: 'Invitation sent successfully' });

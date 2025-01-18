@@ -297,7 +297,7 @@ const sendPeerCounselorInvitation = async (email, registrationLink, collegeDetai
 };
 
 const sendPasswordResetEmail = async (email, resetToken) => {
-  const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+  const resetLink = `${PROD_APP_URL}/reset-password/${resetToken}`;
   
   const mailOptions = {
     from: process.env.EMAIL_USER,

@@ -7,6 +7,11 @@ const { createNotification } = require('../models/notifications');
 const { decrypt } = require('../utils/encryption.utils');
 const { isTimeSlotAvailable, getAvailableTimeSlots } = require('../utils/timeslot');
 
+// Get the appropriate app URL based on environment
+const APP_URL = process.env.NODE_ENV === 'production' 
+  ? process.env.PROD_APP_URL 
+  : process.env.APP_URL;
+
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
     const appointmentsRef = db.collection('appointments');
@@ -77,7 +82,7 @@ router.post('/create-appointment', async (req, res) => {
         time: appointmentData.time,
         clientName: decryptedClientName,
         peerCounselorName: decryptedCounselorName,
-        roomLink: `http://localhost:5173/counseling/${roomId}`
+        roomLink: `${PROD_APP_URL}/counseling/${roomId}`
       }
     );
 
@@ -153,7 +158,7 @@ router.get('/check-reminders', async (req, res) => {
           time: appointment.time,
           clientName: decrypt(appointment.clientName),
           peerCounselorName: decrypt(appointment.peerCounselorName),
-          roomLink: `http://localhost:5173/counseling/${appointment.roomId}`
+          roomLink: `${PROD_APP_URL}/counseling/${appointment.roomId}`
         }
       );
     }
@@ -214,7 +219,7 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
               time: appointmentData.time,
               clientName: decryptedClientName,
               peerCounselorName: decryptedCounselorName,
-              roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
+              roomLink: `${PROD_APP_URL}/counseling/${appointmentData.roomId}`
             }
           );
         } else if (status === 'declined') {

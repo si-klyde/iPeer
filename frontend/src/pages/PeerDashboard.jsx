@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, authStateChanged } from '../firebase';
 import { Calendar, ChevronRight } from 'lucide-react';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 // Add DeleteConfirmationModal component
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, eventName }) => {
@@ -156,7 +157,7 @@ const PeerDashboard = () => {
     setError(null);
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/appointments/peer-counselor/${currentUserId}`, {
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api/appointments/peer-counselor/${currentUserId}`, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -205,7 +206,7 @@ const PeerDashboard = () => {
       const clientPromises = uniqueUserIds.map(async (userId) => {
         try {
           console.log(`Fetching client details for userId: ${userId}`);
-          const response = await axios.get(`http://localhost:5000/api/client/${userId}`, {
+          const response = await axios.get(`${API_CONFIG.BASE_URL}/api/client/${userId}`, {
             headers: {
               'Cache-Control': 'no-cache',
               'Pragma': 'no-cache'
@@ -257,7 +258,7 @@ const PeerDashboard = () => {
   const fetchEvents = useCallback(async () => {
     try {
       const token = await auth.currentUser.getIdToken();
-      const response = await axios.get('http://localhost:5000/api/events', {
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api/events`, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
@@ -324,7 +325,7 @@ const PeerDashboard = () => {
         setPeerStatus(newStatus);
         setIsAvailable(newStatus === 'online');
         
-        await axios.put(`http://localhost:5000/api/peer-counselor/status/${currentUserId}`, {
+        await axios.put(`${API_CONFIG.BASE_URL}/api/peer-counselor/status/${currentUserId}`, {
           status: newStatus,
           isAvailable: newStatus === 'online'
         });
@@ -370,7 +371,7 @@ const PeerDashboard = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/${eventToDelete.id}`);
+      await axios.delete(`${API_CONFIG.BASE_URL}/api/${eventToDelete.id}`);
       setDeleteModalOpen(false);
       setEventToDelete(null);
       fetchEvents();

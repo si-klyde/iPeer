@@ -4,6 +4,7 @@ import axios from 'axios';
 import { auth, authStateChanged } from '../firebase';
 import InvitePeerCounselor from '../components/InvitePeerCounselor';
 import { toast } from 'react-toastify';
+import API_CONFIG from '../config/api.js';
 
 const AdminDashboard = () => {
   const [peerCounselors, setPeerCounselors] = useState([]);
@@ -39,7 +40,7 @@ const AdminDashboard = () => {
       if (user) {
         console.log('Fetching admin data for uid:', user.uid);
         try {
-          const response = await axios.get(`http://localhost:5000/api/admin/admin-data/${user.uid}`);
+          const response = await axios.get(`${API_CONFIG.BASE_URL}/api/admin/admin-data/${user.uid}`);
           console.log('Admin data received:', response.data);
           setAdminData(response.data);
         } catch (error) {
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
           console.log('Auth token obtained:', token.substring(0, 20) + '...');
           
           const response = await axios.get(
-            `http://localhost:5000/api/peer-counselors/per-college/${adminData.college}`,
+            `${API_CONFIG.BASE_URL}/api/peer-counselors/per-college/${adminData.college}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`
@@ -118,7 +119,7 @@ const AdminDashboard = () => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.post(
-        `http://localhost:5000/api/admin/send-delete-verification`,
+        `${API_CONFIG.BASE_URL}/api/admin/send-delete-verification`,
         { 
           counselorId: counselorToDelete.id,
           counselorName: counselorToDelete.fullName,
@@ -138,7 +139,7 @@ const AdminDashboard = () => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.delete(
-        `http://localhost:5000/api/peer-counselors/${counselorId}`,
+        `${API_CONFIG.BASE_URL}/api/peer-counselors/${counselorId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           data: { verificationCode: code }

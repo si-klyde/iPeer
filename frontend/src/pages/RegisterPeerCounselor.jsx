@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
+import API_CONFIG from '../config/api.js';
 
 const RegisterPeerCounselor = () => {
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ const RegisterPeerCounselor = () => {
     const validateInvitation = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/admin/validate-invitation/${token}`
+          `${API_CONFIG.BASE_URL}/api/admin/validate-invitation/${token}`
         );
         setInvitationData(response.data);
         setEmail(response.data.email);
@@ -90,7 +91,7 @@ const RegisterPeerCounselor = () => {
     try {
       // First create the user account
       const response = await axios.post(
-        'http://localhost:5000/api/register-peer-counselor',
+        `${API_CONFIG.BASE_URL}/api/register-peer-counselor`,
         {
           email,
           password,

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { auth, authStateChanged, firestore } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import API_CONFIG from '../config/api.js';
 
 const PeerCounselorProfile = () => {
   const { id } = useParams();
@@ -31,7 +32,7 @@ const PeerCounselorProfile = () => {
         try {
           const token = await user.getIdToken();
           const response = await axios.get(
-            `http://localhost:5000/api/peer-counselors/${id}`,
+            `${API_CONFIG.BASE_URL}/api/peer-counselors/${id}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`
@@ -71,7 +72,7 @@ const PeerCounselorProfile = () => {
     try {
       const token = await auth.currentUser.getIdToken();
       const response = await axios.post(
-        `http://localhost:5000/api/peer-counselors/${id}/verify`,
+        `${API_CONFIG.BASE_URL}/api/peer-counselors/${id}/verify`,
         { isVerified: pendingVerificationStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

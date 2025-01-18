@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Save, X, ClipboardEdit } from 'lucide-react';
 import { auth } from '../firebase';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const SessionNotes = ({ roomId, clientId, isOpen, onClose, onNotesUpdate }) => {
     const [notes, setNotes] = useState('');
@@ -41,7 +42,7 @@ const SessionNotes = ({ roomId, clientId, isOpen, onClose, onNotesUpdate }) => {
             try {
                 const token = await auth.currentUser.getIdToken();
                 const response = await axios.get(
-                    `http://localhost:5000/api/notes/client/${clientId}`,
+                    `${API_CONFIG.BASE_URL}/api/notes/client/${clientId}`,
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
@@ -70,7 +71,7 @@ const SessionNotes = ({ roomId, clientId, isOpen, onClose, onNotesUpdate }) => {
                 notesLength: notes.length 
             });
     
-            const response = await axios.post('http://localhost:5000/api/save-note', {
+            const response = await axios.post(`${API_CONFIG.BASE_URL}/api/save-note`, {
                 roomId,
                 notes,
                 clientId

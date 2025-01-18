@@ -24,6 +24,7 @@ const Hero = () => {
   });
   const [schoolName, setSchoolName] = useState(""); 
   const [loading, setLoading] = useState(true);
+  const [openFAQs, setOpenFAQs] = useState({});
 
   const observerOptions = {
     threshold: 0.2, // Trigger the animation when 20% of the element is visible
@@ -103,6 +104,13 @@ const Hero = () => {
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
+  };
+
+  const toggleFAQ = (index) => {
+    setOpenFAQs(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   return (
@@ -384,31 +392,18 @@ const Hero = () => {
                 className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <button
-                  className="w-full px-6 py-4 text-left focus:outline-none focus:ring-2 focus:ring-green-500 rounded-xl"
-                  onClick={(e) => {
-                    const answer = e.currentTarget.nextElementSibling;
-                    const icon = e.currentTarget.querySelector('.transform');
-                    const button = e.currentTarget;
-                    
-                    // Toggle active state
-                    button.classList.toggle('active');
-                    
-                    if (answer.style.maxHeight) {
-                      answer.style.maxHeight = null;
-                      icon.style.transform = 'rotate(0deg)';
-                      button.classList.remove('bg-green-50');
-                    } else {
-                      answer.style.maxHeight = answer.scrollHeight + 'px';
-                      icon.style.transform = 'rotate(45deg)';
-                      button.classList.add('bg-green-50');
-                    }
-                  }}
+                  className={`w-full px-6 py-4 text-left focus:outline-none focus:ring-2 focus:ring-green-500 rounded-xl ${
+                    openFAQs[index] ? 'bg-green-50' : ''
+                  }`}
+                  onClick={() => toggleFAQ(index)}
                 >
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-gray-900 pr-8">{faq.question}</span>
                     <span className="flex-shrink-0">
                       <svg 
-                        className="w-6 h-6 transform transition-transform duration-300 text-green-600" 
+                        className={`w-6 h-6 transform transition-transform duration-300 text-green-600 ${
+                          openFAQs[index] ? 'rotate-45' : ''
+                        }`}
                         fill="none" 
                         viewBox="0 0 24 24" 
                         stroke="currentColor"
@@ -424,8 +419,14 @@ const Hero = () => {
                   </div>
                 </button>
                 <div
-                  className="overflow-hidden transition-all duration-300 ease-in-out"
-                  style={{ maxHeight: 0 }}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    openFAQs[index] ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  style={{ 
+                    maxHeight: openFAQs[index] ? '500px' : '0',
+                    transition: 'max-height 0.3s ease-in-out, opacity 0.2s ease-in-out',
+                    padding: openFAQs[index] ? undefined : '0'
+                  }}
                 >
                   <p className="px-6 py-4 text-gray-600 border-t border-gray-100 bg-white rounded-b-xl">
                     {faq.answer}

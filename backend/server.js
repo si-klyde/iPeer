@@ -12,12 +12,11 @@ const sessionHistoryRoutes = require('./routes/sessionHistory');
 const schoolsRouter = require('./routes/schools');
 const adminRoutes = require('./routes/admin');
 const cors = require('cors');
+const corsOptions = require('./config/cors.config');
 
 require('./services/schedulerService');
 
-app.use(cors({
-  origin: 'http://localhost:5173' //frontend URL
-}));
+app.use(cors(corsOptions));
 
 app.use(express.json());
 

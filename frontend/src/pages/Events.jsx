@@ -3,6 +3,7 @@ import axios from 'axios';
 import EventModal from '../components/EventModal';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, authStateChanged, auth } from '../firebase';
+import API_CONFIG from '../config/api.js';
 
 // Add DeleteConfirmationModal component
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, eventName }) => {
@@ -78,7 +79,7 @@ const EventCatalog = () => {
           setUser(currentUser);
           if (currentUser) {
               try {
-                  const response = await axios.get('http://localhost:5000/api/events', {
+                  const response = await axios.get(`${API_CONFIG.BASE_URL}/api/events`, {
                       headers: {
                           Authorization: `Bearer ${await currentUser.getIdToken()}`
                       }
@@ -138,13 +139,13 @@ const EventCatalog = () => {
           };
 
           if (isEditing) {
-              await axios.put(`http://localhost:5000/api/${editingId}`, eventData, {
+              await axios.put(`${API_CONFIG.BASE_URL}/api/${editingId}`, eventData, {
                   headers: {
                       Authorization: `Bearer ${await user.getIdToken()}`
                   }
               });
           } else {
-              await axios.post('http://localhost:5000/api/add-events', eventData, {
+              await axios.post(`${API_CONFIG.BASE_URL}/api/add-events`, eventData, {
                   headers: {
                       Authorization: `Bearer ${await user.getIdToken()}`
                   }
@@ -152,7 +153,7 @@ const EventCatalog = () => {
           }
 
           // Fetch fresh data after mutation
-          const response = await axios.get('http://localhost:5000/api/events', {
+          const response = await axios.get(`${API_CONFIG.BASE_URL}/api/events`, {
               headers: {
                   Authorization: `Bearer ${await user.getIdToken()}`
               }
@@ -206,7 +207,7 @@ const EventCatalog = () => {
   
     const confirmDelete = async () => {
       try {
-        await axios.delete(`http://localhost:5000/api/${eventToDelete.id}`);
+        await axios.delete(`${API_CONFIG.BASE_URL}/api/${eventToDelete.id}`);
         // Immediately remove the deleted event from state
         setEvents(currentEvents => 
           currentEvents.filter(event => event.id !== eventToDelete.id)

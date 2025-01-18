@@ -4,6 +4,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import AdminPasswordReset from '../components/AdminPasswordReset.jsx';
+import API_CONFIG from '../config/api.js';
 
 const AdminProfile = () => {
   const [adminData, setAdminData] = useState({
@@ -24,7 +25,7 @@ const AdminProfile = () => {
       try {
         const token = await auth.currentUser.getIdToken();
         const response = await axios.get(
-          `http://localhost:5000/api/admin/admin-data/${auth.currentUser.uid}`,
+          `${API_CONFIG.BASE_URL}/api/admin/admin-data/${auth.currentUser.uid}`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
@@ -70,7 +71,7 @@ const AdminProfile = () => {
       };
 
       await axios.put(
-        `http://localhost:5000/api/admin/update-profile/${auth.currentUser.uid}`,
+        `${API_CONFIG.BASE_URL}/api/admin/update-profile/${auth.currentUser.uid}`,
         updateData,
         {
           headers: { Authorization: `Bearer ${token}` }

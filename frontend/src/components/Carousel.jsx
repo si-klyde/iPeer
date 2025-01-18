@@ -6,6 +6,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, authStateChanged, firestore } from '../firebase';
+import API_CONFIG from '../config/api.js';
 
 const Carousel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,12 +48,12 @@ const Carousel = () => {
       
       try {
         // Get client's school
-        const clientResponse = await axios.get(`http://localhost:5000/api/client/${currentUserId}`);
+        const clientResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/client/${currentUserId}`);
         const userSchool = clientResponse.data.school;
         setClientSchool(userSchool);
 
         // Get peer counselors
-        const counselorsResponse = await axios.get('http://localhost:5000/api/peer-counselors');
+        const counselorsResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/peer-counselors`);
         
         // Filter by school
         const filteredCounselors = counselorsResponse.data.filter(counselor => 

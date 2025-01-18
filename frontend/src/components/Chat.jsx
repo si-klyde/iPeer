@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import notification from '../assets/notification/message.mp3'
 import { auth } from '../firebase';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const Chat = ({ roomId, isOpen, onClose }) => {
     const chatBoxRef = useRef(null);
@@ -27,8 +28,8 @@ const Chat = ({ roomId, isOpen, onClose }) => {
                     // Use role to determine endpoint
                     const token = await currentUser.getIdToken();
                     const endpoint = userRole === 'peer-counselor' 
-                        ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
-                        : `http://localhost:5000/api/client/${currentUser.uid}`;
+                        ? `${API_CONFIG.BASE_URL}/api/peer-counselors/${currentUser.uid}`
+                        : `${API_CONFIG.BASE_URL}/api/client/${currentUser.uid}`;
                     
                     const response = await axios.get(endpoint, {
                         headers: { Authorization: `Bearer ${token}` }

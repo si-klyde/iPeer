@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { auth } from '../firebase';
 import { ClipboardList, Calendar, Clock, User, ChevronDown, ChevronUp, Tag } from 'lucide-react';
+import API_CONFIG from '../config/api.js';
 
 const SessionHistory = ({ role, peerCounselors }) => {
   const [sessions, setSessions] = useState([]);
@@ -15,7 +16,7 @@ const SessionHistory = ({ role, peerCounselors }) => {
       try {
         const token = await auth.currentUser.getIdToken();
         const response = await axios.get(
-          `http://localhost:5000/api/sessions/${auth.currentUser.uid}`,
+          `${API_CONFIG.BASE_URL}/api/sessions/${auth.currentUser.uid}`,
           {
             params: { role },
             headers: { Authorization: `Bearer ${token}` }
@@ -30,7 +31,7 @@ const SessionHistory = ({ role, peerCounselors }) => {
               ? `/api/peer-counselors/${userId}`
               : `/api/client/${userId}`;
             try {
-              const nameResponse = await axios.get(`http://localhost:5000${endpoint}`);
+              const nameResponse = await axios.get(`${API_CONFIG.BASE_URL}${endpoint}`);
               setUserNames(prev => ({
                 ...prev,
                 [userId]: nameResponse.data.fullName

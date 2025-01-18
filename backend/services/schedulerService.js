@@ -10,6 +10,11 @@ const REMINDER_MINUTES_BEFORE = 10;
 const WINDOW_PADDING_MINUTES = 2;
 const CRON_SCHEDULE = '*/1 * * * *';
 
+// Get the appropriate app URL based on environment
+const APP_URL = process.env.NODE_ENV === 'production' 
+  ? process.env.PROD_APP_URL 
+  : process.env.APP_URL;
+
 console.log('Scheduler service initialized');
 
 cron.schedule(CRON_SCHEDULE, async () => {
@@ -116,9 +121,7 @@ cron.schedule(CRON_SCHEDULE, async () => {
           time: appointment.time,
           clientName: clientName,
           peerCounselorName: counselorName,
-          roomLink: process.env.APP_URL ? 
-            `${process.env.APP_URL}/counseling/${appointment.roomId}` :
-            `http://localhost:5173/counseling/${appointment.roomId}`
+          roomLink: `${PROD_APP_URL}/counseling/${appointment.roomId}`
         };
 
         await Promise.all([

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import notificationSound from '../assets/notification/notification.mp3';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import API_CONFIG from '../config/api.js';
 
 const InstantSessionNotification = () => {
     const navigate = useNavigate();
@@ -56,7 +57,7 @@ const InstantSessionNotification = () => {
                     try {
                         const token = await auth.currentUser.getIdToken();
                         const response = await axios.get(
-                            `http://localhost:5000/api/client/${callData.clientId}`,
+                            `${API_CONFIG.BASE_URL}/api/client/${callData.clientId}`,
                             {
                                 headers: { Authorization: `Bearer ${token}` }
                             }
@@ -164,7 +165,7 @@ const InstantSessionNotification = () => {
             // Update peer counselor's status
             const token = await currentUser.getIdToken();
             await axios.put(
-                `http://localhost:5000/api/peer-counselor/status/${currentUser.uid}`,
+                `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${currentUser.uid}`,
                 {
                     status: 'busy',
                     isAvailable: false

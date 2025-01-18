@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { auth } from '../firebase';
 import { toast } from 'react-toastify';
+import API_CONFIG from '../config/api.js';
 
 const AdminPasswordReset = () => {
   const [step, setStep] = useState(1);
@@ -34,7 +35,7 @@ const AdminPasswordReset = () => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.post(
-        'http://localhost:5000/api/admin/initiate-password-change',
+        `${API_CONFIG.BASE_URL}/api/admin/initiate-password-change`,
         { uid: auth.currentUser.uid },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -49,7 +50,7 @@ const AdminPasswordReset = () => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.post(
-        'http://localhost:5000/api/admin/verify-code',
+        `${API_CONFIG.BASE_URL}/api/admin/verify-code`,
         { 
           uid: auth.currentUser.uid,
           code: verificationCode 
@@ -72,7 +73,7 @@ const AdminPasswordReset = () => {
     try {
       const token = await auth.currentUser.getIdToken();
       await axios.post(
-        'http://localhost:5000/api/admin/complete-password-change',
+        `${API_CONFIG.BASE_URL}/api/admin/complete-password-change`,
         {
           uid: auth.currentUser.uid,
           code: verificationCode,
