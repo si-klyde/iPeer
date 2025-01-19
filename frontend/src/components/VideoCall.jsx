@@ -13,17 +13,13 @@ const servers = {
         {
             urls: [
                 'stun:stun.l.google.com:19302',
-                'stun:stun2.l.google.com:19302',
-                'stun:stun3.l.google.com:19302',
-                'stun:stun4.l.google.com:19302'
+                'stun:stun2.l.google.com:19302'
             ]
         },
         {
-            urls:[
-                'turn:relay1.expressturn.com:3478'
-            ],
-            username: 'efBIJ3TTF7VTJLEOWE',
-            credential: 'MR5rbgese4SYmAEF'        
+            urls: import.meta.env.VITE_TURN_SERVER_URL,
+            username: import.meta.env.VITE_TURN_USERNAME,
+            credential: import.meta.env.VITE_TURN_CREDENTIAL
         }
     ],
     iceCandidatePoolSize: 10,
