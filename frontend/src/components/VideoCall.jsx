@@ -13,19 +13,75 @@ const servers = {
         {
             urls: [
                 'stun:stun.l.google.com:19302',
-                'stun:stun2.l.google.com:19302'
+                'stun:stun1.l.google.com:19302'
             ]
         },
         {
             urls: import.meta.env.VITE_TURN_SERVER_URL,
             username: import.meta.env.VITE_TURN_USERNAME,
-            credential: import.meta.env.VITE_TURN_CREDENTIAL
+            credential: import.meta.env.VITE_TURN_CREDENTIAL,
+            credentialType: 'password'
         }
     ],
     iceCandidatePoolSize: 10,
-    iceTransportPolicy: 'all',
+    iceTransportPolicy: 'relay',
     bundlePolicy: 'max-bundle',
     rtcpMuxPolicy: 'require'
+};
+
+// Add connection monitoring
+const monitorConnection = (pc) => {
+    let monitorInterval = null;
+    let failureCount = 0;
+    
+    const checkConnection = async () => {
+        if (!pc || pc.connectionState === 'closed') {
+            if (monitorInterval) {
+                clearInterval(monitorInterval);
+            }
+            return;
+        }
+
+        console.log('Connection Status:', {
+            iceConnectionState: pc.iceConnectionState,
+            connectionState: pc.connectionState,
+            signalingState: pc.signalingState,
+            iceGatheringState: pc.iceGatheringState,
+            remoteDescription: pc.remoteDescription ? 'set' : 'not set',
+            localDescription: pc.localDescription ? 'set' : 'not set'
+        });
+
+        // Handle failed state
+        if (pc.iceConnectionState === 'failed' || pc.connectionState === 'failed') {
+            failureCount++;
+            if (failureCount <= 3) {
+                console.log(`Attempting ICE restart (attempt ${failureCount}/3)`);
+                try {
+                    const offer = await pc.createOffer({ iceRestart: true });
+                    await pc.setLocalDescription(offer);
+                    // Update the offer in Firestore
+                    const callDoc = doc(firestore, 'calls', roomId);
+                    await updateDoc(callDoc, {
+                        offer: {
+                            type: offer.type,
+                            sdp: offer.sdp
+                        }
+                    });
+                } catch (error) {
+                    console.error('ICE restart failed:', error);
+                }
+            }
+        } else {
+            failureCount = 0;
+        }
+    };
+
+    monitorInterval = setInterval(checkConnection, 2000);
+    return () => {
+        if (monitorInterval) {
+            clearInterval(monitorInterval);
+        }
+    };
 };
 
 // Error handling utility function
@@ -99,7 +155,6 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
             const answerCandidates = collection(callDoc, 'answerCandidates');
             const callData = (await getDoc(callDoc)).data();
 
-            // Check if session is ended
             if (callData?.status === 'ended') {
                 cleanup();
                 alert('This session has ended');
@@ -107,200 +162,368 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                 return;
             }
         
+            console.log('Setting up peer connection with config:', servers);
             const pc = new RTCPeerConnection(servers);
             setPeerConnection(pc);
 
-            // Handle connection failures
-            pc.oniceconnectionstatechange = async () => {
-                console.log('ICE Connection State:', pc.iceConnectionState);
-                console.log('Connection State:', pc.connectionState);
-                console.log('Signaling State:', pc.signalingState);
-                console.log('Current ICE candidates:', pc.localDescription?.sdp);
-                if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
-                    await handleCallError(
-                        new Error(`ICE connection ${pc.iceConnectionState}`),
-                        pc,
-                        id,
-                        userRole
-                    );
-                    navigate('/');
-                }
-            };
+            // Start connection monitoring
+            const monitorInterval = monitorConnection(pc);
 
-            pc.onconnectionstatechange = async () => {
-                console.log('Connection State:', pc.connectionState);
-                if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-                    await handleCallError(
-                        new Error(`Peer connection ${pc.connectionState}`),
-                        pc,
-                        id,
-                        userRole
-                    );
-                    navigate('/');
-                }
-            };
+            // Buffer for ICE candidates received before remote description
+            let iceCandidateBuffer = [];
 
-            // Set up data channel
-            if (userRole === 'peer-counselor') {
-                const channel = pc.createDataChannel('endMeeting');
-                setDataChannel(channel);
-            } else {
-                pc.ondatachannel = (event) => {
-                    const channel = event.channel;
-                    setDataChannel(channel);
-                    
-                    channel.onmessage = (event) => {
-                        if (event.data === 'endMeeting') {
-                            cleanup();
-                            //alert('The counselor has ended the session');
-                            navigate('/');
-                        }
-                    };
-                };
-            }
-        
-            // Add tracks to connection
-            localStream.getTracks().forEach(track => {
-                console.log('Adding track to peer connection:', track.kind, track.enabled);
-                const sender = pc.addTrack(track, localStream);
-                if (track.kind === 'video') {
-                    sender.setParameters({
-                        ...sender.getParameters(),
-                        degradationPreference: 'maintain-framerate'
-                    });
-                }
-            });
-        
-            // Handle remote tracks
-            pc.ontrack = event => {
-                console.log('Track received:', event.track.kind, event.track.enabled);
-                const [remoteStream] = event.streams;
-                
-                if (remoteVideoRef.current && remoteStream) {
-                    console.log('Setting remote stream');
-                    remoteVideoRef.current.srcObject = remoteStream;
-                    
-                    // Check for video tracks
-                    const videoTracks = remoteStream.getVideoTracks();
-                    setHasRemoteVideo(videoTracks.length > 0);
-                    
-                    // Monitor track enabled state
-                    if (videoTracks.length > 0) {
-                        const videoTrack = videoTracks[0];
-                        setRemoteVideoEnabled(videoTrack.enabled);
-                        
-                        videoTrack.onmute = () => {
-                            console.log('Remote video track muted');
-                            setRemoteVideoEnabled(false);
-                        };
-                        
-                        videoTrack.onunmute = () => {
-                            console.log('Remote video track unmuted');
-                            setRemoteVideoEnabled(true);
-                        };
-                        
-                        // Monitor enabled state changes
-                    const observer = new MutationObserver(() => {
-                        setRemoteVideoEnabled(videoTrack.enabled);
-                    });
-
-                    // Observe the track's enabled property
-                    observer.observe(videoTrack, {
-                        attributes: true,
-                        attributeFilter: ['enabled']
-                    });
-
-                    // Return cleanup function
-                    return () => observer.disconnect();
-                    }
-                }
-            };
-        
-            pc.onicecandidate = event => {
-                console.log('New ICE candidate:', event.candidate?.type);
+            pc.onicecandidate = async event => {
                 if (event.candidate) {
-                    console.log('ICE candidate details:', {
-                        type: event.candidate.type,
-                        protocol: event.candidate.protocol,
-                        address: event.candidate.address,
-                        port: event.candidate.port
+                    const candidate = event.candidate;
+                    console.log('Generated ICE candidate:', {
+                        type: candidate.type,
+                        protocol: candidate.protocol,
+                        address: candidate.address,
+                        port: candidate.port
                     });
-                    addDoc(offerCandidates, event.candidate.toJSON());
+
+                    try {
+                        await addDoc(userRole === 'peer-counselor' ? offerCandidates : answerCandidates, candidate.toJSON());
+                        console.log('Successfully added ICE candidate to Firestore');
+                    } catch (error) {
+                        console.error('Error adding ICE candidate:', error);
+                    }
                 }
             };
 
             pc.onicegatheringstatechange = () => {
                 console.log('ICE gathering state:', pc.iceGatheringState);
                 if (pc.iceGatheringState === 'complete') {
-                    console.log('Final ICE candidates:', pc.localDescription?.sdp);
+                    console.log('ICE gathering complete');
                 }
             };
 
-            // Force TURN usage for testing
-            pc.iceTransportPolicy = 'relay';
-            
-            pc.onconnectionstatechange = async () => {
-                if (pc.connectionState === 'connected') {
-                    // If client and counselor are both present, set start time
-                    if (callData.clientId && callData.counselorId) {
-                        await updateDoc(callDoc, {
-                            startTime: new Date().toISOString(),
-                            status: 'active'
-                        });
-                    }
+            pc.oniceconnectionstatechange = async () => {
+                console.log('ICE connection state changed to:', pc.iceConnectionState);
+                
+                switch (pc.iceConnectionState) {
+                    case 'checking':
+                        console.log('Establishing connection...');
+                        break;
+                    case 'connected':
+                        console.log('Connection established successfully');
+                        // Ensure remote stream is playing
+                        if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
+                            try {
+                                await remoteVideoRef.current.play();
+                            } catch (error) {
+                                console.warn('Auto-play failed, will retry on user interaction');
+                            }
+                        }
+                        break;
+                    case 'disconnected':
+                        console.log('Connection disconnected, waiting for reconnection...');
+                        break;
+                    case 'failed':
+                        console.log('Connection failed, attempting recovery...');
+                        try {
+                            // First try ICE restart
+                            const offer = await pc.createOffer({ iceRestart: true });
+                            await pc.setLocalDescription(offer);
+                            
+                            await updateDoc(doc(firestore, 'calls', roomId), {
+                                offer: {
+                                    type: offer.type,
+                                    sdp: offer.sdp
+                                }
+                            });
+
+                            // If ICE restart doesn't work within 5 seconds, try full reconnection
+                            setTimeout(async () => {
+                                if (pc.iceConnectionState === 'failed') {
+                                    console.log('ICE restart failed, attempting full reconnection...');
+                                    const stream = await navigator.mediaDevices.getUserMedia({
+                                        video: true,
+                                        audio: true
+                                    });
+                                    
+                                    stream.getTracks().forEach(track => {
+                                        const sender = pc.getSenders().find(s => s.track?.kind === track.kind);
+                                        if (sender) {
+                                            sender.replaceTrack(track);
+                                        }
+                                    });
+                                }
+                            }, 5000);
+                        } catch (error) {
+                            console.error('Connection recovery failed:', error);
+                            await handleCallError(error, pc, roomId, userRole);
+                        }
+                        break;
+                    case 'closed':
+                        console.log('Connection closed');
+                        break;
                 }
             };
+
+            // Set up data channel
+            if (userRole === 'peer-counselor') {
+                const channel = pc.createDataChannel('endMeeting');
+                channel.onopen = () => console.log('Data channel opened');
+                channel.onclose = () => console.log('Data channel closed');
+                channel.onerror = (error) => console.error('Data channel error:', error);
+                setDataChannel(channel);
+            } else {
+                pc.ondatachannel = (event) => {
+                    const channel = event.channel;
+                    channel.onopen = () => console.log('Data channel opened');
+                    channel.onclose = () => console.log('Data channel closed');
+                    channel.onerror = (error) => console.error('Data channel error:', error);
+                    setDataChannel(channel);
+                    
+                    channel.onmessage = (event) => {
+                        if (event.data === 'endMeeting') {
+                            cleanup();
+                            navigate('/');
+                        }
+                    };
+                };
+            }
+
+            // Add local tracks
+            console.log('Adding tracks to peer connection...');
+            localStream.getTracks().forEach(track => {
+                console.log('Adding track to peer connection:', track.kind, track.enabled);
+                const sender = pc.addTrack(track, localStream);
+                if (track.kind === 'video') {
+                    sender.setParameters({
+                        ...sender.getParameters(),
+                        degradationPreference: 'maintain-framerate',
+                        encodings: [
+                            {
+                                maxBitrate: 500000, // Increased for better quality
+                                maxFramerate: 30,
+                                scaleResolutionDownBy: 2
+                            }
+                        ]
+                    }).catch(console.error);
+                }
+            });
         
-            if (!callData?.offer) {
-                const offerDescription = await pc.createOffer();
-                await pc.setLocalDescription(offerDescription);
-        
-                await updateDoc(callDoc, {
-                    offer: {
-                        type: offerDescription.type,
-                        sdp: offerDescription.sdp,
-                    }
+            // Handle remote tracks
+            pc.ontrack = event => {
+                console.log('Track received:', {
+                    kind: event.track.kind,
+                    enabled: event.track.enabled,
+                    muted: event.track.muted,
+                    readyState: event.track.readyState,
+                    streams: event.streams.length
                 });
+
+                if (!remoteVideoRef.current) {
+                    console.error('Remote video element not mounted');
+                    return;
+                }
+
+                const [remoteStream] = event.streams;
+                if (!remoteStream) {
+                    console.error('No remote stream in track event');
+                    return;
+                }
+
+                // Create new MediaStream if none exists
+                if (!remoteVideoRef.current.srcObject) {
+                    console.log('Creating new MediaStream for remote video');
+                    const newStream = new MediaStream();
+                    remoteVideoRef.current.srcObject = newStream;
+                }
+
+                const currentStream = remoteVideoRef.current.srcObject;
+
+                // Add track if it doesn't exist
+                const trackExists = currentStream.getTracks().some(t => t.id === event.track.id);
+                if (!trackExists) {
+                    console.log(`Adding ${event.track.kind} track to remote stream`);
+                    currentStream.addTrack(event.track);
+                }
+
+                // Track state handling
+                const updateTrackState = () => {
+                    const hasVideoTrack = currentStream.getVideoTracks().some(track => track.enabled);
+                    const hasAudioTrack = currentStream.getAudioTracks().some(track => track.enabled);
+                    
+                    setHasRemoteVideo(true);
+                    setRemoteVideoEnabled(hasVideoTrack);
+                    
+                    console.log('Updated remote track states:', {
+                        hasVideoTrack,
+                        hasAudioTrack,
+                        videoTracks: currentStream.getVideoTracks().length,
+                        audioTracks: currentStream.getAudioTracks().length
+                    });
+                };
+
+                // Set up track event listeners
+                event.track.onunmute = () => {
+                    console.log(`Remote ${event.track.kind} track unmuted`);
+                    updateTrackState();
+                };
+                
+                event.track.onmute = () => {
+                    console.log(`Remote ${event.track.kind} track muted`);
+                    updateTrackState();
+                };
+                
+                event.track.onended = () => {
+                    console.log(`Remote ${event.track.kind} track ended`);
+                    updateTrackState();
+                };
+
+                // Force play attempt with retry
+                const attemptPlay = async () => {
+                    try {
+                        await remoteVideoRef.current.play();
+                        console.log('Remote video playback started');
+                    } catch (error) {
+                        console.warn('Auto-play failed:', error);
+                        // Retry after user interaction
+                        const playButton = document.createElement('button');
+                        playButton.textContent = 'Click to play';
+                        playButton.onclick = () => {
+                            remoteVideoRef.current.play();
+                            playButton.remove();
+                        };
+                        remoteVideoRef.current.parentElement.appendChild(playButton);
+                    }
+                };
+
+                // Initial state update and play attempt
+                updateTrackState();
+                attemptPlay();
+            };
         
-                onSnapshot(callDoc, (snapshot) => {
+            // Handle signaling
+            if (!callData?.offer) {
+                console.log('Creating offer...');
+                const offerDescription = await pc.createOffer({
+                    offerToReceiveAudio: true,
+                    offerToReceiveVideo: true,
+                    voiceActivityDetection: true
+                });
+
+                console.log('Setting local description...');
+                await pc.setLocalDescription(offerDescription);
+
+                console.log('Updating call document with offer...');
+                const offerData = {
+                    type: offerDescription.type,
+                    sdp: offerDescription.sdp
+                };
+                
+                await updateDoc(callDoc, { offer: offerData });
+
+                // Listen for remote answer with retry mechanism
+                let answerRetries = 0;
+                const maxRetries = 3;
+                
+                const answerListener = onSnapshot(callDoc, async (snapshot) => {
                     const data = snapshot.data();
                     if (!pc.currentRemoteDescription && data?.answer) {
-                        pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                        console.log('Received answer, setting remote description...');
+                        try {
+                            const answerDescription = new RTCSessionDescription(data.answer);
+                            await pc.setRemoteDescription(answerDescription);
+                            console.log('Remote description set successfully');
+                        } catch (error) {
+                            console.error('Error setting remote description:', error);
+                            if (answerRetries < maxRetries) {
+                                answerRetries++;
+                                console.log(`Retrying to set remote description (${answerRetries}/${maxRetries})`);
+                                // Wait before retrying
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                                try {
+                                    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                                    console.log('Remote description set successfully on retry');
+                                } catch (retryError) {
+                                    console.error('Retry failed:', retryError);
+                                    if (answerRetries === maxRetries) {
+                                        await handleCallError(retryError, pc, id, userRole);
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
-        
-                onSnapshot(answerCandidates, (snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
+
+                // Listen for remote ICE candidates
+                onSnapshot(userRole === 'peer-counselor' ? answerCandidates : offerCandidates, (snapshot) => {
+                    snapshot.docChanges().forEach(async (change) => {
                         if (change.type === 'added') {
-                            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                            const candidate = new RTCIceCandidate(change.doc.data());
+                            try {
+                                if (pc.remoteDescription && pc.remoteDescription.type) {
+                                    await pc.addIceCandidate(candidate);
+                                    console.log('Added ICE candidate:', candidate);
+                                } else {
+                                    iceCandidateBuffer.push(candidate);
+                                    console.log('Buffered ICE candidate:', candidate);
+                                }
+                            } catch (error) {
+                                if (!error.message.includes('Unknown ufrag')) {
+                                    console.error('Error adding ICE candidate:', error);
+                                }
+                            }
                         }
                     });
                 });
+
+                return () => answerListener();
             } else {
-                await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+                console.log('Received offer, creating answer...');
+                try {
+                    console.log('Setting remote description from offer...');
+                    await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
                 
-                const answerDescription = await pc.createAnswer();
-                await pc.setLocalDescription(answerDescription);
-        
-                await updateDoc(callDoc, {
-                    answer: {
-                        type: answerDescription.type,
-                        sdp: answerDescription.sdp,
-                    }
-                });
-        
-                onSnapshot(offerCandidates, (snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                    console.log('Creating answer...');
+                    const answerDescription = await pc.createAnswer();
+                
+                    console.log('Setting local description...');
+                    await pc.setLocalDescription(answerDescription);
+                
+                    console.log('Updating call document with answer...');
+                    await updateDoc(callDoc, {
+                        answer: {
+                            type: answerDescription.type,
+                            sdp: answerDescription.sdp
                         }
                     });
-                });
+                
+                    // Listen for remote ICE candidates
+                    onSnapshot(userRole === 'peer-counselor' ? answerCandidates : offerCandidates, (snapshot) => {
+                        snapshot.docChanges().forEach(async (change) => {
+                            if (change.type === 'added') {
+                                const candidate = new RTCIceCandidate(change.doc.data());
+                                try {
+                                    if (pc.remoteDescription && pc.remoteDescription.type) {
+                                        await pc.addIceCandidate(candidate);
+                                        console.log('Added ICE candidate:', candidate);
+                                    } else {
+                                        iceCandidateBuffer.push(candidate);
+                                        console.log('Buffered ICE candidate:', candidate);
+                                    }
+                                } catch (error) {
+                                    if (!error.message.includes('Unknown ufrag')) {
+                                        console.error('Error adding ICE candidate:', error);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('Error during answer creation:', error);
+                    await handleCallError(error, pc, roomId, userRole);
+                }
             }
         
             return pc;
         } catch (error) {
-            await handleCallError(error, null, id, userRole);
+            console.error('Error in setupPeerConnection:', error);
+            await handleCallError(error, null, roomId, userRole);
             navigate('/');
         }
     }, [localStream, navigate, userRole]);
@@ -332,8 +555,8 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                     playsInline
                     style={{ objectFit: 'contain' }}
                 />
-                {(hasRemoteVideo && !remoteVideoEnabled) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                {(!hasRemoteVideo || !remoteVideoEnabled) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900">
                         <div className="text-white mb-4">
                             {!hasRemoteVideo ? 'Waiting for remote video...' : 'Video turned off'}
                         </div>
@@ -432,26 +655,80 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         }
     }, [remoteVideoRef.current?.srcObject]);
     
+    // Check browser compatibility
+    const checkBrowserCompatibility = () => {
+        const constraints = {
+            video: true,
+            audio: true
+        };
+
+        // Check if getUserMedia is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Your browser does not support video calls. Please use a modern browser like Chrome, Firefox, or Edge.');
+        }
+
+        // Check WebRTC support
+        if (!window.RTCPeerConnection) {
+            throw new Error('Your browser does not support WebRTC. Please use a modern browser like Chrome, Firefox, or Edge.');
+        }
+
+        return navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+            })
+            .catch(error => {
+                console.error('Browser compatibility check failed:', error);
+                throw error;
+            });
+    };
+
     useEffect(() => {
         const init = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                await checkBrowserCompatibility();
+                
+                console.log('Requesting media permissions...');
+                const constraints = {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        channelCount: 2
                     },
-                    audio: true
+                    video: {
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 },
+                        aspectRatio: { ideal: 1.7777777778 },
+                        facingMode: 'user',
+                        frameRate: { min: 20, ideal: 30, max: 60 }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Ensure tracks are enabled and unmuted
+                stream.getTracks().forEach(track => {
+                    track.enabled = true;
+                    if (track.kind === 'video') {
+                        console.log('Initializing video track:', {
+                            id: track.id,
+                            settings: track.getSettings(),
+                            constraints: track.getConstraints()
+                        });
+                    }
                 });
 
-                console.log('Local Stream:', stream);
                 setLocalStream(stream);
                 if (localVideoRef.current) {
                     localVideoRef.current.srcObject = stream;
+                    localVideoRef.current.muted = true; // Mute local audio to prevent echo
+                    await localVideoRef.current.play().catch(console.error);
+                    console.log('Local video element configured');
                 }
             } catch (error) {
-                console.error('Error accessing media devices.', error);
-                await handleCallError(error, peerConnection, roomId, userRole);
-                navigate('/');
+                console.error('Error during initialization:', error);
+                handleInitError(error);
             }
         };
 
@@ -532,14 +809,14 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                                 (sender?.track?.kind === 'video' || 
                                  (sender?.track === null && sender.dtmf === null))
                             );
-    
+
                             if (videoSender) {
                                 await videoSender.replaceTrack(null);
                                 if (videoSender.track) {
                                     videoSender.track.stop();
                                 }
                             }
-    
+
                             // Create and send new offer
                             const offer = await peerConnection.createOffer();
                             await peerConnection.setLocalDescription(offer);
@@ -551,7 +828,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                             return;
                         }
                     } else {
-                        // Existing code for Chrome/Edge
+                        // Chrome/Edge handling
                         localStream.getVideoTracks().forEach(track => {
                             track.enabled = false;
                             track.stop();
@@ -575,31 +852,34 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                         
                         // Wait for next render cycle
                         await new Promise(resolve => setTimeout(resolve, 0));
-    
-                        // Log initial senders
-                        console.log('Initial video senders:', peerConnection.getSenders()
-                            .filter(sender => sender.track?.kind === 'video'));
-    
+
                         // Stop and remove existing tracks
                         localStream.getVideoTracks().forEach(track => {
                             track.stop();
                             localStream.removeTrack(track);
                         });
-    
-                        const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+                        const newStream = await navigator.mediaDevices.getUserMedia({ 
+                            video: {
+                                width: { ideal: 1280 },
+                                height: { ideal: 720 },
+                                facingMode: 'user',
+                                frameRate: { ideal: 30 }
+                            }
+                        });
                         const newVideoTrack = newStream.getVideoTracks()[0];
                         console.log('Got new video track:', newVideoTrack?.label);
-    
+
                         if (navigator.userAgent.toLowerCase().includes('firefox')) {
                             try {
-                                // Firefox specific handling...
+                                // Firefox specific handling
                                 const tracks = peerConnection.getSenders();
                                 const videoSender = tracks.find(sender => 
                                     sender && 
                                     (sender?.track?.kind === 'video' || 
                                      (sender?.track === null && sender.dtmf === null))
                                 );
-    
+
                                 if (videoSender) {
                                     await videoSender.replaceTrack(newVideoTrack);
                                 } else {
@@ -610,7 +890,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                                     });
                                     peerConnection.addTrack(newVideoTrack, newStream);
                                 }
-    
+
                                 const offer = await peerConnection.createOffer();
                                 await peerConnection.setLocalDescription(offer);
                                 
@@ -627,15 +907,16 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                             const videoSender = peerConnection
                                 .getSenders()
                                 .find(sender => sender.track?.kind === 'video');
-    
+
                             if (videoSender) {
                                 await videoSender.replaceTrack(newVideoTrack);
+                                videoSender.track.enabled = true;
                             } else {
                                 peerConnection.addTrack(newVideoTrack, newStream);
                             }
                         }
-    
-                        // Now try to access video element
+
+                        // Update local video
                         if (localVideoRef.current) {
                             localStream.addTrack(newVideoTrack);
                             localVideoRef.current.srcObject = localStream;
@@ -645,7 +926,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                             setIsVideoMuted(true); // Reset state if video element isn't available
                             return;
                         }
-    
+
                     } catch (error) {
                         console.error('Error restarting video:', error);
                         setIsVideoMuted(true); // Reset state if failed
@@ -659,6 +940,7 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         if (localStream && peerConnection) {
             const audioTrack = localStream.getAudioTracks()[0];
             if (audioTrack) {
+                console.log('Toggling audio:', !audioTrack.enabled);
                 // Toggle the enabled state of the track
                 audioTrack.enabled = !audioTrack.enabled;
                 setIsAudioMuted(!audioTrack.enabled);
@@ -685,19 +967,36 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
             console.log('Starting cleanup...');
             
             if (localStream) {
+                console.log('Stopping local tracks...');
                 localStream.getTracks().forEach(track => {
+                    console.log(`Stopping ${track.kind} track`);
                     track.stop();
                 });
                 setLocalStream(null);
             }
 
             if (peerConnection) {
+                console.log('Closing peer connection...');
+                // Remove all tracks from peer connection
+                const senders = peerConnection.getSenders();
+                senders.forEach(sender => {
+                    if (sender.track) {
+                        sender.track.stop();
+                    }
+                    try {
+                        peerConnection.removeTrack(sender);
+                    } catch (e) {
+                        console.error('Error removing track:', e);
+                    }
+                });
+                
                 peerConnection.close();
                 setPeerConnection(null);
             }
 
             // Update peer counselor status if applicable
             if (userRole === 'peer-counselor' && auth.currentUser) {
+                console.log('Updating peer counselor status...');
                 const token = await auth.currentUser.getIdToken();
                 await axios.put(
                     `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
@@ -709,6 +1008,14 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                         headers: { Authorization: `Bearer ${token}` }
                     }
                 );
+            }
+
+            // Clear video elements
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = null;
+            }
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = null;
             }
 
         } catch (error) {
