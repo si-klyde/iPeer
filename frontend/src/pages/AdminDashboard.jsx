@@ -135,27 +135,31 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDelete = async (counselorId, code) => {
+  const handleDeactivate = async (counselorId, code) => {
     try {
       const token = await auth.currentUser.getIdToken();
-      await axios.delete(
-        `${API_CONFIG.BASE_URL}/api/peer-counselors/${counselorId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { verificationCode: code }
-        }
+      await axios.post(
+        `${API_CONFIG.BASE_URL}/api/peer-counselors/${counselorId}/deactivate`,
+        { verificationCode: code },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      setPeerCounselors(prev => prev.filter(c => c.id !== counselorId));
-      toast.success('Peer counselor deleted successfully');
+      // Update local state to reflect deactivation
+      setPeerCounselors(prev => prev.map(c => 
+        c.id === counselorId 
+          ? {...c, status: 'deactivated'} 
+          : c
+      ));
+      toast.success('Peer counselor deactivated successfully');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete peer counselor');
+      toast.error(error.response?.data?.message || 'Failed to deactivate peer counselor');
     }
     setShowDeleteModal(false);
     setCounselorToDelete(null);
     setVerificationCode('');
     setIsVerificationSent(false);
   };
+  
 
   const formatLastOnline = (timestamp) => {
     if (!timestamp || !timestamp._seconds) return 'Unknown';
@@ -410,7 +414,7 @@ const AdminDashboard = () => {
                     }}
                     className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-100 text-red-600 text-xs sm:text-sm rounded-lg hover:bg-red-200 transition-colors duration-300"
                   >
-                    Delete
+                    Deactivate
                   </button>
                 </div>
               </div>
@@ -457,10 +461,10 @@ const AdminDashboard = () => {
                 </svg>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Delete Peer Counselor
+                Deactivate Peer Counselor
               </h3>
               <p className="text-gray-600 mb-6">
-                You are about to delete <span className="font-semibold">{counselorToDelete?.fullName}</span>
+                You are about to deactivate the account of <span className="font-semibold">{counselorToDelete?.fullName}</span>
               </p>
 
               {!isVerificationSent ? (
@@ -508,13 +512,13 @@ const AdminDashboard = () => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => handleDelete(counselorToDelete.id, verificationCode)}
+                      onClick={() => handleDeactivate(counselorToDelete.id, verificationCode)}
                       disabled={!verificationCode}
                       className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 
                         font-medium transition-all duration-200
                         disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Delete
+                      Deactivate
                     </button>
                   </div>
                 </>

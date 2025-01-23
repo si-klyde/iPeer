@@ -96,7 +96,8 @@ const WaitingRoom = () => {
           // Filter counselors by school and verification status
           const availableCounselors = allAvailableCounselors.filter(counselor => 
             counselor.school === clientSchool && 
-            counselor.verificationStatus === 'verified'
+            counselor.verificationStatus === 'verified' &&
+            counselor.accountStatus === 'active'
           );
           
           console.log('Filtered counselors:', availableCounselors);

@@ -98,34 +98,49 @@ const BookAppointment = () => {
 
   useEffect(() => {
     const fetchPeerCounselors = async () => {
-      const cachedCounselors = localStorage.getItem('peerCounselors');
-      if (cachedCounselors) {
-        setPeerCounselors(JSON.parse(cachedCounselors));
-      }
-
       try {
-        //Fetch Client data 
+        setInitialLoading(true);
+        console.log('Fetching counselors for user:', currentUserId);
+  
+        // 1. Get client data first
         const clientResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/client/${currentUserId}`);
         const userSchool = clientResponse.data.school;
+
         setClientSchool(userSchool);
-
-        // Fetch peer counselors
+  
+        // 2. Get all peer counselors
         const counselorsResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/peer-counselors`);
-
-        // Filter counselors by school
-        const filteredCounselors = counselorsResponse.data.filter(counselor => 
-          counselor.school === userSchool &&
-          counselor.verificationStatus === 'verified'
-        );
-
+  
+        // 3. Filter counselors with detailed logging
+        const filteredCounselors = counselorsResponse.data.filter(counselor => {
+          const isVerified = counselor.verificationStatus === 'verified';
+          const matchesSchool = counselor.school === userSchool;
+          const isActive = counselor.accountStatus === 'active';
+          
+          console.log('Counselor:', {
+            id: counselor.id,
+            name: counselor.fullName,
+            school: counselor.school,
+            userSchool: userSchool,
+            isVerified: isVerified,
+            matchesSchool: matchesSchool,
+            active: isActive
+          });
+  
+          return isVerified && matchesSchool && isActive;
+        });
+  
         setPeerCounselors(filteredCounselors);
         localStorage.setItem('peerCounselors', JSON.stringify(filteredCounselors));
-
+  
       } catch (error) {
-        console.error('Error fetching peer counselors:', error);
+        console.error('Error in fetchPeerCounselors:', error.response || error);
+        setAvailabilityError('Unable to load peer counselors. Please try again later.');
+      } finally {
+        setInitialLoading(false);
       }
     };
-
+  
     if (currentUserId) {
       fetchPeerCounselors();
     }
