@@ -11,6 +11,8 @@ const SessionHistory = ({ role, peerCounselors }) => {
   const [userNames, setUserNames] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchSessionHistory = async () => {
@@ -106,6 +108,29 @@ const SessionHistory = ({ role, peerCounselors }) => {
     return userName.includes(search) || sessionDate.includes(search);
   });
 
+  const Pagination = ({ currentPage, setCurrentPage, totalPages }) => (
+    <div className="flex justify-center mt-6 gap-2">
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button
+          key={i + 1}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-4 py-2 rounded-lg transition-all ${
+            currentPage === i + 1
+              ? 'bg-[#50B498] text-white'
+              : 'bg-white border-2 border-[#9CDBA6]/20 text-[#4A5568] hover:border-[#9CDBA6]/50'
+          }`}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
+  );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSessions = filteredSessions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+
   if (loading) return <div className="text-center text-gray-600 py-4">Loading sessions...</div>;
   if (error) return <div className="text-center text-red-500 py-4">{error}</div>;
   
@@ -134,9 +159,14 @@ const SessionHistory = ({ role, peerCounselors }) => {
       </div>
       {sessions.length === 0 ? (
         <div className="text-center text-gray-500 bg-white rounded-lg p-6 shadow-sm">No session history available</div>
+      ) : filteredSessions.length === 0 ? (
+        <div className="text-center text-gray-500 bg-white rounded-lg p-6 shadow-sm">
+          <div className="text-lg font-medium mb-2">No results found</div>
+          <div className="text-sm">Try adjusting your search terms</div>
+        </div>
       ) : (
         <div className="space-y-4">
-          {filteredSessions.map((session) => (
+          {currentSessions.map((session) => (
             <div 
               key={session.id} 
               className="bg-white border border-[#9CDBA6]/20 rounded-xl p-6 hover:shadow-lg hover:border-[#9CDBA6]/50 transition-all duration-200"
@@ -165,10 +195,11 @@ const SessionHistory = ({ role, peerCounselors }) => {
               </div>
             </div>
           ))}
+          <Pagination currentPage={currentPage} setCurrentPage={setCurrentPage} totalPages={totalPages} />
         </div>
       )}
     </div>
-  );
+  );  
 };
 
 export default SessionHistory;
