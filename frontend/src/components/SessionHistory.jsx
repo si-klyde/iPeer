@@ -10,6 +10,7 @@ const SessionHistory = ({ role, peerCounselors }) => {
   const [error, setError] = useState(null);
   const [userNames, setUserNames] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchSessionHistory = async () => {
@@ -97,17 +98,45 @@ const SessionHistory = ({ role, peerCounselors }) => {
     );
   };
 
+  const filteredSessions = sessions.filter(session => {
+    const userName = getUserName(session).toLowerCase();
+    const sessionDate = new Date(session.startTime).toLocaleDateString().toLowerCase();
+    const search = searchTerm.toLowerCase();
+    
+    return userName.includes(search) || sessionDate.includes(search);
+  });
+
   if (loading) return <div className="text-center text-gray-600 py-4">Loading sessions...</div>;
   if (error) return <div className="text-center text-red-500 py-4">{error}</div>;
   
   return (
     <div className="bg-transparent">
       <h2 className="text-xl font-semibold text-[#2D3748] mb-6">Session History</h2>
+      <div className="relative mb-6">
+        <input
+          type="text"
+          placeholder="Search by name or date..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-12 py-3 rounded-xl border-2 border-[#9CDBA6]/20 
+          focus:border-[#9CDBA6] focus:ring-2 focus:ring-[#9CDBA6]/10 
+          text-[#4A5568] placeholder-gray-400 shadow-sm bg-white
+          hover:border-[#9CDBA6]/30 transition-all"
+        />
+        <svg 
+          className="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#50B498]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
       {sessions.length === 0 ? (
         <div className="text-center text-gray-500 bg-white rounded-lg p-6 shadow-sm">No session history available</div>
       ) : (
         <div className="space-y-4">
-          {sessions.map((session) => (
+          {filteredSessions.map((session) => (
             <div 
               key={session.id} 
               className="bg-white border border-[#9CDBA6]/20 rounded-xl p-6 hover:shadow-lg hover:border-[#9CDBA6]/50 transition-all duration-200"
