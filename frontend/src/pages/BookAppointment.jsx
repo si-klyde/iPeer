@@ -38,7 +38,19 @@ const BookAppointment = () => {
   const [step, setStep] = useState(1);
   const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
-
+  const TIME_SLOTS = [
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00"
+  ];
+  
   useEffect(() => {
     // Hide Header and Footer
     document.querySelector('header')?.classList.add('hidden');
@@ -307,8 +319,11 @@ const BookAppointment = () => {
                     Select Time
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                    {availableTimeSlots.length > 0 ? (
-                      availableTimeSlots.map((slot) => (
+                    {TIME_SLOTS.map((slot) => {
+                      const { currentDate, currentTime } = getCurrentDateTime();
+                      const isTimeSlotPassed = date === currentDate && slot < currentTime;
+                      
+                      return (
                         <button
                           key={slot}
                           type="button"
@@ -316,16 +331,20 @@ const BookAppointment = () => {
                             setTime(slot);
                             setStep(3);
                           }}
+                          disabled={!availableTimeSlots.includes(slot) || isTimeSlotPassed}
                           className={`py-3 sm:py-4 px-4 sm:px-6 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 ${
                             time === slot
                               ? 'bg-green-500 text-white shadow-lg transform scale-105'
-                              : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                              : availableTimeSlots.includes(slot) && !isTimeSlotPassed
+                                ? 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                                : 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
                           }`}
                         >
                           {slot}
                         </button>
-                      ))
-                    ) : (
+                      );
+                    })}
+                    {TIME_SLOTS.length === 0 && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -340,6 +359,8 @@ const BookAppointment = () => {
                       </motion.div>
                     )}
                   </div>
+
+
                 </div>
               </motion.div>
             )}
