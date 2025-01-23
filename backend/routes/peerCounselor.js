@@ -240,7 +240,7 @@ router.get('/peer-counselors/per-college/:college', async (req, res) => {
     const peerCounselorsSnapshot = await db.collection('users')
       .where('role', '==', 'peer-counselor')
       .where('college', '==', college)
-      .where('accountStatus', '!=', 'deactivated')
+      // .where('accountStatus', '!=', 'deactivated')
       .get();
 
     const peerCounselors = peerCounselorsSnapshot.docs.map(doc => {
