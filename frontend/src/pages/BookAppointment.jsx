@@ -287,12 +287,23 @@ const BookAppointment = () => {
                   className="w-full px-3 sm:px-4 py-3 sm:py-4 text-base sm:text-lg rounded-xl border-2 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-white shadow-sm hover:border-green-400"
                 >
                   <option value="">Select a counselor...</option>
-                  {peerCounselors.map((counselor) => (
-                    <option key={counselor.id} value={counselor.id}>
-                      {counselor.fullName}
-                    </option>
+                  {Object.entries(
+                    peerCounselors.reduce((acc, counselor) => {
+                      const college = counselor.college || 'Other';
+                      acc[college] = [...(acc[college] || []), counselor];
+                      return acc;
+                    }, {})
+                  ).map(([college, counselors]) => (
+                    <optgroup key={college} label={college}>
+                      {counselors.map((counselor) => (
+                        <option key={counselor.id} value={counselor.id}>
+                          {counselor.fullName}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
+
               </motion.div>
             )}
 
