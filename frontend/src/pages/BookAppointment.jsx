@@ -111,7 +111,7 @@ const BookAppointment = () => {
 
         // Fetch peer counselors
         const counselorsResponse = await axios.get(`${API_CONFIG.BASE_URL}/api/peer-counselors`);
-        
+
         // Filter counselors by school
         const filteredCounselors = counselorsResponse.data.filter(counselor => 
           counselor.school === userSchool &&
@@ -297,13 +297,12 @@ const BookAppointment = () => {
                     <optgroup key={college} label={college}>
                       {counselors.map((counselor) => (
                         <option key={counselor.id} value={counselor.id}>
-                          {counselor.fullName}
+                          {counselor.fullName} ({counselor.currentStatus?.status || 'offline'})
                         </option>
                       ))}
                     </optgroup>
                   ))}
                 </select>
-
               </motion.div>
             )}
 
