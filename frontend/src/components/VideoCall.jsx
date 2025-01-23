@@ -966,60 +966,89 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         try {
             console.log('Starting cleanup...');
             
+            // 1. Clean up media streams
             if (localStream) {
-                console.log('Stopping local tracks...');
-                localStream.getTracks().forEach(track => {
-                    console.log(`Stopping ${track.kind} track`);
-                    track.stop();
-                });
-                setLocalStream(null);
+                try {
+                    console.log('Stopping local tracks...');
+                    localStream.getTracks().forEach(track => {
+                        console.log(`Stopping ${track.kind} track`);
+                        track.stop();
+                    });
+                    setLocalStream(null);
+                } catch (e) {
+                    console.error('Error cleaning up local stream:', e);
+                }
             }
 
+            // 2. Clean up peer connection
             if (peerConnection) {
-                console.log('Closing peer connection...');
-                // Remove all tracks from peer connection
-                const senders = peerConnection.getSenders();
-                senders.forEach(sender => {
-                    if (sender.track) {
-                        sender.track.stop();
+                try {
+                    console.log('Closing peer connection...');
+                    // Remove all tracks from peer connection
+                    const senders = peerConnection.getSenders();
+                    for (const sender of senders) {
+                        if (sender.track) {
+                            sender.track.stop();
+                        }
+                        try {
+                            peerConnection.removeTrack(sender);
+                        } catch (e) {
+                            console.error('Error removing track:', e);
+                        }
                     }
-                    try {
-                        peerConnection.removeTrack(sender);
-                    } catch (e) {
-                        console.error('Error removing track:', e);
-                    }
-                });
-                
-                peerConnection.close();
-                setPeerConnection(null);
+                    
+                    peerConnection.close();
+                    setPeerConnection(null);
+                } catch (e) {
+                    console.error('Error cleaning up peer connection:', e);
+                }
             }
 
-            // Update peer counselor status if applicable
-            if (userRole === 'peer-counselor' && auth.currentUser) {
-                console.log('Updating peer counselor status...');
-                const token = await auth.currentUser.getIdToken();
-                await axios.put(
-                    `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
-                    {
-                        status: 'online',
-                        isAvailable: true
-                    },
-                    {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }
-                );
+            // 3. Clean up data channel
+            if (dataChannel) {
+                try {
+                    dataChannel.close();
+                    setDataChannel(null);
+                } catch (e) {
+                    console.error('Error closing data channel:', e);
+                }
             }
 
-            // Clear video elements
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = null;
+            // 4. Clean up video elements
+            try {
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = null;
+                }
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = null;
+                }
+            } catch (e) {
+                console.error('Error cleaning up video elements:', e);
             }
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = null;
+
+            // 5. Reset all state variables
+            setIsVideoMuted(false);
+            setIsAudioMuted(false);
+            setShowChat(false);
+            setShowNotes(false);
+            setUnreadMessages(0);
+            setHasRemoteVideo(false);
+            setRemoteVideoEnabled(false);
+            setSessionNotes('');
+            setRemoteUserPhoto(null);
+            lastMessageCountRef.current = 0;
+
+            // 6. Clear room ID if it exists
+            if (setRoomId) {
+                setRoomId(null);
             }
 
         } catch (error) {
             console.error('Error during cleanup:', error);
+            // Even if cleanup fails, ensure critical states are reset
+            setPeerConnection(null);
+            setLocalStream(null);
+            setDataChannel(null);
         }
     };
 
@@ -1027,23 +1056,61 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
         if (userRole === 'peer-counselor') {
             const endTime = new Date().toISOString();
             try {
-                // Send end meeting signal to all participants
-                if (dataChannel && dataChannel.readyState === 'open') {
+                // Get current user token first to ensure authentication
+                const token = await auth.currentUser.getIdToken();
+                
+                // Send end meeting signal first
+                if (dataChannel?.readyState === 'open') {
                     dataChannel.send('endMeeting');
                 }
     
-                // Get current user token
-                const token = await auth.currentUser.getIdToken();
-                
-                // Update call document status instead of deleting
+                // Get call data and update status
                 const callDoc = doc(firestore, 'calls', roomId);
                 const callData = (await getDoc(callDoc)).data();
+                
+                if (!callData) {
+                    throw new Error('Call data not found');
+                }
+    
                 await updateDoc(callDoc, {
                     status: 'ended',
                     endedAt: endTime
                 });
+    
+                // Create session with better error handling
+                const sessionData = {
+                    roomId,
+                    clientId: callData.clientId,
+                    counselorId: callData.counselorId,
+                    startTime: callData.acceptedAt.toDate ? 
+                        callData.acceptedAt.toDate().toISOString() : 
+                        new Date(callData.acceptedAt).toISOString(),
+                    endTime: new Date().toISOString(),
+                    status: 'completed',
+                    duration: Math.floor((new Date() - (callData.acceptedAt.toDate ? 
+                        callData.acceptedAt.toDate() : 
+                        new Date(callData.acceptedAt))) / 1000),
+                    notes: sessionNotes || '',
+                    type: callData.appointmentId ? 'Appointment' : 'Instant'
+                };
+    
+                const response = await axios.post(
+                    `${API_CONFIG.BASE_URL}/api/sessions`, 
+                    { sessionData },
+                    { 
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+    
+                if (!response.data?.sessionId) {
+                    console.error('Session creation response:', response.data);
+                    throw new Error('Session creation failed: Invalid response format');
+                }
 
-                // Update peer counselor status to available
+                // Update peer counselor status AFTER everything else succeeds
                 await axios.put(
                     `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
                     {
@@ -1054,53 +1121,41 @@ const VideoCall = ({ roomId, setRoomId, userRole, clientId }) => {
                         headers: { Authorization: `Bearer ${token}` }
                     }
                 );
-
-                // Create session record
-                const sessionData = {
-                    roomId,
-                    clientId: callData.clientId,
-                    counselorId: callData.counselorId,
-                    startTime: callData.startTime,
-                    endTime,
-                    status: 'completed',
-                    duration: new Date(endTime) - new Date(callData.startTime),
-                    notes: sessionNotes,
-                    type: callData.appointmentId ? 'Appointment' : 'Instant'
-                };
     
+                await cleanup();
+                alert('Session ended successfully');
+                navigate('/');
+    
+            } catch (error) {
+                console.error('Detailed error:', error.response?.data || error.message);
+                
+                // Still try to update peer counselor status even if session creation fails
                 try {
-                    const response = await axios.post(
-                        `${API_CONFIG.BASE_URL}/api/sessions`, 
-                        { sessionData, token },
-                        { 
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            }
+                    const token = await auth.currentUser.getIdToken();
+                    await axios.put(
+                        `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${auth.currentUser.uid}`,
+                        {
+                            status: 'online',
+                            isAvailable: true
+                        },
+                        {
+                            headers: { Authorization: `Bearer ${token}` }
                         }
                     );
-    
-                    if (!response.data?.sessionId) {
-                        throw new Error('Invalid session creation response');
-                    }
-    
-                } catch (error) {
-                    throw new Error(`Session creation failed: ${error.message}`);
+                } catch (statusError) {
+                    console.error('Failed to update peer counselor status:', statusError);
                 }
-    
-                cleanup();
-                alert('Session ended successfully');
-            } catch (error) {
-                console.error('Error ending session:', error);
-                alert('Error ending session');
+                
+                await cleanup();
+                alert(`Session ended but there was an error saving the session data. Please contact support.`);
+                navigate('/');
             }
         } else {
-            cleanup();
+            await cleanup();
             alert('You have left the session');
+            navigate('/');
         }
-        
-        navigate('/');
-    }
+    }    
     
 
     return (

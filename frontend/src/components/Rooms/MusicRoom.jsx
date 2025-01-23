@@ -11,7 +11,7 @@ import {
 const PLAYLISTS = {
   focus: { 
     id: 'mJW57E7GpSo',
-    embedUrl: 'https://www.youtube.com/embed/mJW57E7GpSo?autoplay=1',
+    embedUrl: 'https://www.youtube.com/embed/sAcj8me7wGI?autoplay=1',
     name: 'Focus Mode',
     description: 'Beautiful piano music to help you concentrate',
     icon: <SparklesIcon className="w-6 h-6 text-white" />,
@@ -19,7 +19,7 @@ const PLAYLISTS = {
   },
   relax: { 
     id: 'PLQkQfzsIUwRYHN4pxZ-g3KCF_yPr9Xz_m',
-    embedUrl: 'https://www.youtube.com/embed/videoseries?list=OLAK5uy_nJmvBhVY4tpslZ3Cue3yHr4k93U8M8bVc&autoplay=1',
+    embedUrl: 'https://www.youtube.com/embed/bP9gMpl1gyQ?autoplay=1',
     name: 'Chill & Relax',
     description: 'Soothing melodies for relaxation',
     icon: <HeartIcon className="w-6 h-6 text-white" />,
@@ -35,7 +35,7 @@ const PLAYLISTS = {
   },
   lofi: { 
     id: 'PLQkQfzsIUwRaJgpxqKUU8gmHqYxZ-6yzR',
-    embedUrl: 'https://www.youtube.com/embed/HQwLPhE2zys?autoplay=1',
+    embedUrl: 'https://www.youtube.com/embed/6H-PLF2CR18?autoplay=1',
     name: 'Lo-Fi Beats',
     description: 'Relaxing beats for study and work',
     icon: <MusicalNoteIcon className="w-6 h-6 text-white" />,
