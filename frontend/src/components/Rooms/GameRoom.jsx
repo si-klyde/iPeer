@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PuzzlePieceIcon, ShieldExclamationIcon, LightBulbIcon, HashtagIcon, LanguageIcon } from '@heroicons/react/24/outline';
+import { logRoomEntry } from '../../utils/roomLogger';
 
 // Common game container style
 const GameContainer = ({ icon, title, children }) => (
@@ -497,6 +498,18 @@ const ChessGame = () => {
     return (row + col) % 2 === 0 ? 'bg-white' : 'bg-gray-300';
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Game Room');
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <GameContainer 
       icon={<ShieldExclamationIcon className="w-auto h-auto text-white" />}
@@ -646,6 +659,18 @@ const WordPuzzle = () => {
     ];
     return parts.slice(6 - attempts);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Game Room');
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <GameContainer 
@@ -821,6 +846,18 @@ const MemoryGame = () => {
     }
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Game Room');
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <GameContainer 
       icon={<LightBulbIcon className="w-auto h-auto text-white" />}
@@ -957,6 +994,18 @@ const SudokuGame = () => {
     setIsComplete(false);
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Game Room');
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <GameContainer 
       icon={<HashtagIcon className="w-auto h-auto text-white" />}
@@ -1045,6 +1094,18 @@ const GameRoom = () => {
       component: SudokuGame
     }
   ];
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Game Room');
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12">

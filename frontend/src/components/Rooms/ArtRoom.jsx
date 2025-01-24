@@ -7,6 +7,7 @@ import {
   ArrowUturnDownIcon,
   SwatchIcon
 } from '@heroicons/react/24/outline';
+import { logRoomEntry } from '../../utils/roomLogger';
 
 const ColorPicker = ({ selectedColor, onColorChange }) => {
   const colors = [
@@ -292,6 +293,18 @@ const ArtRoom = () => {
     };
     setArtworks([newArtwork, ...artworks]);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Art Room');
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="h-auto bg-gradient-to-br from-[#E9EDC9] to-[#FEFAE0] p-8">

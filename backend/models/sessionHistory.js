@@ -37,26 +37,33 @@ const createSession = async (sessionData, token) => {
 
 const getSessionHistory = async (userId, role, token) => {
     try {
-      const decodedToken = await verifyUserToken(token);
-      if (userId !== decodedToken.uid) {
-        throw new Error('Unauthorized access');
-      }
-  
-      const query = db.collection('sessionsHistory')
-        .where(role === 'peer-counselor' ? 'counselorId' : 'clientId', '==', userId)
-        .orderBy('startTime', 'desc');
+        if (!['client', 'peer-counselor'].includes(role)) {
+            throw new Error('Invalid role specified');
+        }
         
-      const snapshot = await query.get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+        const decodedToken = await verifyUserToken(token);
+        
+        if (userId !== decodedToken.uid) {
+            throw new Error('Unauthorized access');
+        }
+
+        const query = db.collection('sessionsHistory')
+            .where(role === 'peer-counselor' ? 'counselorId' : 'clientId', '==', userId)
+            .orderBy('startTime', 'desc');
+        
+        const snapshot = await query.get();
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
     } catch (error) {
-      throw new Error(`Authentication failed: ${error.message}`);
+        console.error(`Session history error: ${error.message}`);
+        throw new Error(`Failed to retrieve session history: ${error.message}`);
     }
-  };
+};
 
 module.exports = {
-  createSession,
-  getSessionHistory
+    createSession,
+    getSessionHistory
 };

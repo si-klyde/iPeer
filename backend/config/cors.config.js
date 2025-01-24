@@ -1,24 +1,23 @@
 const allowedOrigins = {
-  development: [
-    'http://localhost:5173',
-    'https://localhost:5173'
-  ],
-  production: [
-    // Main production URLs
-    'https://ipeer.tech',
-    'https://www.ipeer.tech',
-    // For potential subdomain support
-    'https://*.ipeer.tech'
-  ]
+  development: ['http://localhost:5173'],
+  production: ['https://ipeer.tech']
 };
 
 const corsOptions = {
-  origin: true, // Allow all origins
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.development.includes(origin) || allowedOrigins.production.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
     'Authorization',
+    'Cache-Control',
+    'Pragma',
     'X-Requested-With',
     'Accept',
     'Origin'
