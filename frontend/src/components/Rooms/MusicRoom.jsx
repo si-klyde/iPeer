@@ -6,6 +6,7 @@ import {
   CloudIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { logRoomEntry } from '../../utils/roomLogger';
 
 // YouTube Playlist configuration with correct embed URLs
 const PLAYLISTS = {
@@ -110,16 +111,17 @@ const PlaylistCard = ({ playlist, onSelect }) => {
 export const MusicRoom = () => {
   const [currentPlaylist, setCurrentPlaylist] = useState(null);
 
-  // useEffect(() => {
-  //   // Hide Footer
-  //   const footer = document.querySelector('footer');
-  //   if (footer) footer.style.display = 'none';
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Music Room');
+    }
 
-  //   return () => {
-  //     // Restore Footer visibility when leaving the page
-  //     if (footer) footer.style.display = '';
-  //   };
-  // }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="max-w-[1600px] h-auto bg-[#E6F4EA] mx-auto p-8">

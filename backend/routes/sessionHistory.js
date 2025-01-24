@@ -46,6 +46,10 @@ router.get('/sessions/:userId', async (req, res) => {
             return res.status(401).json({ error: 'No authorization token provided' });
         }
 
+        if (!['client', 'peer-counselor'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role specified' });
+        }
+
         const sessions = await getSessionHistory(userId, role, token);
         // Decrypt notes for each session
         const decryptedSessions = sessions.map(session => ({

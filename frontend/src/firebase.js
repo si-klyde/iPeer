@@ -23,3 +23,5 @@ const provider = new GoogleAuthProvider();
 const authStateChanged = onAuthStateChanged;
 
 export { auth, provider, storage, signInWithPopup, signOut, signInWithCustomToken, authStateChanged, firestore };
+
+export const db = getFirestore(app);
