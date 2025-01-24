@@ -44,6 +44,7 @@ const createPeerCounselorDocument = async (uid, userData, authData) => {
 
   await db.collection('users').doc(uid).set({
     uid: uid,
+    accountStatus: 'active',
     email: encryptedEmail, 
     fullName: encryptedFullName,
     school: userData.school,

@@ -35,7 +35,40 @@ const ViewAppointments = () => {
     });
   }, [navigate]);
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   const sortAppointmentsByCreatedAt = (appointments) => {
+  //     return [...appointments].sort((a, b) => {
+  //       const aSeconds = a.createdAt?._seconds ?? 0;
+  //       const bSeconds = b.createdAt?._seconds ?? 0;
+  //       return bSeconds - aSeconds;
+  //     });
+  //   };
+  
+  //   const fetchAppointments = async () => {
+  //     if (!currentUserId) return;
+  
+  //     const cachedAppointments = localStorage.getItem(`appointments_${currentUserId}`);
+  //     if (cachedAppointments) {
+  //       setAppointments(JSON.parse(cachedAppointments));
+  //     }
+  
+  //     try {
+  //       const { data: appointments } = await axios.get(`${API_CONFIG.BASE_URL}/api/appointments/client/${currentUserId}`);
+  //       const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
+  //       setAppointments(sortedAppointments);
+  //       localStorage.setItem(`appointments_${currentUserId}`, JSON.stringify(sortedAppointments));
+  //     } catch (error) {
+  //       console.error('Error fetching appointments:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchAppointments();
+  // }, [currentUserId]);
+  const fetchAppointments = async () => {
+    if (!currentUserId) return;
+    
     const sortAppointmentsByCreatedAt = (appointments) => {
       return [...appointments].sort((a, b) => {
         const aSeconds = a.createdAt?._seconds ?? 0;
@@ -43,27 +76,20 @@ const ViewAppointments = () => {
         return bSeconds - aSeconds;
       });
     };
-  
-    const fetchAppointments = async () => {
-      if (!currentUserId) return;
-  
-      const cachedAppointments = localStorage.getItem(`appointments_${currentUserId}`);
-      if (cachedAppointments) {
-        setAppointments(JSON.parse(cachedAppointments));
-      }
-  
-      try {
-        const { data: appointments } = await axios.get(`${API_CONFIG.BASE_URL}/api/appointments/client/${currentUserId}`);
-        const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
-        setAppointments(sortedAppointments);
-        localStorage.setItem(`appointments_${currentUserId}`, JSON.stringify(sortedAppointments));
-      } catch (error) {
-        console.error('Error fetching appointments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+    try {
+      const { data: appointments } = await axios.get(`${API_CONFIG.BASE_URL}/api/appointments/client/${currentUserId}`);
+      const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
+      setAppointments(sortedAppointments);
+      localStorage.setItem(`appointments_${currentUserId}`, JSON.stringify(sortedAppointments));
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAppointments();
   }, [currentUserId]);
 
@@ -194,6 +220,7 @@ const ViewAppointments = () => {
               appointments={appointments}
               peerCounselors={peerCounselors}
               role="client"
+              fetchAppointments={fetchAppointments}
             />
           )}
           

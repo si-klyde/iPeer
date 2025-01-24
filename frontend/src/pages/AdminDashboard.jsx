@@ -20,6 +20,7 @@ const AdminDashboard = () => {
   const [counselorToDelete, setCounselorToDelete] = useState(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerificationSent, setIsVerificationSent] = useState(false);
+  const [accountStatusTab, setAccountStatusTab] = useState('active');
 
   const navigate = useNavigate();
 
@@ -73,7 +74,9 @@ const AdminDashboard = () => {
               }
             }
           );
-          console.log('Peer counselors data received:', response.data);
+          console.log('All Peer Counselors:', response.data);
+        console.log('Active Accounts:', response.data.filter(c => c.accountStatus !== 'activate'));
+        console.log('Deactivated Accounts:', response.data.filter(c => c.accountStatus === 'deactivated'));
           setPeerCounselors(response.data);
         } catch (error) {
           console.log('Error details:', {
@@ -135,27 +138,31 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDelete = async (counselorId, code) => {
+  const handleDeactivate = async (counselorId, code) => {
     try {
       const token = await auth.currentUser.getIdToken();
-      await axios.delete(
-        `${API_CONFIG.BASE_URL}/api/peer-counselors/${counselorId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          data: { verificationCode: code }
-        }
+      await axios.post(
+        `${API_CONFIG.BASE_URL}/api/peer-counselors/${counselorId}/deactivate`,
+        { verificationCode: code },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      setPeerCounselors(prev => prev.filter(c => c.id !== counselorId));
-      toast.success('Peer counselor deleted successfully');
+      // Update local state to reflect deactivation
+      setPeerCounselors(prev => prev.map(c => 
+        c.id === counselorId 
+          ? {...c, status: 'deactivated'} 
+          : c
+      ));
+      toast.success('Peer counselor deactivated successfully');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete peer counselor');
+      toast.error(error.response?.data?.message || 'Failed to deactivate peer counselor');
     }
     setShowDeleteModal(false);
     setCounselorToDelete(null);
     setVerificationCode('');
     setIsVerificationSent(false);
   };
+  
 
   const formatLastOnline = (timestamp) => {
     if (!timestamp || !timestamp._seconds) return 'Unknown';
@@ -205,8 +212,12 @@ const AdminDashboard = () => {
       verificationFilter === 'verified' ? counselor.isVerified :
       !counselor.isVerified;
       
-    return matchesSearch && matchesStatus && matchesVerification;
-  });
+    const matchesAccountStatus = accountStatusTab === 'active' 
+      ? counselor.accountStatus !== 'deactivated'
+      : counselor.accountStatus === 'deactivated';
+      
+    return matchesSearch && matchesStatus && matchesVerification && matchesAccountStatus;
+  });  
 
   // Get current counselors
   const indexOfLastCounselor = currentPage * PeerCounselorsPerPage;
@@ -240,8 +251,16 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 md:p-6 transition-all duration-300 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Counselors</p>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-600">{peerCounselors.length}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  {accountStatusTab === 'active' ? 'Active Counselors' : 'Deactivated Counselors'}
+                </p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-600">
+                  {peerCounselors.filter(c => 
+                    accountStatusTab === 'active' 
+                      ? c.accountStatus !== 'deactivated'
+                      : c.accountStatus === 'deactivated'
+                  ).length}
+                </p>
               </div>
               <div className="bg-emerald-100 rounded-full p-2 sm:p-3">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,6 +284,32 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setAccountStatusTab('active')}
+              className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                accountStatusTab === 'active'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Active Accounts
+            </button>
+            <button
+              onClick={() => setAccountStatusTab('deactivated')}
+              className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                accountStatusTab === 'deactivated'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Deactivated Accounts
+            </button>
+          </div>
+        </div>
+
 
         {/* Updated Search and Filters Section */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
@@ -403,15 +448,17 @@ const AdminDashboard = () => {
                   >
                     View Profile
                   </button>
-                  <button 
-                    onClick={() => {
-                      setShowDeleteModal(true);
-                      setCounselorToDelete(counselor);
-                    }}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-100 text-red-600 text-xs sm:text-sm rounded-lg hover:bg-red-200 transition-colors duration-300"
-                  >
-                    Delete
-                  </button>
+                  {counselor.accountStatus !== 'deactivated' && (
+                    <button 
+                      onClick={() => {
+                        setShowDeleteModal(true);
+                        setCounselorToDelete(counselor);
+                      }}
+                      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-100 text-red-600 text-xs sm:text-sm rounded-lg hover:bg-red-200 transition-colors duration-300"
+                    >
+                      Deactivate
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -457,10 +504,10 @@ const AdminDashboard = () => {
                 </svg>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Delete Peer Counselor
+                Deactivate Peer Counselor
               </h3>
               <p className="text-gray-600 mb-6">
-                You are about to delete <span className="font-semibold">{counselorToDelete?.fullName}</span>
+                You are about to deactivate the account of <span className="font-semibold">{counselorToDelete?.fullName}</span>
               </p>
 
               {!isVerificationSent ? (
@@ -508,13 +555,13 @@ const AdminDashboard = () => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => handleDelete(counselorToDelete.id, verificationCode)}
+                      onClick={() => handleDeactivate(counselorToDelete.id, verificationCode)}
                       disabled={!verificationCode}
                       className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 
                         font-medium transition-all duration-200
                         disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Delete
+                      Deactivate
                     </button>
                   </div>
                 </>

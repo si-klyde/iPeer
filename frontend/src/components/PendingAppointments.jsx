@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import BookingCalendar from './BookingCalendar';
+import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
-const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppointmentStatus, role }) => {
+const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppointmentStatus, handleReschedule, role, fetchAppointments }) => {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const currentTime = now.toLocaleTimeString('en-US', { 
       hour12: false, 
       hour: '2-digit', 
@@ -10,26 +15,17 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
       hourCycle: 'h23' 
   });
 
-  // Convert appointment time to 24-hour format for comparison
   const formatTo24Hour = (time) => {
       const [hours, minutes] = time.split(':');
       return `${hours.padStart(2, '0')}:${minutes}`;
   };
 
   const pendingAppointments = appointments.filter(apt => {
-      console.log('Comparing times:', {
-          current: currentTime,
-          appointment: formatTo24Hour(apt.time)
-      });
-      
-      if (apt.status !== 'pending') return false;
-      
+      if (apt.status !== 'pending' && apt.status !== 'pending_reschedule') return false;
       if (apt.date > today) return true;
-      
       if (apt.date === today) {
           return formatTo24Hour(apt.time) > currentTime;
       }
-      
       return false;
   });
 
@@ -43,6 +39,121 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
   const getUserLabel = () => {
     return role === 'client' ? 'Peer Counselor' : 'Client';
   };
+
+  const handleRescheduleResponse = async (appointmentId, response) => {
+    try {
+      await axios.put(`${API_CONFIG.BASE_URL}/api/appointments/${appointmentId}/reschedule-response`, {
+        response: response // 'accept' or 'decline'
+      });
+      
+      // Refresh appointments after response
+      await fetchAppointments();
+    } catch (error) {
+      console.error('Error responding to reschedule:', error);
+    }
+  };
+
+  const RescheduleModal = ({ appointment, onClose, onSubmit }) => {
+    const [newDate, setNewDate] = useState(null);
+    const [newDescription, setNewDescription] = useState('');
+    const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+    const [selectedTime, setSelectedTime] = useState('');
+  
+    const handleSubmit = () => {
+      const formattedDate = newDate.toISOString().split('T')[0];
+      onSubmit(appointment.id, formattedDate, selectedTime, newDescription);
+    };  
+
+    useEffect(() => {
+      const fetchAvailableSlots = async () => {
+        if (newDate && appointment.peerCounselorId) {
+          try {
+            const response = await axios.get(
+              `${API_CONFIG.BASE_URL}/api/available-slots/${appointment.peerCounselorId}`,
+              { params: { date: newDate.toISOString().split('T')[0] } }
+            );
+            
+            if (response.data.availableSlots) {
+              setAvailableTimeSlots(response.data.availableSlots);
+            }
+          } catch (error) {
+            console.error('Error fetching slots:', error);
+            setAvailableTimeSlots([]);
+          }
+        }
+      };
+  
+      fetchAvailableSlots();
+    }, [newDate, appointment.peerCounselorId]);
+  
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <h3 className="text-xl font-semibold mb-4">Reschedule Appointment</h3>
+          
+          <BookingCalendar date={newDate} onDateChange={setNewDate} />
+          
+          <div className="mt-6 space-y-4">
+            <label className="text-base font-medium text-gray-700">
+              Select Time
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {availableTimeSlots.length > 0 ? (
+                availableTimeSlots.map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setSelectedTime(slot)}
+                    className={`py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      selectedTime === slot
+                        ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-3 text-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                  <p className="text-gray-600">No available time slots for this date</p>
+                </div>
+              )}
+            </div>
+          </div>
+  
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rescheduling Reason
+            </label>
+            <textarea
+              className="w-full p-3 border rounded-lg"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Please provide a reason for rescheduling..."
+              rows="3"
+            />
+          </div>
+  
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={handleSubmit}
+              disabled={!newDate || !selectedTime || !newDescription}
+              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Confirm Reschedule
+            </button>
+            <button
+              onClick={onClose}
+              className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
 
   return (
     <div className="space-y-4">
@@ -92,19 +203,36 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
             </div>
 
             <div className="mt-4">
-                <p className={`text-sm font-medium mb-2 ${
-                  appointment.status === 'accepted' ? 'text-green-600' : 
-                  appointment.status === 'declined' ? 'text-red-600' : 
-                  'text-yellow-600'
-                }`}>
-                  Status: {appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : 'Pending'}
+              <p className={`text-sm font-medium mb-2 ${
+                appointment.status === 'accepted' ? 'text-green-600' : 
+                appointment.status === 'declined' ? 'text-red-600' : 
+                'text-yellow-600'
+              }`}>
+                Status: {appointment.status ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) : 'Pending'}
+              </p>
+              {role === 'client' && appointment.status === 'pending' && (
+                <p className="text-xs text-gray-500">
+                  Thanks for your patience! Your request is under review. 😊
                 </p>
-                {role === 'client' && appointment.status === 'pending' && (
-                  <p className="text-xs text-gray-500">
-                    Thanks for your patience! Your request is under review. 😊
-                  </p>
-                )}
+              )}
+            </div>4
+
+            {appointment.status === 'pending_reschedule' && role === 'client' && (
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => handleRescheduleResponse(appointment.id, 'accept')}
+                className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+              >
+                Accept New Schedule
+              </button>
+              <button
+                onClick={() => handleRescheduleResponse(appointment.id, 'decline')}
+                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Decline
+              </button>
             </div>
+          )}
 
             {role === 'peer-counselor' && handleAppointmentStatus && (
               <div className="mt-4 flex gap-2">
@@ -120,10 +248,34 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
                 >
                   Decline
                 </button>
+                <button
+                  onClick={() => {
+                    setSelectedAppointment(appointment);
+                    setIsRescheduling(true);
+                  }}
+                  className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  Reschedule
+                </button>
               </div>
             )}
           </div>
         ))
+      )}
+
+      {isRescheduling && selectedAppointment && (
+        <RescheduleModal
+          appointment={selectedAppointment}
+          onClose={() => {
+            setIsRescheduling(false);
+            setSelectedAppointment(null);
+          }}
+          onSubmit={async (appointmentId, newDate, newTime, newDescription) => {
+            await handleReschedule(appointmentId, newDate, newTime, newDescription);
+            setIsRescheduling(false);
+            setSelectedAppointment(null);
+          }}
+        />
       )}
     </div>
   );

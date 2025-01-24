@@ -70,9 +70,31 @@ const getUpcomingAppointments = async () => {
     });
 };
 
+const rescheduleAppointment = async (appointmentId, newDate, newTime, newDescription) => {
+  const appointmentRef = db.collection('appointments').doc(appointmentId);
+  const originalAppointment = await appointmentRef.get();
+  const originalData = originalAppointment.data();
+
+  const updateData = {
+    date: newDate,
+    time: newTime,
+    description: newDescription ? encrypt(newDescription) : null,
+    status: 'pending_reschedule',
+    updatedAt: new Date(),
+    originalDate: originalData.date,
+    originalTime: originalData.time,
+    originalDescription: originalData.description
+  };
+
+  await appointmentRef.update(updateData);
+  return { appointmentId, status: 'pending_reschedule' };
+};
+
+
 module.exports = {
   createAppointment,
   getAppointmentsClient,
   getAppointmentsPeer,
   getUpcomingAppointments,
+  rescheduleAppointment
 };

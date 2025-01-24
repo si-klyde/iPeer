@@ -119,6 +119,15 @@ const ViewAppointmentsPeer = () => {
     }
   };
 
+  const handleReschedule = async (appointmentId, newDate, newTime, newDescription) => {
+    console.log('Processing reschedule:', { appointmentId, newDate, newTime, newDescription });
+    
+    const response = await axios.put(
+      `${API_CONFIG.BASE_URL}/api/appointments/${appointmentId}/reschedule`,
+      { newDate, newTime, newDescription }
+    );
+  };  
+  
   useEffect(() => {
     // Handle navigation state
     if (location.state?.appointmentId) {
@@ -202,6 +211,7 @@ const ViewAppointmentsPeer = () => {
               clients={clients}
               role="peer-counselor"
               handleAppointmentStatus={handleAppointmentStatus}
+              handleReschedule={handleReschedule}
             />
           )}
           
