@@ -14,6 +14,8 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
       minute: '2-digit',
       hourCycle: 'h23' 
   });
+  const [processingAppointments, setProcessingAppointments] = useState({});
+  const [rescheduledAppointments, setRescheduledAppointments] = useState([]);
 
   const formatTo24Hour = (time) => {
       const [hours, minutes] = time.split(':');
@@ -234,29 +236,44 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
             </div>
           )}
 
-            {role === 'peer-counselor' && handleAppointmentStatus && (
+          {role === 'peer-counselor' && handleAppointmentStatus && (
               <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => handleAppointmentStatus(appointment.id, 'accepted')}
-                  className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => handleAppointmentStatus(appointment.id, 'declined')}
-                  className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  Decline
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedAppointment(appointment);
-                    setIsRescheduling(true);
-                  }}
-                  className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
-                >
-                  Reschedule
-                </button>
+                {rescheduledAppointments.includes(appointment.id) ? (
+                  <p className="text-green-600 font-medium">Reschedule request sent</p>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleAppointmentStatus(appointment.id, 'accepted')}
+                      disabled={processingAppointments[appointment.id]}
+                      className={`bg-green-500 text-white px-6 py-2 rounded-lg transition-colors ${
+                        processingAppointments[appointment.id] ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'
+                      }`}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleAppointmentStatus(appointment.id, 'declined')}
+                      disabled={processingAppointments[appointment.id]}
+                      className={`bg-red-500 text-white px-6 py-2 rounded-lg transition-colors ${
+                        processingAppointments[appointment.id] ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'
+                      }`}
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        setIsRescheduling(true);
+                      }}
+                      disabled={processingAppointments[appointment.id]}
+                      className={`bg-yellow-500 text-white px-6 py-2 rounded-lg transition-colors ${
+                        processingAppointments[appointment.id] ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-600'
+                      }`}
+                    >
+                      Reschedule
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -271,7 +288,10 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
             setSelectedAppointment(null);
           }}
           onSubmit={async (appointmentId, newDate, newTime, newDescription) => {
+            setProcessingAppointments(prev => ({ ...prev, [appointmentId]: true }));
             await handleReschedule(appointmentId, newDate, newTime, newDescription);
+            setRescheduledAppointments(prev => [...prev, appointmentId]);
+            setProcessingAppointments(prev => ({ ...prev, [appointmentId]: false }));
             setIsRescheduling(false);
             setSelectedAppointment(null);
           }}
