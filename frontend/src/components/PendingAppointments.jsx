@@ -16,6 +16,33 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
   });
   const [processingAppointments, setProcessingAppointments] = useState({});
   const [rescheduledAppointments, setRescheduledAppointments] = useState([]);
+  const TIME_SLOTS = [
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00"
+  ];
+
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+    return {
+      currentDate: `${year}-${month}-${day}`,
+      currentTime: `${hours}:${minutes}`
+    };
+  };
+  
 
   const formatTo24Hour = (time) => {
       const [hours, minutes] = time.split(':');
@@ -99,26 +126,42 @@ const PendingAppointments = ({ appointments, clients, peerCounselors, handleAppo
             <label className="text-base font-medium text-gray-700">
               Select Time
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              {availableTimeSlots.length > 0 ? (
-                availableTimeSlots.map((slot) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              {TIME_SLOTS.map((slot) => {
+                const { currentDate, currentTime } = getCurrentDateTime();
+                const isTimeSlotPassed = newDate?.toISOString().split('T')[0] === currentDate && slot < currentTime;
+                
+                return (
                   <button
                     key={slot}
                     type="button"
                     onClick={() => setSelectedTime(slot)}
-                    className={`py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    disabled={!availableTimeSlots.includes(slot) || isTimeSlotPassed}
+                    className={`py-3 sm:py-4 px-4 sm:px-6 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 ${
                       selectedTime === slot
                         ? 'bg-green-500 text-white shadow-lg transform scale-105'
-                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                        : availableTimeSlots.includes(slot) && !isTimeSlotPassed
+                          ? 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:shadow'
+                          : 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     {slot}
                   </button>
-                ))
-              ) : (
-                <div className="col-span-3 text-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                  <p className="text-gray-600">No available time slots for this date</p>
-                </div>
+                );
+              })}
+              {TIME_SLOTS.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-full text-center p-4 sm:p-8 bg-gray-50 rounded-xl border-2 border-gray-200"
+                >
+                  <div className="text-sm sm:text-base text-gray-600 font-medium">
+                    No available time slots for this date
+                  </div>
+                  <div className="mt-2 text-xs sm:text-sm text-gray-500">
+                    Please select a different date to view other available slots
+                  </div>
+                </motion.div>
               )}
             </div>
           </div>
