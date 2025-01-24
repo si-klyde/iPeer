@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createAppointment, getAppointmentsClient, getAppointmentsPeer, rescheduleAppointment } = require('../models/appointment');
 const { db } = require('../firebaseAdmin');
-const { sendAppointmentConfirmation, sendAppointmentRejection } = require('../services/emailService');
+const { sendAppointmentConfirmation, sendAppointmentRejection, sendRescheduleNotification, sendRescheduleResponseNotification } = require('../services/emailService');
 const { createNotification } = require('../models/notifications');
 const { encrypt, decrypt } = require('../utils/encryption.utils');
 const { isTimeSlotAvailable, getAvailableTimeSlots } = require('../utils/timeslot');
@@ -279,6 +279,18 @@ router.put('/appointments/:appointmentId/reschedule', async (req, res) => {
 
     const clientData = clientDoc.data();
     const counselorData = counselorDoc.data();
+
+    await sendRescheduleNotification(
+      decrypt(clientData.email),
+      decrypt(counselorData.email),
+      {
+        newDate,
+        newTime,
+        newDescription,
+        originalDate: appointmentData.originalDate,
+        originalTime: appointmentData.originalTime
+      }
+    );
 
     // Create notification for client about reschedule request
     await createNotification(appointmentData.clientId, {
