@@ -68,6 +68,7 @@ router.get('/peer-counselors/available', async (req, res) => {
       
     const counselorsSnapshot = await db.collection('users')
       .where('role', '==', 'peer-counselor')
+      .where('accountStatus', '==', 'active')
       .where('currentStatus.status', '==', 'online')  // Update this line
       .where('currentStatus.isAvailable', '==', true) // Update this line
       .get();
@@ -163,7 +164,7 @@ router.post('/admin/send-delete-verification', async (req, res) => {
 });
 
 
-router.delete('/peer-counselors/:id', async (req, res) => {
+router.post('/peer-counselors/:id/deactivate', async (req, res) => {
   try {
     const { id } = req.params;
     const { verificationCode } = req.body;
@@ -183,16 +184,22 @@ router.delete('/peer-counselors/:id', async (req, res) => {
       return res.status(400).json({ message: 'Verification code expired' });
     }
 
-    // Proceed with deletion
-    await admin.auth().deleteUser(id);
-    
-    await db.collection('users').doc(id).delete();
+    // Update user status to deactivated instead of deleting
+    await db.collection('users').doc(id).update({
+      accountStatus: 'deactivated',
+      deactivatedAt: admin.firestore.Timestamp.now(),
+      currentStatus: {
+        status: 'offline',
+        isAvailable: false,
+        lastStatusUpdate: admin.firestore.Timestamp.now()
+      }
+    });
     
     await db.collection('deleteVerifications').doc(id).delete();
 
-    res.status(200).json({ message: 'Peer counselor deleted successfully' });
+    res.status(200).json({ message: 'Peer counselor deactivated successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete peer counselor' });
+    res.status(500).json({ error: 'Failed to deactivate peer counselor' });
   }
 });
 
@@ -233,6 +240,7 @@ router.get('/peer-counselors/per-college/:college', async (req, res) => {
     const peerCounselorsSnapshot = await db.collection('users')
       .where('role', '==', 'peer-counselor')
       .where('college', '==', college)
+      // .where('accountStatus', '!=', 'deactivated')
       .get();
 
     const peerCounselors = peerCounselorsSnapshot.docs.map(doc => {

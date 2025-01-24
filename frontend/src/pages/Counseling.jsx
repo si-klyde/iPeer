@@ -8,6 +8,7 @@ import { MessageCircle, ClipboardEdit } from 'lucide-react';
 import { auth } from '../firebase';
 import axios from 'axios';
 import SessionNotes from '../components/SessionNotes';
+import API_CONFIG from '../config/api.js';
 
 const Counseling = () => {
     const { roomId } = useParams();
@@ -38,7 +39,7 @@ const Counseling = () => {
         const checkUserRole = async () => {
             try {
                 const token = await auth.currentUser.getIdToken();
-                const response = await axios.post('http://localhost:5000/api/check-role', {}, {
+                const response = await axios.post(`${API_CONFIG.BASE_URL}/api/check-role`, {}, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

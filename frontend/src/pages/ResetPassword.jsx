@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -54,7 +55,7 @@ const ResetPassword = () => {
     }
 
     try {
-        await axios.post('http://localhost:5000/api/reset-password', {
+        await axios.post(`${API_CONFIG.BASE_URL}/api/reset-password`, {
           token,
           newPassword
         });

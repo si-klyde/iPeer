@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, storage } from '../firebase';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const AdminSetupAccount = () => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -43,7 +44,7 @@ const AdminSetupAccount = () => {
         try {
           const token = await auth.currentUser.getIdToken();
           const response = await axios.get(
-            `http://localhost:5000/api/admin/admin-initial-data/${auth.currentUser.uid}`,
+            `${API_CONFIG.BASE_URL}/api/admin/admin-initial-data/${auth.currentUser.uid}`,
             {
               headers: { Authorization: `Bearer ${token}` }
             }
@@ -68,7 +69,7 @@ const AdminSetupAccount = () => {
     const fetchInitialData = async () => {
         const token = await auth.currentUser.getIdToken();
         const response = await axios.get(
-            `http://localhost:5000/api/admin/admin-initial-data/${auth.currentUser.uid}`,
+            `${API_CONFIG.BASE_URL}/api/admin/admin-initial-data/${auth.currentUser.uid}`,
             {
                 headers: { Authorization: `Bearer ${token}` }
             }
@@ -103,7 +104,7 @@ const AdminSetupAccount = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/setup-account', {
+      const response = await axios.post(`${API_CONFIG.BASE_URL}/api/admin/setup-account`, {
         uid: user.uid,
         ...formData
       });

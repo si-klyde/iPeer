@@ -11,6 +11,7 @@ import ProfileDropdown from './ProfileDropdown';
 import NotificationBell from './NotificationBell';
 import { HiHome, HiCalendar, HiInformationCircle, HiClipboardList, HiUserGroup, HiAcademicCap, HiLogout, HiLogin } from 'react-icons/hi';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const getIcon = (title) => {
   switch (title) {
@@ -81,7 +82,7 @@ const Header = ({ user, setUser }) => {
         const token = await auth.currentUser.getIdToken();
         
         await axios.put(
-          `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
+          `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${user.uid}`,
           { status: 'offline', isAvailable: false },
           {
             headers: {

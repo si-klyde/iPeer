@@ -5,6 +5,7 @@ import { auth, firestore } from '../firebase';
 import axios from 'axios';
 import { toast }from 'react-toastify';
 import RegisterPeerCounselor from '../pages/RegisterPeerCounselor';
+import API_CONFIG from '../config/api.js';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
             }
             const idToken = await user.getIdToken();
             
-            const response = await axios.post('http://localhost:5000/api/check-role', {}, {
+            const response = await axios.post(`${API_CONFIG.BASE_URL}/api/check-role`, {}, {
               headers: {
                 Authorization: `Bearer ${idToken}`
               }

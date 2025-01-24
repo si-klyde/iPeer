@@ -297,7 +297,7 @@ const sendPeerCounselorInvitation = async (email, registrationLink, collegeDetai
 };
 
 const sendPasswordResetEmail = async (email, resetToken) => {
-  const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+  const resetLink = `${PROD_APP_URL}/reset-password/${resetToken}`;
   
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -401,6 +401,72 @@ const sendAdminPasswordResetEmail = async (email, verificationCode) => {
   await transporter.sendMail(mailOptions);
 };
 
+const sendRescheduleNotification = async (clientEmail, counselorEmail, appointmentDetails) => {
+  // Email to client
+  const clientMailOptions = {
+    from: process.env.EMAIL_USER,
+    to: clientEmail,
+    subject: 'Appointment Reschedule Request - iPeer Counseling',
+    html: `
+      ${emailStyles}
+      <div class="email-container">
+        <div class="header">
+          <h2>Appointment Reschedule Request</h2>
+        </div>
+        <div class="content">
+          <p>Dear valued client,</p>
+          <p>Your peer counselor has requested to reschedule your appointment.</p>
+          
+          <div class="appointment-details">
+            <p><strong>New Proposed Schedule:</strong></p>
+            <p>📅 Date: ${appointmentDetails.newDate}</p>
+            <p>🕒 Time: ${appointmentDetails.newTime}</p>
+            <p>✏️ Reason: ${appointmentDetails.newDescription}</p>
+            <p><strong>Original Schedule:</strong></p>
+            <p>📅 Date: ${appointmentDetails.originalDate}</p>
+            <p>🕒 Time: ${appointmentDetails.originalTime}</p>
+          </div>
+          
+          <p>Please log in to your iPeer account to accept or decline this request.</p>
+          <p>Best regards,<br>The iPeer Team</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(clientMailOptions);
+};
+
+const sendRescheduleResponseNotification = async (counselorEmail, appointmentDetails, wasAccepted) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: counselorEmail,
+    subject: `Reschedule Request ${wasAccepted ? 'Accepted' : 'Declined'} - iPeer Counseling`,
+    html: `
+      ${emailStyles}
+      <div class="email-container">
+        <div class="header">
+          <h2>Reschedule Request ${wasAccepted ? 'Accepted' : 'Declined'}</h2>
+        </div>
+        <div class="content">
+          <p>The client has ${wasAccepted ? 'accepted' : 'declined'} your reschedule request.</p>
+          
+          <div class="appointment-details">
+            <p><strong>${wasAccepted ? 'Confirmed Schedule:' : 'Requested Schedule (Declined):'}</strong></p>
+            <p>📅 Date: ${appointmentDetails.newDate}</p>
+            <p>🕒 Time: ${appointmentDetails.newTime}</p>
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   sendAppointmentConfirmation,
   sendAppointmentReminder,
@@ -408,5 +474,7 @@ module.exports = {
   sendPeerCounselorInvitation,
   sendPasswordResetEmail,
   sendVerificationEmail,
-  sendAdminPasswordResetEmail
+  sendAdminPasswordResetEmail,
+  sendRescheduleNotification,
+  sendRescheduleResponseNotification
 };

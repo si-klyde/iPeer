@@ -1,11 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { createAppointment, getAppointmentsClient, getAppointmentsPeer } = require('../models/appointment');
+const { createAppointment, getAppointmentsClient, getAppointmentsPeer, rescheduleAppointment } = require('../models/appointment');
 const { db } = require('../firebaseAdmin');
-const { sendAppointmentConfirmation, sendAppointmentRejection } = require('../services/emailService');
+const { sendAppointmentConfirmation, sendAppointmentRejection, sendRescheduleNotification, sendRescheduleResponseNotification } = require('../services/emailService');
 const { createNotification } = require('../models/notifications');
-const { decrypt } = require('../utils/encryption.utils');
+const { encrypt, decrypt } = require('../utils/encryption.utils');
 const { isTimeSlotAvailable, getAvailableTimeSlots } = require('../utils/timeslot');
+
+// Get the appropriate app URL based on environment
+const APP_URL = process.env.NODE_ENV === 'production' 
+  ? process.env.PROD_APP_URL 
+  : process.env.APP_URL;
 
 const checkPeerCounselorAvailability = async (peerCounselorId, date, time) => {
   try {
@@ -77,7 +82,7 @@ router.post('/create-appointment', async (req, res) => {
         time: appointmentData.time,
         clientName: decryptedClientName,
         peerCounselorName: decryptedCounselorName,
-        roomLink: `http://localhost:5173/counseling/${roomId}`
+        roomLink: `${APP_URL}/counseling/${roomId}`
       }
     );
 
@@ -135,7 +140,11 @@ router.get('/appointments/peer-counselor/:peerCounselorId', async (req, res) => 
     res.status(200).send(appointments);
   } catch (error) {
     console.error('Error fetching appointments:', error);
-    res.status(500).send({ error: 'Error fetching appointments' });
+    // Send a more specific error message
+    res.status(500).send({ 
+      error: 'Error processing appointment data',
+      details: error.message 
+    });
   }
 });
 
@@ -153,7 +162,7 @@ router.get('/check-reminders', async (req, res) => {
           time: appointment.time,
           clientName: decrypt(appointment.clientName),
           peerCounselorName: decrypt(appointment.peerCounselorName),
-          roomLink: `http://localhost:5173/counseling/${appointment.roomId}`
+          roomLink: `${APP_URL}/counseling/${appointment.roomId}`
         }
       );
     }
@@ -214,7 +223,7 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
               time: appointmentData.time,
               clientName: decryptedClientName,
               peerCounselorName: decryptedCounselorName,
-              roomLink: `http://localhost:5173/counseling/${appointmentData.roomId}`
+              roomLink: `${APP_URL}/counseling/${appointmentData.roomId}`
             }
           );
         } else if (status === 'declined') {
@@ -248,6 +257,115 @@ router.put('/appointments/:appointmentId/status', async (req, res) => {
   } catch (error) {
     console.error('Error updating appointment status:', error);
     res.status(500).send({ message: 'Error updating appointment status', error: error.message });
+  }
+});
+
+router.put('/appointments/:appointmentId/reschedule', async (req, res) => {
+  const { appointmentId } = req.params;
+  const { newDate, newTime, newDescription } = req.body;
+  
+  try {
+    const result = await rescheduleAppointment(appointmentId, newDate, newTime, newDescription);
+    
+    // Get appointment and user details
+    const appointmentRef = db.collection('appointments').doc(appointmentId);
+    const appointment = await appointmentRef.get();
+    const appointmentData = appointment.data();
+    
+    const [clientDoc, counselorDoc] = await Promise.all([
+      db.collection('users').doc(appointmentData.clientId).get(),
+      db.collection('users').doc(appointmentData.peerCounselorId).get()
+    ]);
+
+    const clientData = clientDoc.data();
+    const counselorData = counselorDoc.data();
+
+    await sendRescheduleNotification(
+      decrypt(clientData.email),
+      decrypt(counselorData.email),
+      {
+        newDate,
+        newTime,
+        newDescription,
+        originalDate: appointmentData.originalDate,
+        originalTime: appointmentData.originalTime
+      }
+    );
+
+    // Create notification for client about reschedule request
+    await createNotification(appointmentData.clientId, {
+      type: 'APPOINTMENT_RESCHEDULE_REQUEST',
+      title: 'Appointment Reschedule Request',
+      message: `Your counselor has requested to reschedule your appointment to ${newDate} at ${newTime}`,
+      appointmentId,
+      requiresAction: true
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error processing reschedule:', error);
+    res.status(500).json({ error: 'Failed to process reschedule request' });
+  }
+});
+
+router.put('/appointments/:appointmentId/reschedule-response', async (req, res) => {
+  const { appointmentId } = req.params;
+  const { response } = req.body;
+  
+  try {
+    const appointmentRef = db.collection('appointments').doc(appointmentId);
+    const appointment = await appointmentRef.get();
+    const appointmentData = appointment.data();
+
+    // Get user details for notifications
+    const [clientDoc, counselorDoc] = await Promise.all([
+      db.collection('users').doc(appointmentData.clientId).get(),
+      db.collection('users').doc(appointmentData.peerCounselorId).get()
+    ]);
+
+    const clientData = clientDoc.data();
+    const counselorData = counselorDoc.data();
+
+    if (response === 'accept') {
+      await appointmentRef.update({
+        status: 'accepted',
+        updatedAt: new Date()
+      });
+
+      // Send confirmation emails
+      await sendAppointmentConfirmation(
+        decrypt(clientData.email),
+        decrypt(counselorData.email),
+        {
+          status: 'accepted',
+          date: appointmentData.date,
+          time: appointmentData.time,
+          clientName: decrypt(clientData.fullName),
+          peerCounselorName: decrypt(counselorData.fullName),
+          roomLink: `${APP_URL}/counseling/${appointmentData.roomId}`
+        }
+      );
+    } else {
+      await appointmentRef.update({
+        status: 'pending',
+        date: appointmentData.originalDate,
+        description: appointmentData.originalDescription,
+        updatedAt: new Date()
+      });
+    }
+
+    // Create notification for peer counselor
+    await createNotification(appointmentData.peerCounselorId, {
+      type: 'RESCHEDULE_RESPONSE',
+      title: `Reschedule ${response === 'accept' ? 'Accepted' : 'Declined'}`,
+      message: `Client has ${response}ed the rescheduled appointment for ${appointmentData.date}`,
+      appointmentId
+    });
+
+    res.status(200).json({ message: `Reschedule ${response}ed successfully` });
+  } catch (error) {
+    console.error('Error processing reschedule response:', error);
+    res.status(500).json({ error: 'Failed to process reschedule response' });
   }
 });
 

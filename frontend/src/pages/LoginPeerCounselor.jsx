@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, signInWithCustomToken } from '../firebase';
+import API_CONFIG from '../config/api.js';
 
 const LoginPeerCounselor = () => {
   const [email, setEmail] = useState('');
@@ -34,7 +35,7 @@ const LoginPeerCounselor = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/login-peer-counselor',
+        `${API_CONFIG.BASE_URL}/api/login-peer-counselor`,
         { email, password }
       );
 

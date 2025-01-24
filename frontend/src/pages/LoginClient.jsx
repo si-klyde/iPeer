@@ -3,6 +3,7 @@ import axios from 'axios';
 import { auth, provider, signInWithPopup, signInWithCustomToken } from '../firebase';
 import { deleteUser } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import API_CONFIG from '../config/api.js';
 
 const LoginClient = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const LoginClient = () => {
       console.log('Firebase ID token:', idToken);
 
       try {
-        const apiUrl = 'http://localhost:5000/api/google-signin';
+        const apiUrl = `${API_CONFIG.BASE_URL}/api/google-signin`;
         console.log('Attempting to fetch from:', apiUrl);
 
         const response = await axios.post(apiUrl, { 

@@ -39,6 +39,7 @@ import InstantSessionNotification from './components/InstantSessionNotification.
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
+import API_CONFIG from './config/api.js';
 
 const App = () => {
     const [user, setUser] = useState(null);
@@ -76,7 +77,7 @@ const App = () => {
             try {
                 console.log('Updating peer counselor status to offline...');
                 await axios.put(
-                    `http://localhost:5000/api/peer-counselor/status/${user.uid}`,
+                    `${API_CONFIG.BASE_URL}/api/peer-counselor/status/${user.uid}`,
                     { status: 'offline', isAvailable: false },
                     {
                         headers: {
@@ -97,7 +98,7 @@ const App = () => {
     // Helper function to fetch admin data
     const fetchAdminData = async (currentUser) => {
         return await axios.get(
-            `http://localhost:5000/api/admin/admin-data/${currentUser.uid}`,
+            `${API_CONFIG.BASE_URL}/api/admin/admin-data/${currentUser.uid}`,
             {
                 headers: {
                     Authorization: `Bearer ${await currentUser.getIdToken()}`
@@ -109,8 +110,8 @@ const App = () => {
     // Helper function to fetch user data
     const fetchUserData = async (currentUser, userRole) => {
         const endpoint = userRole === 'peer-counselor'
-            ? `http://localhost:5000/api/peer-counselors/${currentUser.uid}`
-            : `http://localhost:5000/api/client/${currentUser.uid}`;
+            ? `${API_CONFIG.BASE_URL}/api/peer-counselors/${currentUser.uid}`
+            : `${API_CONFIG.BASE_URL}/api/client/${currentUser.uid}`;
 
         const response = await axios.get(endpoint, {
             headers: {
@@ -124,7 +125,7 @@ const App = () => {
     const setupAdminListener = async (currentUser) => {
         try {
             const adminInitialCheck = await axios.get(
-                `http://localhost:5000/api/admin/admin-initial-data/${currentUser.uid}`,
+                `${API_CONFIG.BASE_URL}/api/admin/admin-initial-data/${currentUser.uid}`,
                 {
                     headers: {
                         Authorization: `Bearer ${await currentUser.getIdToken()}`

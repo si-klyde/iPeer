@@ -4,6 +4,7 @@ import { BellIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons
 import notification from '../assets/notification/notification.mp3';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
+import API_CONFIG from '../config/api.js';
 
 const NotificationBell = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
@@ -18,7 +19,7 @@ const NotificationBell = ({ user }) => {
       const auth = getAuth();
       const token = await auth.currentUser.getIdToken();
       
-      const response = await axios.get('http://localhost:5000/api/notifications', {
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -39,7 +40,7 @@ const NotificationBell = ({ user }) => {
       const auth = getAuth();
       const token = await auth.currentUser.getIdToken();
 
-      await axios.put(`http://localhost:5000/api/notifications/${notificationId}`, {}, {
+      await axios.put(`${API_CONFIG.BASE_URL}/api/notifications/${notificationId}`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

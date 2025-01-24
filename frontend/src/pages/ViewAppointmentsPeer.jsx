@@ -5,6 +5,7 @@ import { auth, authStateChanged } from '../firebase';
 import PendingAppointments from '../components/PendingAppointments';
 import AcceptedAppointments from '../components/AcceptedAppointments';
 import SessionHistory from '../components/SessionHistory';
+import API_CONFIG from '../config/api.js';
 
 const ViewAppointmentsPeer = () => {
   const [appointments, setAppointments] = useState([]);
@@ -52,7 +53,7 @@ const ViewAppointmentsPeer = () => {
       }
   
       try {
-        const { data: appointments } = await axios.get(`http://localhost:5000/api/appointments/peer-counselor/${currentUserId}`);
+        const { data: appointments } = await axios.get(`${API_CONFIG.BASE_URL}/api/appointments/peer-counselor/${currentUserId}`);
         const sortedAppointments = sortAppointmentsByCreatedAt(appointments);
         setAppointments(sortedAppointments);
         localStorage.setItem(`appointments_${currentUserId}`, JSON.stringify(sortedAppointments));
@@ -80,7 +81,7 @@ const ViewAppointmentsPeer = () => {
         }
     
         try {
-          const response = await axios.get(`http://localhost:5000/api/client/${clientId}`);
+          const response = await axios.get(`${API_CONFIG.BASE_URL}/api/client/${clientId}`);
           const clientName = response.data.fullName || 'Name not available';
           setClients(prevState => ({
             ...prevState,
@@ -106,7 +107,7 @@ const ViewAppointmentsPeer = () => {
 
   const handleAppointmentStatus = async (appointmentId, status) => {
     try {
-      await axios.put(`http://localhost:5000/api/appointments/${appointmentId}/status`, { status });
+      await axios.put(`${API_CONFIG.BASE_URL}/api/appointments/${appointmentId}/status`, { status });
       
       setAppointments(appointments.map(appointment => 
         appointment.id === appointmentId 
@@ -118,6 +119,15 @@ const ViewAppointmentsPeer = () => {
     }
   };
 
+  const handleReschedule = async (appointmentId, newDate, newTime, newDescription) => {
+    console.log('Processing reschedule:', { appointmentId, newDate, newTime, newDescription });
+    
+    const response = await axios.put(
+      `${API_CONFIG.BASE_URL}/api/appointments/${appointmentId}/reschedule`,
+      { newDate, newTime, newDescription }
+    );
+  };  
+  
   useEffect(() => {
     // Handle navigation state
     if (location.state?.appointmentId) {
@@ -201,6 +211,7 @@ const ViewAppointmentsPeer = () => {
               clients={clients}
               role="peer-counselor"
               handleAppointmentStatus={handleAppointmentStatus}
+              handleReschedule={handleReschedule}
             />
           )}
           

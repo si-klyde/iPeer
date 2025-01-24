@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { additional1, recentPic, upcomingPic, ongoingPic } from '../assets';
+import API_CONFIG from '../config/api.js';
 
 const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -29,7 +30,7 @@ const Calendar = () => {
         const token = await user.getIdToken(true);
         console.log('ID Token:', token);
         
-        const response = await axios.get('http://localhost:5000/api/events/all', {
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/api/events/all`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

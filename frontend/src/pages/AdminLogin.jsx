@@ -4,6 +4,7 @@ import { signInWithCustomToken } from 'firebase/auth';
 import { auth } from '../firebase';
 import logo from '../assets/ipeer-icon.png';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -31,7 +32,7 @@ const AdminLogin = () => {
     try {
       console.log('Attempting login with:', { username });
       
-      const response = await axios.post('http://localhost:5000/api/admin/login-admin', {
+      const response = await axios.post(`${API_CONFIG.BASE_URL}/api/admin/login-admin`, {
         username,
         password
       });

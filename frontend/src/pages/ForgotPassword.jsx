@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_CONFIG from '../config/api.js';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ const ForgotPassword = () => {
     setMessage('');
     
     try {
-      const response = await axios.post('http://localhost:5000/api/reset-password-request', { email });
+      const response = await axios.post(`${API_CONFIG.BASE_URL}/api/reset-password-request`, { email });
       setMessage(response.data.message);
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to process request');

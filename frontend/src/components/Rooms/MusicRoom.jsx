@@ -6,12 +6,13 @@ import {
   CloudIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { logRoomEntry } from '../../utils/roomLogger';
 
 // YouTube Playlist configuration with correct embed URLs
 const PLAYLISTS = {
   focus: { 
     id: 'mJW57E7GpSo',
-    embedUrl: 'https://www.youtube.com/embed/mJW57E7GpSo',
+    embedUrl: 'https://www.youtube.com/embed/sAcj8me7wGI?autoplay=1',
     name: 'Focus Mode',
     description: 'Beautiful piano music to help you concentrate',
     icon: <SparklesIcon className="w-6 h-6 text-white" />,
@@ -19,7 +20,7 @@ const PLAYLISTS = {
   },
   relax: { 
     id: 'PLQkQfzsIUwRYHN4pxZ-g3KCF_yPr9Xz_m',
-    embedUrl: 'https://www.youtube.com/embed/videoseries?list=PLQkQfzsIUwRYHN4pxZ-g3KCF_yPr9Xz_m',
+    embedUrl: 'https://www.youtube.com/embed/bP9gMpl1gyQ?autoplay=1',
     name: 'Chill & Relax',
     description: 'Soothing melodies for relaxation',
     icon: <HeartIcon className="w-6 h-6 text-white" />,
@@ -27,7 +28,7 @@ const PLAYLISTS = {
   },
   ambient: { 
     id: 'PLQkQfzsIUwRZuFW0zWn5eXwpLZE5sAS_x',
-    embedUrl: 'https://www.youtube.com/embed/videoseries?list=PLQkQfzsIUwRZuFW0zWn5eXwpLZE5sAS_x',
+    embedUrl: 'https://www.youtube.com/embed/sjkrrmBnpGE?autoplay=1',
     name: 'Ambient',
     description: 'Peaceful ambient sounds and music',
     icon: <CloudIcon className="w-6 h-6 text-white" />,
@@ -35,7 +36,7 @@ const PLAYLISTS = {
   },
   lofi: { 
     id: 'PLQkQfzsIUwRaJgpxqKUU8gmHqYxZ-6yzR',
-    embedUrl: 'https://www.youtube.com/embed/videoseries?list=PLQkQfzsIUwRaJgpxqKUU8gmHqYxZ-6yzR',
+    embedUrl: 'https://www.youtube.com/embed/6H-PLF2CR18?autoplay=1',
     name: 'Lo-Fi Beats',
     description: 'Relaxing beats for study and work',
     icon: <MusicalNoteIcon className="w-6 h-6 text-white" />,
@@ -110,16 +111,17 @@ const PlaylistCard = ({ playlist, onSelect }) => {
 export const MusicRoom = () => {
   const [currentPlaylist, setCurrentPlaylist] = useState(null);
 
-  // useEffect(() => {
-  //   // Hide Footer
-  //   const footer = document.querySelector('footer');
-  //   if (footer) footer.style.display = 'none';
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      logRoomEntry('Music Room');
+    }
 
-  //   return () => {
-  //     // Restore Footer visibility when leaving the page
-  //     if (footer) footer.style.display = '';
-  //   };
-  // }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="max-w-[1600px] h-auto bg-[#E6F4EA] mx-auto p-8">

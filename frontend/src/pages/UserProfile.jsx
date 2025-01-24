@@ -6,6 +6,7 @@ import { updateProfile } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { User } from 'lucide-react';
+import API_CONFIG from '../config/api.js';
 
 const UserProfile = () => {
   const [userProfile, setUserProfile] = useState(null);
@@ -91,7 +92,7 @@ const UserProfile = () => {
         // Fetch fresh data if cache invalid
         const idToken = await user.getIdToken();
 
-        const roleResponse = await axios.post('http://localhost:5000/api/check-role', null, {
+        const roleResponse = await axios.post(`${API_CONFIG.BASE_URL}/api/check-role`, null, {
           headers: { Authorization: `Bearer ${idToken}` }
         });
 
@@ -100,8 +101,8 @@ const UserProfile = () => {
         console.log("USER ROLE: " + userRole);
 
         const endpoint = userRole === 'peer-counselor' 
-          ? `http://localhost:5000/api/peer-counselors/${user.uid}`
-          : `http://localhost:5000/api/client/${user.uid}`;
+          ? `${API_CONFIG.BASE_URL}/api/peer-counselors/${user.uid}`
+          : `${API_CONFIG.BASE_URL}/api/client/${user.uid}`;
 
         const response = await axios.get(endpoint, {
           headers: { Authorization: `Bearer ${idToken}` }
@@ -243,7 +244,7 @@ const UserProfile = () => {
       // Update credentials in Firestore
       const token = await user.getIdToken();
       await axios.post(
-        `http://localhost:5000/api/update-credentials/${user.uid}`,
+        `${API_CONFIG.BASE_URL}/api/update-credentials/${user.uid}`,
         { credentials: uploadedCredentials },
         {
           headers: { Authorization: `Bearer ${token}` }
