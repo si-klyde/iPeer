@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@heroicons/react": "^2.1.5",
+    "@heroicons/react": "^2.2.0",
     "lucide-react": "^0.454.0",
     "use-react-state": "^0.1.0-alpha.0"
   }
